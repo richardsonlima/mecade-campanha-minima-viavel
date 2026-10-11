@@ -1,0 +1,30 @@
+# Registro de cenário no formato da Tabela 3.3 da dissertação
+id: s1_latencia_productcatalog
+version: 1
+hipotese: >
+  O estado estacionário (P95/P99 e TSR do cliente) persiste, ou é restaurado dentro do RTO,
+  sob latência de rede induzida em uma instância do productcatalogservice.
+modo_de_falha:
+  tipo: latência
+  causa_presumida: degradação de rede ou de nó afetando uma instância
+  efeito_local: respostas lentas do catálogo
+  efeito_sistemico: degradação de quase todas as páginas do frontend (dependência em leque)
+alvo: productcatalogservice
+nivel_de_injecao: servico (instância específica)
+metricas_observadas: [p95, p99, error_rate]
+rto_s: 180
+mitigacao:                     # igual nos dois braços; o que muda é quando ela é acionada
+  acao: restart                # troca a instância degradada (a falha fica presa às instâncias originais)
+runbook: "Substituir instâncias degradadas: kubectl rollout restart deployment/productcatalogservice"
+replicas_alvo: 1
+chaos:
+  apiVersion: chaos-mesh.org/v1alpha1
+  kind: NetworkChaos
+  metadata: {name: "{name}", namespace: "{ns}"}
+  spec:
+    action: delay
+    mode: all
+    selector:
+      pods: {"{ns}": "{pods}"}
+    delay: {latency: "400ms", jitter: "100ms", correlation: "25"}
+    duration: "{fault}s"

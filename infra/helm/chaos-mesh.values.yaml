@@ -1,0 +1,8 @@
+# Chaos Mesh 2.8.4, execução de falhas da Camada 4.
+# Tanto o kind quanto o GKE Standard usam containerd.
+chaosDaemon:
+  runtime: containerd
+  socketPath: /run/containerd/containerd.sock
+dashboard:
+  create: true
+  securityMode: false     # só serve para o ambiente de experimento

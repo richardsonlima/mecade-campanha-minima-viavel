@@ -1,0 +1,71 @@
+# Configuração da Campanha Mínima Viável. Todos os parâmetros ficam só aqui, e cada réplica
+# copia esses valores para o próprio metadado (rastreabilidade, Cap. 4).
+campaign_id: mvc-2026-10
+seed: 20261011                 # semente da randomização da ordem dos braços
+namespace: boutique
+prometheus_url: http://localhost:9090   # via `make port-forward`
+
+timing:                        # segundos
+  warmup: 120                  # estabilização após o reset do ambiente
+  baseline: 300                # janela de referência do estado estacionário (M_base)
+  fault: 600                   # duração do incidente (igual nos dois braços)
+  recovery: 600                # observação após o fim do incidente
+  step: 5                      # período de avaliação, igual ao intervalo de coleta do Prometheus
+
+replicas:
+  per_cell: 10                 # réplicas por (cenário, braço)
+  control: 10                  # réplicas de controle sem injeção (taxa de falsos bloqueios)
+
+scenarios:                     # arquivos em scenarios/
+  - s1_latencia_productcatalog
+  - s2_gray_currency
+  - s3_podkill_cart
+control_scenario: c0_controle
+
+# Sinais da Camada 2. {ns} e {target} são trocados em tempo de execução.
+# floor é o piso do denominador de D(t), para métricas com baseline perto de zero (docs/PROTOCOLO.md, D2).
+signals:
+  p95:
+    query: histogram_quantile(0.95, sum(rate(mecade_loadgen_request_duration_seconds_bucket[30s])) by (le))
+    floor: 0.05
+  p99:
+    query: histogram_quantile(0.99, sum(rate(mecade_loadgen_request_duration_seconds_bucket[30s])) by (le))
+    floor: 0.05
+  error_rate:
+    query: (sum(rate(mecade_loadgen_requests_total{outcome!="ok"}[30s])) or vector(0)) / sum(rate(mecade_loadgen_requests_total[30s]))
+    floor: 0.01
+# Sinais que só registro, sem entrar na decisão (servem para métricas derivadas).
+aux_signals:
+  throughput: sum(rate(mecade_loadgen_requests_total{outcome="ok"}[30s]))
+  cpu_boutique: sum(rate(container_cpu_usage_seconds_total{namespace="{ns}",container!=""}[1m]))
+  cpu_target: sum(rate(container_cpu_usage_seconds_total{namespace="{ns}",pod=~"{target}-.*",container!=""}[1m]))
+
+# Parâmetros dos axiomas (Camada 3, Listagem 3.1). Ainda são valores iniciais; calibro na Fase 1.
+axioms:
+  decision_signals: [p95, p99, error_rate]   # n = 3
+  k: 2                         # correlação multi-sinal: k de n
+  d_on: 0.5                    # mesmo papel de delta_alert / epsilon (limiar de ativação)
+  d_off: 0.3                   # limiar de desativação (histerese)
+  tau_dwell: 15                # janela de confirmação (s)
+  aggregation: max             # D_agr = max(D_m) ou média
+  deadband: 0.3                # LIMIT integra max(0, D_agr - deadband) (ver docs/PROTOCOLO.md, D1)
+  budget_B: 60.0               # Chaos Budget (unidades de D·s)
+  envelope_delta: 1.0          # desvio máximo do Safety Envelope (classificação "degradado")
+
+# Braço baseline: alerta convencional no estilo do Prometheus e runbook com atraso fixo.
+reactive:
+  rules:                       # dispara se qualquer regra ficar verdadeira por `for` segundos seguidos
+    - {signal: p99, op: ">", factor_of_baseline: 2.0}
+    - {signal: error_rate, op: ">", absolute: 0.05}
+  for: 300                     # equivalente ao "for: 5m" usual
+  response_delay: 120          # tempo para reconhecer o alerta e executar o runbook (s)
+
+recovery:
+  hold: 60                     # D_agr <= d_off por `hold` segundos conta como estado estacionário restaurado
+
+block:
+  stop_injection: false        # false: o incidente dura `fault` nos dois braços (é a análise principal)
+
+audit:
+  enabled: true                # perfil mínimo da Camada 6 (JSONL com hash encadeado, assíncrono)
+  dir: data/audit

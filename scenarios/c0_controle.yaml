@@ -1,0 +1,9 @@
+# Réplicas de controle: braço MECADE sem injeção. Qualquer BLOCK aqui é falso bloqueio.
+id: c0_controle
+version: 1
+hipotese: Sem falha injetada, o MECADE não aciona BLOCK.
+alvo: frontend
+rto_s: 180
+mitigacao: {acao: none}
+replicas_alvo: 1
+chaos: null

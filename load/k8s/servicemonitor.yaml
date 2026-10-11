@@ -1,0 +1,11 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mecade-loadgen
+  labels: {app: mecade-loadgen}
+spec:
+  selector:
+    matchLabels: {app: mecade-loadgen}
+  endpoints:
+    - port: metrics
+      interval: 5s

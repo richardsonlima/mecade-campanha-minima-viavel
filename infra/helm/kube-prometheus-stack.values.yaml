@@ -1,0 +1,18 @@
+# kube-prometheus-stack 90.0.0, observabilidade da Camada 2.
+fullnameOverride: kps
+alertmanager:
+  enabled: false          # a regra do baseline reativo é avaliada pelo orquestrador (está em config/campaign.yaml)
+grafana:
+  enabled: true
+  adminPassword: mecade   # só serve para o ambiente de experimento
+prometheus:
+  prometheusSpec:
+    scrapeInterval: 5s
+    evaluationInterval: 5s
+    retention: 15d
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1Gi

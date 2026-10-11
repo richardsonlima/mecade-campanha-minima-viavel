@@ -1,0 +1,10 @@
+# Cluster local para desenvolvimento e calibração (estágios E1 e E2).
+# Um control-plane e três workers, igual aos três nós do GKE Standard.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: mecade
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker
+  - role: worker

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mecade-loadgen
+  labels: {app: mecade-loadgen}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: mecade-loadgen}
+  template:
+    metadata:
+      labels: {app: mecade-loadgen}
+    spec:
+      containers:
+        - name: loadgen
+          image: python:3.12-slim
+          command: ["sh", "-c"]
+          args:
+            - pip install --no-cache-dir --quiet httpx==0.28.1 prometheus-client==0.26.0 && python /app/loadgen.py
+          env:
+            - {name: FRONTEND_ADDR, value: "http://frontend.boutique.svc.cluster.local"}
+            - {name: RPS, value: "20"}
+            - {name: TIMEOUT_S, value: "3"}
+            - {name: SEED, value: "20261011"}
+            - {name: SESSIONS, value: "20"}
+            - {name: MAX_INFLIGHT, value: "200"}
+          ports:
+            - {name: metrics, containerPort: 9100}
+          readinessProbe:
+            httpGet: {path: /metrics, port: metrics}
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            requests: {cpu: 300m, memory: 256Mi}
+            limits: {cpu: "1", memory: 512Mi}
+          volumeMounts:
+            - {name: code, mountPath: /app}
+      volumes:
+        - name: code
+          configMap: {name: mecade-loadgen-code}
