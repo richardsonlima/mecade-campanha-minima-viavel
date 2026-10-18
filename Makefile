@@ -24,11 +24,19 @@ kind-down: ## remove o cluster kind
 gke-create: ## cria o cluster GKE Standard (exige PROJECT=<id>)
 	infra/gke/create-cluster.sh
 
-gke-up: ## node pool -> 3 nós (antes de rodar)
+gke-up: ## node pool -> 3 nós e espera tudo voltar (antes de rodar)
 	infra/gke/scale.sh 3
+	kubectl wait --for=condition=Ready nodes --all --timeout=10m
+	kubectl -n $(NAMESPACE_MONITORING) wait --for=condition=available deployment --all --timeout=10m
+	kubectl -n $(NAMESPACE_CHAOS) wait --for=condition=available deployment --all --timeout=10m
+	kubectl -n $(NAMESPACE_TARGET) wait --for=condition=available deployment --all --timeout=10m
+	@echo "Prometheus voltou vazio (emptyDir). Espero uns 2 min de carga e rodo make smoke."
 
-gke-down: ## node pool -> 0 nós (fora das janelas de execução)
+gke-down: clean-chaos ## limpa injeções e leva o node pool a 0 nós (fora das janelas de execução)
 	infra/gke/scale.sh 0
+
+controller-vm: ## cria a VM do controlador na mesma zona do cluster (exige PROJECT=<id>)
+	infra/gke/controller-vm.sh
 
 # pilha
 install: ## instala Prometheus, Chaos Mesh, Online Boutique e gerador de carga
@@ -39,6 +47,12 @@ port-forward: ## expõe Prometheus (9090), Grafana (3000) e Chaos Dashboard (233
 	kubectl -n $(NAMESPACE_MONITORING) port-forward svc/kps-grafana 3000:80 & \
 	kubectl -n $(NAMESPACE_CHAOS) port-forward svc/chaos-dashboard 2333:2333 & \
 	wait
+
+port-forward-loop: ## igual ao port-forward, mas reabre sozinho se cair (uso nos lotes longos)
+	while true; do \
+	  kubectl -n $(NAMESPACE_MONITORING) port-forward svc/kps-prometheus 9090:9090; \
+	  echo "port-forward caiu em $$(date -u +%FT%TZ), reabrindo" | tee -a data/runs/portforward.log; sleep 2; \
+	done
 
 smoke: ## pré-voo: confere se os sinais de decisão respondem no Prometheus
 	$(PY) -m mecade.cli smoke
@@ -73,4 +87,4 @@ clean-chaos: ## remove qualquer injeção ativa (uso em emergência)
 	kubectl -n $(NAMESPACE_TARGET) delete schedules.chaos-mesh.org,networkchaos.chaos-mesh.org,podchaos.chaos-mesh.org --all
 
 
-.PHONY: analyze help venv test kind-up kind-down gke-create gke-up gke-down install port-forward smoke plan plan-contingency pilot run sim notebook verify-audit clean-chaos
+.PHONY: analyze help venv test kind-up kind-down gke-create gke-up gke-down controller-vm port-forward-loop install port-forward smoke plan plan-contingency pilot run sim notebook verify-audit clean-chaos
