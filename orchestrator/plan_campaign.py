@@ -2,9 +2,13 @@
 
 Em cada par (cenário, réplica) os dois braços entram em ordem sorteada, e os pares são misturados
 com as réplicas de controle. Nos controles alterno auditoria ligada e desligada para medir o
-overhead da Camada 6 (Tabela 4.2).
+overhead da Camada 6 (Tabela 4.6).
 
   python -m orchestrator.plan_campaign [--scenarios s2_gray_currency,s3_podkill_cart] [--per-cell N]
+  python -m orchestrator.plan_campaign --calibracao 1    # rodada 1 da Fase 1, em data/calibracao/
+
+O plano de calibração tem 3 controles e 1 par por cenário. Os run_id dele começam com cal<rodada>_ e
+a semente é outra, para não coincidir com o plano oficial nem consumir réplica dele.
 """
 from __future__ import annotations
 
@@ -15,9 +19,12 @@ from pathlib import Path
 
 from mecade.config import ROOT, load_campaign
 
+CALIB_PER_CELL, CALIB_CONTROL = 1, 3
 
-def build_plan(campaign: dict, scenarios: list[str], per_cell: int, control: int) -> list[dict]:
-    rng = random.Random(campaign["seed"])
+
+def build_plan(campaign: dict, scenarios: list[str], per_cell: int, control: int,
+               seed: int | None = None, prefix: str = "") -> list[dict]:
+    rng = random.Random(campaign["seed"] if seed is None else seed)
     blocks: list[list[dict]] = []
     for sc in scenarios:
         for rep in range(1, per_cell + 1):
@@ -31,8 +38,13 @@ def build_plan(campaign: dict, scenarios: list[str], per_cell: int, control: int
     plan = [row for b in blocks for row in b]
     for i, row in enumerate(plan, start=1):
         row["order"] = i
-        row["run_id"] = f"{i:03d}_{row['scenario']}_{row['arm']}_r{row['rep']:02d}"
+        row["run_id"] = f"{prefix}{i:03d}_{row['scenario']}_{row['arm']}_r{row['rep']:02d}"
     return plan
+
+
+def build_calibration_plan(campaign: dict, rodada: int) -> list[dict]:
+    return build_plan(campaign, campaign["scenarios"], CALIB_PER_CELL, CALIB_CONTROL,
+                      seed=int(campaign["seed"]) + 1000 * rodada, prefix=f"cal{rodada}_")
 
 
 def main() -> None:
@@ -42,16 +54,22 @@ def main() -> None:
                     help="lista separada por vírgula (contingência: 2 cenários)")
     ap.add_argument("--per-cell", type=int, default=camp["replicas"]["per_cell"])
     ap.add_argument("--control", type=int, default=camp["replicas"]["control"])
-    ap.add_argument("--out", default=str(ROOT / "data" / f"plan_{camp['campaign_id']}.csv"))
+    ap.add_argument("--calibracao", type=int, default=0, metavar="RODADA", help="gera o plano da rodada de calibração")
+    ap.add_argument("--out", default=None)
     a = ap.parse_args()
-    plan = build_plan(camp, a.scenarios.split(","), a.per_cell, a.control)
-    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    with open(a.out, "w", newline="", encoding="utf-8") as fh:
+    if a.calibracao:
+        plan = build_calibration_plan(camp, a.calibracao)
+        out = a.out or str(ROOT / "data" / "calibracao" / f"plan_r{a.calibracao}.csv")
+    else:
+        plan = build_plan(camp, a.scenarios.split(","), a.per_cell, a.control)
+        out = a.out or str(ROOT / "data" / f"plan_{camp['campaign_id']}.csv")
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+    with open(out, "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=["order", "run_id", "scenario", "arm", "rep", "pair", "audit"])
         w.writeheader()
         w.writerows(plan)
     hours = len(plan) * sum(camp["timing"][k] for k in ("warmup", "baseline", "fault", "recovery")) / 3600
-    print(f"Plano com {len(plan)} réplicas gravado em {a.out} (~{hours:.1f} h de execução, sem contar resets).")
+    print(f"Plano com {len(plan)} réplicas gravado em {out} (~{hours:.1f} h de execução, sem contar resets).")
 
 
 if __name__ == "__main__":

@@ -64,13 +64,23 @@ plan: ## gera o plano randomizado (data/plan_<campanha>.csv)
 plan-contingency: ## plano reduzido: 2 cenários (contingência)
 	$(PY) -m orchestrator.plan_campaign --scenarios s2_gray_currency,s3_podkill_cart
 
-pilot: ## executa as próximas 2 réplicas (validação do protocolo)
-	$(PY) -m orchestrator.run_campaign --limit 2
+plan-calibracao: ## plano da rodada de calibração em data/calibracao/ (RODADA=1 ou 2)
+	$(PY) -m orchestrator.plan_campaign --calibracao $(or $(RODADA),1)
+
+run-calibracao: ## executa a rodada de calibração, fora de data/runs (RODADA=1 ou 2)
+	$(PY) -m orchestrator.run_campaign --calibracao --plan data/calibracao/plan_r$(or $(RODADA),1).csv
+
+calibrar: ## aplica a regra da Fase 1 aos dados de data/calibracao/runs
+	$(PY) -m analysis.calibrate
+
+pilot: ## executa 2 réplicas do plano de calibração, sem tocar no plano oficial
+	$(PY) -m orchestrator.run_campaign --calibracao --plan data/calibracao/plan_r$(or $(RODADA),1).csv --limit 2
 
 run: ## executa (ou retoma) o plano completo
 	$(PY) -m orchestrator.run_campaign
 
-sim: ## roda o plano em simulação (só testa o pipeline, não é evidência)
+sim: ## roda o plano em simulação do zero (só testa o pipeline, não é evidência)
+	rm -rf data/sim/runs data/sim/audit data/sim/campaign.log data/sim/desvios_execucao.jsonl
 	$(PY) -m orchestrator.plan_campaign --out data/sim/plan.csv && \
 	$(PY) -m orchestrator.run_campaign --backend sim --plan data/sim/plan.csv
 
@@ -87,4 +97,4 @@ clean-chaos: ## remove qualquer injeção ativa (uso em emergência)
 	kubectl -n $(NAMESPACE_TARGET) delete schedules.chaos-mesh.org,networkchaos.chaos-mesh.org,podchaos.chaos-mesh.org --all
 
 
-.PHONY: analyze help venv test kind-up kind-down gke-create gke-up gke-down controller-vm port-forward-loop install port-forward smoke plan plan-contingency pilot run sim notebook verify-audit clean-chaos
+.PHONY: plan-calibracao run-calibracao calibrar analyze help venv test kind-up kind-down gke-create gke-up gke-down controller-vm port-forward-loop install port-forward smoke plan plan-contingency pilot run sim notebook verify-audit clean-chaos
