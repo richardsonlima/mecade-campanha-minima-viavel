@@ -2,7 +2,7 @@
 
 A escrita é assíncrona. No caminho de decisão o evento só entra na fila; o hash e a gravação em
 disco ficam numa thread separada. Meço o custo desse enfileiramento (enqueue_latency) e reporto
-como Δ_audit, que é critério de aceitação na Tabela 4.2.
+como Δ_audit, que é critério de aceitação na Tabela 4.6.
 
 Cada registro guarda o hash do anterior, então verify() pega qualquer alteração, remoção ou
 troca de ordem das linhas.

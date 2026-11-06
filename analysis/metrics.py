@@ -8,12 +8,16 @@ As definições batem com a Seção 4 de docs/PROTOCOLO.md. Todos os tempos cont
                que D_agr <= d_off por `hold` segundos, procurado depois da mitigação (ou depois do
                fim do incidente, quando não houve mitigação)
   MTTR         TTR - TTD, só quando houve detecção (da detecção até a restauração)
-  area         degradação acumulada, soma de D_agr * dt de t = 0 até o fim da janela
+  area_incidente  desvio acumulado durante o incidente, soma de D_agr * dt em 0 <= t < fault (v0.8, Seção 4.4.1)
+  area         o mesmo até o fim da janela, incluindo a recuperação (só descritiva)
+  p95_std, p99_std  desvio-padrão de P95 e P99 durante o incidente (variabilidade da Tabela 4.6)
+  censurada    réplica com falha injetada sem detecção ou sem restauração; entra na comparação com o fim
+               da janela como valor conservador (TTD_capped, TTR_capped, MTTR_capped)
   TSR_fault    1 menos a taxa média de erro durante o incidente
   classe       crítico (desvio acumulado com zona morta > B), degradado (max D_agr > envelope) ou aceitável
   RRIndex_run  1 / (1 + V̄), com V(t) igual à média dos D_m(t)^2 no incidente e na recuperação (Seção 3.4.2)
-  eta_t_proxy  P99 do baseline dividido pelo P99 médio no incidente (aproximação, ver PROTOCOLO D6)
-  eta_I_proxy  (vazão/CPU) no incidente dividido por (vazão/CPU) no baseline (aproximação, ver PROTOCOLO D6)
+
+η_I e η_t ficam fora da campanha (decisão D6 da v0.8): exigem demanda escalonada, e a carga aqui é fixa.
 """
 from __future__ import annotations
 
@@ -36,6 +40,16 @@ def load_runs(root: str | Path, include_sim: bool = False) -> list[tuple[dict, p
         df = pd.read_csv(meta_path.parent / "steps.csv")
         runs.append((meta, df))
     return runs
+
+
+def execution_failures(root: str | Path) -> list[dict]:
+    """Réplicas que falharam 3 vezes na execução. Não têm dados; o par delas sai da comparação pareada."""
+    out = []
+    for meta_path in sorted(Path(root).glob("*/meta.json")):
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        if meta.get("status") == "falha_execucao":
+            out.append(meta)
+    return out
 
 
 def _first(events: list[dict], *names: str) -> float | None:
@@ -83,33 +97,42 @@ def run_metrics(meta: dict, df: pd.DataFrame) -> dict:
     fw = d[d["t"] < fault]
     Dm = d[[f"D_{s}" for s in DECISION if f"D_{s}" in d]].fillna(0)
     V = (Dm ** 2).mean(axis=1)
-    base = meta.get("M_base") or {}
-    base_df = df[df["t"] < 0]
-
-    def ratio(a, b):
-        return float(a) / float(b) if a is not None and b not in (None, 0) and not pd.isna(b) else np.nan
-
-    thr_cpu_fault = ratio(fw.get("aux_throughput", pd.Series(dtype=float)).mean(), fw.get("aux_cpu_boutique", pd.Series(dtype=float)).mean())
-    thr_cpu_base = ratio(base_df.get("aux_throughput", pd.Series(dtype=float)).mean(), base_df.get("aux_cpu_boutique", pd.Series(dtype=float)).mean())
     mttr = (t_rec - t_det) if (t_rec is not None and t_det is not None) else np.nan
+    com_falha = (meta.get("mitigation") or {}).get("acao", "none") != "none"
+    ttr_capped = t_rec if t_rec is not None else window_end
+    ttd_capped = t_det if t_det is not None else window_end
     return {
         "run_id": meta["run_id"], "scenario": meta["scenario"], "arm": meta["arm"], "pair": meta.get("pair", ""),
         "backend": meta.get("backend"), "audit": meta.get("audit_planned", 1),
         "detected": t_det is not None, "TTD": t_det if t_det is not None else np.nan,
         "TTM": t_mit if t_mit is not None else np.nan,
         "TTR": t_rec if t_rec is not None else np.nan, "TTR_censored": t_rec is None,
-        "TTR_capped": t_rec if t_rec is not None else window_end,
+        "TTR_capped": ttr_capped,
+        "TTD_capped": ttd_capped, "MTTR_capped": ttr_capped - ttd_capped if t_det is not None else window_end,
+        "censurada": bool(com_falha and (t_det is None or t_rec is None)),
         "MTTR": mttr, "rto_ok": bool(not pd.isna(mttr) and mttr <= meta.get("rto_s", np.inf)),
         "area": float((d["D_agr"].fillna(0) * step).sum()),
+        "area_incidente": float((fw["D_agr"].fillna(0) * step).sum()),
+        "p95_std": float(fw["p95"].std()) if len(fw) else np.nan,
+        "p99_std": float(fw["p99"].std()) if len(fw) else np.nan,
         "TSR_fault": float(1 - fw["error_rate"].mean()) if len(fw) else np.nan,
         "p99_fault": float(fw["p99"].mean()) if len(fw) else np.nan,
         "classe": classe, "block": t_block is not None, "I_max": I_max, "max_D": max_D,
         "RRIndex_run": float(1 / (1 + V.mean())) if len(V) else np.nan,
-        "eta_t_proxy": ratio(base.get("p99"), fw["p99"].mean() if len(fw) else None),
-        "eta_I_proxy": ratio(thr_cpu_fault, thr_cpu_base),
         "audit_p95_ms": (meta.get("audit") or {}).get("enqueue_p95_ms"),
         "controller_cpu_s": meta.get("controller_cpu_s"),
     }
+
+
+def audit_overhead(m: pd.DataFrame) -> dict:
+    """Tabela 4.6, H3: Δ_audit,p95 e Δcpu nos controles, com a auditoria ligada contra desligada."""
+    ctrl = m[m["pair"].astype(str) == ""]
+    on, off = ctrl[ctrl["audit"] == 1], ctrl[ctrl["audit"] == 0]
+    p95 = on["audit_p95_ms"].dropna()
+    cpu_on, cpu_off = on["controller_cpu_s"].median(), off["controller_cpu_s"].median()
+    dcpu = float((cpu_on - cpu_off) / cpu_off * 100) if cpu_off and not pd.isna(cpu_off) else np.nan
+    return {"n_on": len(on), "n_off": len(off), "delta_audit_p95_ms": float(p95.max()) if len(p95) else np.nan,
+            "delta_cpu_pct": dcpu}
 
 
 def metrics_table(runs) -> pd.DataFrame:
