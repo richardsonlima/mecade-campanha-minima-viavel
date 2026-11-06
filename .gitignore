@@ -1,0 +1,23 @@
+# Ambiente local
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Simulação: só testa o pipeline e não é evidência (data/README.md)
+data/sim/*
+!data/sim/.gitkeep
+
+# Credenciais: o repositório é público. Não ignoro *.json em geral porque meta.json é dado da campanha.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*-key.json
+*credentials*.json
+*service-account*.json
+application_default_credentials.json
+kubeconfig
+.kube/
