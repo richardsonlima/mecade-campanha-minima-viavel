@@ -1,7 +1,8 @@
 # Protocolo experimental da Campanha Mínima Viável
 
-Este é o protocolo operacional que corresponde à Seção 4.4 da dissertação. Se alguma coisa aqui
-divergir do texto, resolvo antes de começar as réplicas oficiais.
+Este é o protocolo operacional que corresponde à Seção 4.4 da dissertação, na v0.8. Se alguma coisa
+aqui divergir do texto, resolvo antes de começar as réplicas oficiais. Os critérios de aceitação vêm
+da Tabela 4.6 e as hipóteses, da Tabela 4.1.
 
 ## 1. Pergunta
 
@@ -48,47 +49,68 @@ reset (limpo injeções, volto réplicas para 1, reinicio o alvo) → warmup de 
 
 As definições exatas estão em `analysis/metrics.py`.
 
-| Desfecho | Como calculo | Critério da Tabela 4.2 |
+| Desfecho | Como calculo | Critério da Tabela 4.6 |
 |---|---|---|
-| TTD | primeiro ALERT (mecade) ou disparo da regra (baseline), contado a partir da injeção | |
-| TTR | primeiro instante depois da mitigação em que `D_agr ≤ d_off` se mantém por 60 s | recuperação |
-| MTTR | TTR menos TTD, só quando houve detecção | recuperação, `≤ RTO` do cenário |
-| área | soma de D_agr·Δt de t = 0 até o fim da janela | estabilidade |
-| TSR no incidente | 1 menos a taxa média de erro entre 0 e 600 s | recuperação |
-| classe | crítico, degradado ou aceitável, com a mesma regra offline nos dois braços | classificação |
-| RRIndex_run | 1/(1 + V̄), com V igual à média dos D_m² | convergência |
-| falsos bloqueios | fração dos controles em que houve BLOCK | falsos bloqueios |
-| Δ_audit,p95 | p95 do custo de enfileirar o evento no caminho de decisão | overhead, até 5 ms |
+| TTD | primeiro ALERT (mecade) ou disparo da regra (baseline), contado a partir da injeção | H1, detecção e estabilidade da latência (ver Seção 8) |
+| TTR | primeiro instante depois da mitigação em que `D_agr ≤ d_off` se mantém por 60 s | H2, recuperação |
+| MTTR | TTR menos TTD | H2, recuperação |
+| dentro do RTO | proporção de réplicas com `MTTR ≤ RTO` do cenário | H2, recuperação |
+| classe | crítico, degradado ou aceitável, com a mesma regra offline nos dois braços | H2, classificação |
+| área | soma de D_agr·Δt durante o incidente (`area_incidente`) | H1, detecção e estabilidade da latência |
+| variabilidade de P95/P99 | desvio-padrão de cada sinal durante o incidente (`p95_std`, `p99_std`; ver Seção 8) | H1, detecção e estabilidade da latência |
+| RRIndex_run | 1/(1 + V̄), com V igual à média dos D_m² | H2, convergência |
+| falsos bloqueios | fração dos controles em que houve BLOCK, abaixo do limiar da Seção 8 | H1, falsos bloqueios |
+| Δ_audit,p95 | p95 do custo de enfileirar o evento, até 5 ms, nos controles com auditoria | H3, overhead |
+| Δcpu | CPU do controlador nos controles com auditoria contra sem auditoria, até 8% | H3, overhead |
+| TSR no incidente | 1 menos a taxa média de erro entre 0 e 600 s | só descritivo |
+
+A vazão de 1000 eventos/s da Camada 6 não é exercida pela carga da campanha, como diz a Tabela 4.6.
 
 Para a análise uso Wilcoxon pareado, delta de Cliff e intervalo de confiança de 95% por bootstrap
-da mediana das diferenças, separado por cenário. Réplicas sem restauração ou sem detecção ficam
-censuradas e aparecem à parte. A métrica `TTR_capped` usa o fim da janela nesses casos, o que é
-conservador.
+da mediana das diferenças, separado por cenário.
+
+Dois rótulos diferentes para réplicas com problema:
+
+- **`censurada`:** réplica com falha injetada que rodou até o fim, mas sem detecção ou sem restauração.
+  Não é descartada: é reportada como censurada e entra na análise principal com o fim da janela como
+  valor conservador (`TTD_capped`, `TTR_capped`, `MTTR_capped`).
+- **`falha_execucao`:** réplica que falhou 3 vezes na execução e não tem dados. O par dela sai da
+  comparação pareada e é relatado.
+
+As duas contam para o limite de 10%: passando disso, a campanha para e eu decido o que fazer. Uma
+réplica refeita sai da ordem sorteada, e isso é um desvio, registrado em `desvios_execucao.jsonl`,
+no `CHANGELOG.md` e em `CAMPANHA_STATUS.md`.
 
 ## 5. Decisões de implementação que preciso levar para a dissertação
 
-| # | Decisão | Motivo | Onde atualizar |
+| # | Decisão | Motivo | Onde está na v0.8 |
 |---|---|---|---|
-| D1 | O LIMIT integra `max(0, D_agr − deadband)` e não `D_agr` | Integrando o desvio bruto, o ruído normal do estado estacionário se acumula a janela inteira e estoura o B sem falha nenhuma. O teste `test_noise_below_deadband_never_violates_budget` mostra isso. | Listagem 3.1, Eq. 3.6 e Tabela 3.11 |
-| D2 | `D = |M − M_base| / max(M_base, piso)` | Com a taxa de erro, o baseline é praticamente zero e o D explode | Eq. 3.1 e 3.4 |
-| D3 | `k = 2` em `n = 3`, com p95, p99 e taxa de erro | p95 e p99 andam juntos, então a regra k-de-n fica mais permissiva do que o texto dá a entender | Camada 3, correlação multi-sinal (declaro como limitação ou troco um sinal) |
-| D4 | O BLOCK aciona a mitigação mas não para a injeção | Comparação justa, como expliquei na Seção 2 | Cap. 4, desenho da campanha |
-| D5 | O controlador roda fora do cluster e avalia a cada 5 s via Prometheus | Mais simples e mais fácil de auditar | Limitação: a latência de decisão em milissegundos não é medida nesta campanha |
-| D6 | η_I e η_t estão como aproximações | Ainda preciso conferir a definição exata em Al-Said Ahmad e Andras (2021) | Cap. 3, Tabela 3.4. Substituo antes da análise final |
-| D7 | RRIndex_run = 1/(1 + V̄), com V igual à média dos D_m² | Forma limitada que adotei na Seção 3.4.2, agora com uma escolha concreta de V | Seção 3.4.2 |
-| D8 | Só o BLOCK aciona a mitigação, o ALERT não age | Segue a hierarquia da Tabela 3.11 | |
+| D1 | O LIMIT integra `max(0, D_agr − deadband)` e não `D_agr` | Integrando o desvio bruto, o ruído normal do estado estacionário se acumula a janela inteira e estoura o B sem falha nenhuma. O teste `test_noise_below_deadband_never_violates_budget` mostra isso. | Listagem 3.1, Eq. 3.3 e Tabela 4.5 |
+| D2 | `D = |M − M_base| / max(M_base, piso)` | Com a taxa de erro, o baseline é praticamente zero e o D explode | Eq. 3.2 e Tabela 4.5 |
+| D3 | `k = 2` em `n = 3`, com p95, p99 e taxa de erro | p95 e p99 andam juntos, então a regra k-de-n fica mais permissiva do que o texto dá a entender | Tabela 4.5 e Seção 4.5, declarada como limitação |
+| D4 | O BLOCK aciona a mitigação mas não para a injeção | Comparação justa, como expliquei na Seção 2 | Tabela 4.5 e discussão da Seção 4.4.1 |
+| D5 | O controlador roda fora do cluster e avalia a cada 5 s via Prometheus | Mais simples e mais fácil de auditar | Tabela 4.5 e Seção 4.5: a latência de decisão em milissegundos não é medida |
+| D6 | η_I e η_t ficam fora da campanha | As métricas exigem demanda escalonada, e a campanha opera em carga fixa. Ficam para a Fase 4, e as aproximações saíram do código | Tabela 4.5 e Seção 4.5 |
+| D7 | RRIndex_run = 1/(1 + V̄), com V igual à média dos D_m² | Forma limitada que adotei na Seção 3.4, com uma escolha concreta de V | Eq. 3.11 e Tabela 4.5 |
+| D8 | Só o BLOCK aciona a mitigação, o ALERT não age | Segue a hierarquia da Tabela 3.11 | Tabela 4.5 |
 
 ## 6. Calibração (Fase 1), antes das réplicas oficiais
 
-1. Rodo 3 réplicas de controle e olho a distribuição de `D_agr` sem falha. `d_off` e `deadband`
-   ficam pelo menos no percentil 99 desse ruído, e `d_on` bem acima de `d_off`, para a histerese
-   funcionar.
-2. Rodo uma réplica piloto de cada cenário em cada braço e ajusto o `budget_B`. Nenhum controle
-   pode chegar perto de B, e a classificação precisa separar os casos. Na simulação, com os valores
-   iniciais, todas as réplicas com falha saíram como críticas, o que indica que o B está baixo para
-   o tamanho das falhas.
-3. Congelo o `config/campaign.yaml`, gero o plano com `make plan`, faço commit e só então começo as
-   réplicas oficiais. Anoto a calibração no CHANGELOG. As réplicas de calibração ficam fora da análise.
+A regra já está decidida e não muda depois de ver os dados. `make calibrar` a aplica:
+
+1. Rodo 3 réplicas de controle e 1 piloto por cenário e braço (`make plan-calibracao run-calibracao`).
+   Esses dados ficam em `data/calibracao/`, com `run_id` próprio, e não entram na análise.
+2. `d_off` e `deadband` ficam no P99 de `D_agr` nos controles, arredondado para cima com uma casa decimal.
+   `d_on` fica 0,2 acima de `d_off`.
+3. `budget_B` é o menor valor em que nenhum controle passa de 50% de B e, no piloto de s1, o desvio
+   acumulado não esgota B antes de 300 s de falha.
+4. `tau_dwell` fica em 15 s, a não ser que os controles tenham ALERT espúrio. Nesse caso sobe de 5 em 5 s
+   até 30 s.
+5. Congelo o `config/campaign.yaml`, mudo o `campaign_id`, gero o plano com `make plan`, faço commit e só
+   então começo as réplicas oficiais. Anoto a calibração no CHANGELOG.
+
+Os pisos M_min aparecem na região calibrável da v0.8, mas a regra da Fase 1 não os ajusta. Ficam nos
+valores de `config/campaign.yaml`.
 
 ## 7. O que esta campanha não testa
 
@@ -99,3 +121,13 @@ Declaro isso nos Capítulos 4 e 5:
 - latência de decisão na escala de milissegundos (ver D5);
 - generalização (Fase 4) e produção de verdade, porque a campanha cobre os estágios E1 e E2 da
   trilha de adoção.
+
+## 8. Decisões do autor antes da primeira réplica oficial
+
+Precisam estar registradas aqui, em commit anterior à primeira réplica oficial.
+
+| Item | Situação |
+|---|---|
+| Limiar de falsos bloqueios (Tabela 4.6) | pendente, decisão minha |
+| TTD como critério de aceitação ou métrica descritiva | pendente; até a resposta vale a Tabela 4.6, que o inclui |
+| Medida da variabilidade de P95/P99 | a v0.8 não define. O código usa o desvio-padrão durante o incidente, a confirmar |
