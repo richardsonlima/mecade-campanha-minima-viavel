@@ -24,7 +24,7 @@ Boutique rodando em Kubernetes.
 make venv && make test      # os testes já incluem uma campanha simulada inteira
 make kind-up && make install
 make port-forward           # deixo rodando em outro terminal
-make smoke && make plan && make pilot
+make smoke && make plan-calibracao && make pilot
 ```
 
 O passo a passo que sigo está em [`docs/RUNBOOK.md`](docs/RUNBOOK.md). O protocolo e as decisões
@@ -55,7 +55,7 @@ data/                   saídas da campanha (detalhes em data/README.md)
 | Chaos Mesh (Helm) | 2.8.4 |
 | kube-prometheus-stack (Helm) | 90.0.0 |
 | kind / imagem do nó | v0.33.0 / kindest/node v1.37.0 |
-| Python do controlador | 3.11 ou mais novo, dependências em `requirements.txt` |
+| Python do controlador | 3.12 ou mais novo, dependências em `requirements.txt` |
 
 Não uso o GKE Autopilot porque o `chaos-daemon` do Chaos Mesh precisa de pod privilegiado, e o
 Autopilot só libera isso para parceiros da lista dele. Fico com o GKE Standard e nós sob demanda.

@@ -1,4 +1,4 @@
-# Controlador, orquestrador e análise (Python >= 3.11)
+# Controlador, orquestrador e análise (Python >= 3.12, exigido por numpy e scipy)
 requests==2.34.2
 PyYAML==6.0.3
 numpy==2.5.4
