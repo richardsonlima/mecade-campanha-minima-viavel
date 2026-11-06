@@ -59,7 +59,9 @@ def calibrate(runs: list) -> dict:
     d_on = round(d_off + 0.2, 1)
 
     I_ctrl = max(_I(df, deadband, step) for _, df in ctrl)
-    I_s1 = {m["arm"]: _I(df, deadband, step, JANELA_B_S) for m, df in s1}
+    I_s1: dict[str, float] = {}
+    for m, df in s1:  # com duas rodadas há mais de um piloto por braço, e vale o maior
+        I_s1[m["arm"]] = max(I_s1.get(m["arm"], 0.0), _I(df, deadband, step, JANELA_B_S))
     budget = _ceil1(max(2 * I_ctrl, max(I_s1.values())))
 
     tau = None

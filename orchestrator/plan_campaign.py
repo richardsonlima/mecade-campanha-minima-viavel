@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import io
 import random
 from pathlib import Path
 
@@ -56,6 +57,7 @@ def main() -> None:
     ap.add_argument("--control", type=int, default=camp["replicas"]["control"])
     ap.add_argument("--calibracao", type=int, default=0, metavar="RODADA", help="gera o plano da rodada de calibração")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--substituir", action="store_true", help="permite trocar um plano que já existe com outro conteúdo")
     a = ap.parse_args()
     if a.calibracao:
         plan = build_calibration_plan(camp, a.calibracao)
@@ -64,10 +66,15 @@ def main() -> None:
         plan = build_plan(camp, a.scenarios.split(","), a.per_cell, a.control)
         out = a.out or str(ROOT / "data" / f"plan_{camp['campaign_id']}.csv")
     Path(out).parent.mkdir(parents=True, exist_ok=True)
+    buf = io.StringIO(newline="")
+    w = csv.DictWriter(buf, fieldnames=["order", "run_id", "scenario", "arm", "rep", "pair", "audit"])
+    w.writeheader()
+    w.writerows(plan)
+    novo = buf.getvalue()
+    if Path(out).exists() and Path(out).read_bytes().decode("utf-8") != novo and not a.substituir:
+        raise SystemExit(f"{out} já existe com outro conteúdo. O plano congelado não é sobrescrito sem --substituir.")
     with open(out, "w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=["order", "run_id", "scenario", "arm", "rep", "pair", "audit"])
-        w.writeheader()
-        w.writerows(plan)
+        fh.write(novo)
     hours = len(plan) * sum(camp["timing"][k] for k in ("warmup", "baseline", "fault", "recovery")) / 3600
     print(f"Plano com {len(plan)} réplicas gravado em {out} (~{hours:.1f} h de execução, sem contar resets).")
 

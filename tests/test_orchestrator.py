@@ -192,6 +192,85 @@ def pd_frame():
                          "D_error_rate": [0.0, 0.0], "p95": [0.1, 0.1], "p99": [0.1, 0.1], "error_rate": [0.0, 0.0]})
 
 
+def test_trilha_da_terceira_falha_sai_de_audit(tmp_path):
+    out, plan = tmp_path / "runs", _plan(2)
+    rid = plan[0]["run_id"]
+    trilha = out.parent / "audit" / f"{rid}.jsonl"
+
+    def execute(row):
+        if row["run_id"] == rid:
+            trilha.parent.mkdir(parents=True, exist_ok=True)
+            trilha.write_text('{"truncad')  # queda no meio de uma escrita
+            raise RuntimeError("caiu")
+        return {"run_id": row["run_id"], "status": "complete"}
+
+    assert execute_plan(plan, out_root=out, execute=execute, clean=lambda: None, log=lambda *_: None, settle_s=0,
+                        sleep=lambda _: None, check_lost=False) == EXIT_OK
+    assert read_status(out / rid) == "falha_execucao"
+    assert not trilha.exists()
+    assert len(list((out.parent / "audit" / "tentativas").glob(f"{rid}.*"))) == 3
+
+
+def test_trilha_existente_na_primeira_tentativa_tambem_e_arquivada(tmp_path):
+    out, plan = tmp_path / "runs", _plan(1)
+    trilha = out.parent / "audit" / f"{plan[0]['run_id']}.jsonl"
+    trilha.parent.mkdir(parents=True)
+    trilha.write_text("antiga")
+    assert _run(plan, Fake(), out) == EXIT_OK
+    assert not trilha.exists()
+    assert next((out.parent / "audit" / "tentativas").iterdir()).read_text() == "antiga"
+
+
+def test_falhas_seguidas_valem_entre_passadas(tmp_path):
+    out, plan = tmp_path / "runs", _plan(3)
+    # as duas últimas falham na passada 1; o ambiente segue quebrado para a primeira pendente da passada 2
+    fake = Fake({plan[1]["run_id"]: 99, plan[2]["run_id"]: 99})
+    assert _run(plan, fake, out) == EXIT_INSTAVEL
+    assert fake.chamadas == [plan[0]["run_id"], plan[1]["run_id"], plan[2]["run_id"], plan[1]["run_id"]]
+
+
+def test_queda_entre_as_gravacoes_do_meta_e_reparada(tmp_path):
+    out, plan = tmp_path / "runs", [{"order": "1", "run_id": "001_s", "scenario": "s", "arm": "mecade", "rep": "1",
+                                     "pair": "s#01", "audit": "1"}]
+    d = out / "001_s"
+    d.mkdir(parents=True)
+    (d / "meta.json").write_text(json.dumps({"run_id": "001_s", "status": "complete"}))
+    (d / "tentativas.jsonl").write_text(json.dumps({"tentativa": 1, "evento": "inicio"}) + "\n")
+    fake = Fake()
+    assert _run(plan, fake, out) == EXIT_OK
+    assert fake.chamadas == []
+    meta = json.loads((d / "meta.json").read_text())
+    assert meta["pair"] == "s#01" and meta["order"] == 1 and meta["tentativa"] == 1
+    assert count_failures(read_attempts(d)) == 0
+
+
+def test_retomada_acima_do_limite_para_sem_gastar_replica(tmp_path, monkeypatch):
+    monkeypatch.setattr("orchestrator.run_campaign.load_runs", lambda *a, **k: [])
+    out, plan = tmp_path / "runs", _plan(5)
+    (out / plan[0]["run_id"]).mkdir(parents=True)
+    (out / plan[0]["run_id"] / "meta.json").write_text(json.dumps({"status": "falha_execucao"}))
+    fake = Fake()
+    assert _run(plan, fake, out, check_lost=True) == EXIT_LIMITE
+    assert fake.chamadas == []
+
+
+def test_plano_existente_nao_e_sobrescrito_sem_substituir(tmp_path, monkeypatch):
+    import sys
+    from orchestrator import plan_campaign
+    out = tmp_path / "plan.csv"
+    monkeypatch.setattr(sys, "argv", ["x", "--out", str(out)])
+    plan_campaign.main()
+    original = out.read_bytes()
+    plan_campaign.main()  # regerar igual é permitido
+    monkeypatch.setattr(sys, "argv", ["x", "--out", str(out), "--scenarios", "s2_gray_currency,s3_podkill_cart"])
+    with pytest.raises(SystemExit):
+        plan_campaign.main()
+    assert out.read_bytes() == original
+    monkeypatch.setattr(sys, "argv", ["x", "--out", str(out), "--scenarios", "s2_gray_currency,s3_podkill_cart", "--substituir"])
+    plan_campaign.main()
+    assert out.read_bytes() != original
+
+
 def test_interrupcao_do_operador_limpa_e_nao_conta(tmp_path):
     out, plan = tmp_path / "runs", _plan(1)
 
