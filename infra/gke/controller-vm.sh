@@ -20,7 +20,7 @@ gcloud compute instances create "$VM" \
   --boot-disk-size 20GB \
   --scopes cloud-platform \
   --metadata-from-file startup-script="$HERE/controller-startup.sh"
-echo "VM criada. Espero o startup-script terminar (existe /var/run/mecade-pronto) e, na VM:"
+echo "VM criada. Espero o startup-script terminar (existe /var/lib/mecade-pronto) e, na VM:"
 echo "  gcloud container clusters get-credentials ${CLUSTER:-mecade-mvc} --zone $ZONE"
 echo "  git clone do bundle do commit local (docs/RUNBOOK.md) && cd mecade-mvc-01"
 echo "  make venv && make test"

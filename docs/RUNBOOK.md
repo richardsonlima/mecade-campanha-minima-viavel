@@ -62,7 +62,7 @@ gcloud compute scp /tmp/mecade.bundle mecade-ctl:~ --zone us-central1-a
 gcloud compute ssh mecade-ctl --zone us-central1-a
 ```
 
-Na VM, uma vez só, depois de o startup-script criar `/var/run/mecade-pronto`:
+Na VM, uma vez só, depois de o startup-script criar `/var/lib/mecade-pronto`:
 
 ```bash
 gcloud container clusters get-credentials mecade-mvc --zone us-central1-a
@@ -83,6 +83,8 @@ make gke-down                     # no fim do lote: limpa injeções e leva os n
 O `make run` trata sozinho as falhas de réplica: limpa as injeções, espera 120 s e refaz a réplica em uma
 passada seguinte. Ele sai com código 3 se mais de 10% das réplicas forem perdidas e com código 4 depois de
 3 falhas seguidas. Nos dois casos os nós continuam ligados e gastando crédito até alguém agir.
+Se eu decidir seguir além dos 10%, rodo `.venv/bin/python -m orchestrator.run_campaign --sem-limite-perdidas`
+e registro a decisão no CHANGELOG. Reboot da VM não reinicia a campanha: confiro o tmux e rodo `make run` de novo.
 
 Posso fechar o notebook com o tmux rodando. Para acompanhar, `gcloud compute ssh mecade-ctl` e
 `tmux attach -t campanha`. Para o Grafana, faço o port-forward do 3000 do meu notebook mesmo.

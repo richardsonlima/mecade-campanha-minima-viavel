@@ -60,7 +60,7 @@ mkdir -p data
 {
   echo "# Ambiente da campanha"
   echo "- criado em: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  echo "- projeto/zona/cluster: $PROJECT / $ZONE / $CLUSTER"
+  echo "- zona/cluster: $ZONE / $CLUSTER"   # sem o ID do projeto, porque este arquivo vai para um repositório público
   echo "- nós: $NODES x $MACHINE, sob demanda"
   echo "- Kubernetes: $(kubectl version -o json | python3 -c 'import json,sys;print(json.load(sys.stdin)["serverVersion"]["gitVersion"])')"
   echo "- exclusão de manutenção: $FREEZE_START até $FREEZE_END (no_minor_or_node_upgrades)"
