@@ -3,8 +3,8 @@
 # Nós sob demanda e não Spot, porque uma preempção seria uma falha não planejada no meio da réplica.
 #
 # Atenção a duas coisas que aprendi antes de rodar:
-# 1. Conta em Free Trial só deixa 8 vCPUs ligadas ao mesmo tempo. Três e2-standard-4 são 12 vCPUs,
-#    então preciso fazer o upgrade da conta para paga antes (o crédito que sobrou continua valendo).
+# 1. Conta em Free Trial só deixa 8 vCPUs ligadas ao mesmo tempo. Três e2-standard-2 mais a VM e2-small
+#    somam 8 e cabem. Três e2-standard-4 somam 14 e exigem upgrade da conta, que só o dono decide.
 # 2. Cluster em release channel não aceita desligar o auto-upgrade dos nós. Em vez disso, crio uma
 #    exclusão de manutenção que bloqueia upgrade de nó e de versão minor até o fim da campanha.
 set -euo pipefail
@@ -13,6 +13,7 @@ ZONE="${ZONE:-us-central1-a}"
 CLUSTER="${CLUSTER:-mecade-mvc}"
 MACHINE="${MACHINE:-e2-standard-4}"
 NODES="${NODES:-3}"
+CONTROLLER_VCPUS="${CONTROLLER_VCPUS:-2}"   # a VM e2-small do controlador entra na mesma cota
 FREEZE_START="${FREEZE_START:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
 FREEZE_END="${FREEZE_END:-2026-12-15T00:00:00Z}"
 
@@ -22,11 +23,19 @@ command -v gke-gcloud-auth-plugin >/dev/null || {
 gcloud config set project "$PROJECT"
 gcloud services enable container.googleapis.com compute.googleapis.com
 
-QUOTA=$(gcloud compute regions describe "${ZONE%-*}" --format=json \
-  | python3 -c 'import json,sys;q=[x for x in json.load(sys.stdin)["quotas"] if x["metric"]=="CPUS"][0];print(int(q["limit"]))')
-NEED=$(( NODES * 4 ))
+VCPUS=$(gcloud compute machine-types describe "$MACHINE" --zone "$ZONE" --format='value(guestCpus)')
+NEED=$(( NODES * VCPUS + CONTROLLER_VCPUS ))
+# O Free Trial limita a região e também o projeto inteiro, então confiro as duas cotas.
+QUOTA_REGION=$(gcloud compute regions describe "${ZONE%-*}" --format=json \
+  | python3 -c 'import json,sys;print(int(next(q["limit"] for q in json.load(sys.stdin)["quotas"] if q["metric"]=="CPUS")))')
+QUOTA_GLOBAL=$(gcloud compute project-info describe --format=json \
+  | python3 -c 'import json,sys;print(int(next(q["limit"] for q in json.load(sys.stdin)["quotas"] if q["metric"]=="CPUS_ALL_REGIONS")))')
+QUOTA=$(( QUOTA_REGION < QUOTA_GLOBAL ? QUOTA_REGION : QUOTA_GLOBAL ))
 if (( QUOTA < NEED )); then
-  echo "Cota de CPUs na região é $QUOTA e preciso de $NEED. Faço o upgrade da conta ou peço aumento de cota."; exit 1
+  echo "Cota de CPUs é $QUOTA (região $QUOTA_REGION, projeto $QUOTA_GLOBAL) e preciso de $NEED: $NODES x $MACHINE ($VCPUS vCPUs) mais $CONTROLLER_VCPUS da VM. Não crio o cluster."; exit 1
+fi
+if [[ "${QUOTA_CHECK_ONLY:-0}" == 1 ]]; then
+  echo "Cota ok: preciso de $NEED vCPUs e tenho $QUOTA."; exit 0
 fi
 
 gcloud container clusters create "$CLUSTER" \
