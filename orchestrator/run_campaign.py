@@ -65,9 +65,20 @@ def count_failures(entries: list[dict]) -> int:
     return sum(1 for ev in por_tentativa.values() if ev in ("inicio", "falhou"))
 
 
-def read_status(run_dir: Path) -> str | None:
+def _read_meta(run_dir: Path) -> dict | None:
+    """Metadado truncado por uma queda no meio da escrita conta como réplica não concluída."""
     p = run_dir / "meta.json"
-    return json.loads(p.read_text(encoding="utf-8")).get("status") if p.exists() else None
+    if not p.exists():
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+
+
+def read_status(run_dir: Path) -> str | None:
+    meta = _read_meta(run_dir)
+    return meta.get("status") if meta else None
 
 
 def archive_partial_audit(out_root: Path, run_id: str, tentativa: int) -> Path | None:
@@ -76,8 +87,13 @@ def archive_partial_audit(out_root: Path, run_id: str, tentativa: int) -> Path |
     trilha = out_root.parent / "audit" / f"{run_id}.jsonl"
     if not trilha.exists():
         return None
-    destino = out_root.parent / "audit" / "tentativas" / f"{run_id}.antes-t{tentativa}.jsonl"
-    destino.parent.mkdir(parents=True, exist_ok=True)
+    pasta = out_root.parent / "audit" / "tentativas"
+    pasta.mkdir(parents=True, exist_ok=True)
+    destino = pasta / f"{run_id}.antes-t{tentativa}.jsonl"
+    n = 1
+    while destino.exists():  # rename sobrescreveria uma trilha já guardada
+        n += 1
+        destino = pasta / f"{run_id}.antes-t{tentativa}.{n}.jsonl"
     trilha.rename(destino)
     return destino
 
@@ -130,8 +146,8 @@ def execute_plan(plan: list[dict], *, out_root: Path, execute: Callable[[dict], 
             entries = read_attempts(run_dir)
             if count_failures(entries) >= MAX_FALHAS:
                 # acontece quando a terceira tentativa morreu com o processo
+                archive_partial_audit(out_root, run_id, max(e["tentativa"] for e in entries) + 1)
                 _mark_execution_failure(row, run_dir, entries)
-                archive_partial_audit(out_root, run_id, len(entries))
                 desvio(run_id, "falha_execucao", par=row["pair"])
                 if perdeu_demais():
                     return EXIT_LIMITE
@@ -177,8 +193,8 @@ def execute_plan(plan: list[dict], *, out_root: Path, execute: Callable[[dict], 
                 seguidas += 1
                 entries = read_attempts(run_dir)
                 if count_failures(entries) >= MAX_FALHAS:
-                    _mark_execution_failure(row, run_dir, entries)
                     archive_partial_audit(out_root, run_id, tentativa + 1)
+                    _mark_execution_failure(row, run_dir, entries)
                     desvio(run_id, "falha_execucao", par=row["pair"])
                     if perdeu_demais():
                         return EXIT_LIMITE
@@ -204,12 +220,10 @@ def _plan_fields(row: dict) -> dict:
 def _repair_incomplete_meta(row: dict, run_dir: Path) -> bool:
     """O run_one grava meta.json e só depois entram os campos do plano. Se o processo cair nesse intervalo,
     a réplica tem dados válidos, mas sem `pair` a análise a trataria como controle. Completo na retomada."""
+    meta = _read_meta(run_dir)
+    if meta is None or meta.get("status") != "complete" or "order" in meta:
+        return False
     p = run_dir / "meta.json"
-    if not p.exists():
-        return False
-    meta = json.loads(p.read_text(encoding="utf-8"))
-    if meta.get("status") != "complete" or "order" in meta:
-        return False
     entries = read_attempts(run_dir)
     meta.update(_plan_fields(row))
     meta["tentativa"] = max((e["tentativa"] for e in entries), default=1)
@@ -292,6 +306,8 @@ def main() -> None:
     oficial = a.backend == "k8s" and not a.calibracao
     if oficial and a.sem_limite_perdidas:
         log("Limite de 10% de réplicas perdidas desligado por minha decisão.")
+        _append_jsonl(out_root.parent / "desvios_execucao.jsonl",
+                      {"quando": _agora(), "run_id": "", "tipo": "limite_de_perdidas_desligado"})
     sys.exit(execute_plan(plan, out_root=out_root, execute=execute, clean=clean, log=log, limit=a.limit,
                           settle_s=0 if a.backend == "sim" else a.settle, check_lost=oficial and not a.sem_limite_perdidas))
 

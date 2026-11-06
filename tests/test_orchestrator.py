@@ -211,6 +211,54 @@ def test_trilha_da_terceira_falha_sai_de_audit(tmp_path):
     assert len(list((out.parent / "audit" / "tentativas").glob(f"{rid}.*"))) == 3
 
 
+def test_tres_quedas_guardam_as_tres_trilhas(tmp_path):
+    """Queda do processo não deixa linha `falhou`, e o arquivamento não pode sobrescrever a trilha anterior."""
+    out, plan = tmp_path / "runs", _plan(1)
+    rid = plan[0]["run_id"]
+    trilha = out.parent / "audit" / f"{rid}.jsonl"
+    trilha.parent.mkdir(parents=True)
+    ledger = out / rid / "tentativas.jsonl"
+    ledger.parent.mkdir(parents=True)
+
+    class Queda(BaseException):
+        pass
+
+    def execute(row):
+        trilha.write_text(f"tentativa {sum(1 for _ in ledger.open())}")
+        raise Queda
+
+    for _ in range(3):
+        with pytest.raises(Queda):
+            execute_plan(plan, out_root=out, execute=execute, clean=lambda: None, log=lambda *_: None, settle_s=0,
+                         sleep=lambda _: None, check_lost=False)
+    fake = Fake()
+    assert _run(plan, fake, out) == EXIT_OK
+    assert fake.chamadas == [] and read_status(out / rid) == "falha_execucao" and not trilha.exists()
+    guardadas = sorted(p.read_text() for p in (out.parent / "audit" / "tentativas").iterdir())
+    assert guardadas == ["tentativa 1", "tentativa 2", "tentativa 3"]
+
+
+def test_arquivar_nunca_sobrescreve(tmp_path):
+    from orchestrator.run_campaign import archive_partial_audit
+    out = tmp_path / "runs"
+    trilha = out.parent / "audit" / "r.jsonl"
+    trilha.parent.mkdir(parents=True)
+    for texto in ("a", "b"):
+        trilha.write_text(texto)
+        archive_partial_audit(out, "r", 2)
+    assert sorted(p.read_text() for p in (out.parent / "audit" / "tentativas").iterdir()) == ["a", "b"]
+
+
+def test_meta_truncado_conta_como_nao_concluida(tmp_path):
+    out, plan = tmp_path / "runs", _plan(1)
+    d = out / plan[0]["run_id"]
+    d.mkdir(parents=True)
+    (d / "meta.json").write_text('{"status": "comp')
+    fake = Fake()
+    assert _run(plan, fake, out) == EXIT_OK
+    assert fake.chamadas == [plan[0]["run_id"]] and read_status(d) == "complete"
+
+
 def test_trilha_existente_na_primeira_tentativa_tambem_e_arquivada(tmp_path):
     out, plan = tmp_path / "runs", _plan(1)
     trilha = out.parent / "audit" / f"{plan[0]['run_id']}.jsonl"
