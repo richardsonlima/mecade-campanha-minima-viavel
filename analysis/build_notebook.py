@@ -17,7 +17,7 @@ nb.cells = [
          "ROOT = pathlib.Path.cwd().parent if pathlib.Path.cwd().name == 'analysis' else pathlib.Path.cwd()\n"
          "sys.path.insert(0, str(ROOT))\n"
          "import pandas as pd, numpy as np, matplotlib.pyplot as plt\n"
-         "from analysis.metrics import audit_overhead, execution_failures, load_runs, metrics_table, paired_comparison\n"
+         "from analysis.metrics import audit_overhead, execution_failures, false_block_verdict, load_runs, metrics_table, paired_comparison\n"
          "DATA_ROOT = ROOT / 'data' / 'runs'\n"
          "INCLUDE_SIM = False\n"
          "FIG = ROOT / 'analysis' / 'figures'; FIG.mkdir(parents=True, exist_ok=True)\n"
@@ -41,9 +41,10 @@ nb.cells = [
     code("pd.concat([paired_comparison(m, k) for k in ['TTD_capped','TTR_capped','MTTR_capped','area_incidente','p95_std','p99_std','RRIndex_run','TSR_fault','p99_fault']], "
          "ignore_index=True).round(4)"),
     md("## 4. Taxa de falsos bloqueios (réplicas de controle)"),
-    code("ctrl = m[m['pair'].astype(str) == '']\n"
-         "print(f\"Controles: {len(ctrl)} | BLOCK acionado em {int(ctrl['block'].sum())} \"\n"
-         "      f\"=> taxa de falsos bloqueios = {ctrl['block'].mean() if len(ctrl) else float('nan'):.2%}\")"),
+    code("from mecade.config import load_campaign\n"
+         "v = false_block_verdict(m, load_campaign()['analysis']['false_block_max_rate'])\n"
+         "print(f\"Controles: {v['controles']} | BLOCK acionado em {v['blocks']} => taxa de falsos bloqueios = {v['taxa']:.2%}\")\n"
+         "print(f\"Critério: taxa <= {v['limiar']:.0%} (no máximo 1 em 10) ->\", v['aceito'])"),
     md("## 5. Overhead da auditoria (Camada 6, perfil mínimo)\n\n"
        "Δ_audit no caminho de decisão é o p95 do custo de enfileirar o evento. Δcpu compara a CPU do controlador nos controles com auditoria ligada e desligada."),
     code("aud = m[m['arm']=='mecade'].groupby('audit')[['audit_p95_ms','controller_cpu_s']].median()\n"

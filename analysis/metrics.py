@@ -124,6 +124,15 @@ def run_metrics(meta: dict, df: pd.DataFrame) -> dict:
     }
 
 
+def false_block_verdict(m: pd.DataFrame, max_rate: float) -> dict:
+    """H1, falsos bloqueios: BLOCK nos controles contra o limiar `analysis.false_block_max_rate` de config/campaign.yaml
+    (1/10, decisão de 2026-11-11). Passa quando a taxa não excede o limiar."""
+    ctrl = m[m["pair"].astype(str) == ""]
+    n, blocks = len(ctrl), int(ctrl["block"].sum()) if len(ctrl) else 0
+    return {"controles": n, "blocks": blocks, "taxa": blocks / n if n else float("nan"),
+            "limiar": max_rate, "aceito": bool(n and blocks <= max_rate * n + 1e-9)}
+
+
 def audit_overhead(m: pd.DataFrame) -> dict:
     """Tabela 4.6, H3: Δ_audit,p95 e Δcpu nos controles, com a auditoria ligada contra desligada."""
     ctrl = m[m["pair"].astype(str) == ""]

@@ -16,6 +16,9 @@ replicas:
   per_cell: 10                 # réplicas por (cenário, braço)
   control: 10                  # réplicas de controle sem injeção (taxa de falsos bloqueios)
 
+analysis:
+  false_block_max_rate: 0.1    # H1: no máximo 1 BLOCK em 10 controles (decisão de 2026-11-11, docs/PROTOCOLO.md Seção 8)
+
 scenarios:                     # arquivos em scenarios/
   - s1_latencia_productcatalog
   - s2_gray_currency

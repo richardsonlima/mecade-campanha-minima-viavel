@@ -59,7 +59,7 @@ As definições exatas estão em `analysis/metrics.py`.
 | área | soma de D_agr·Δt durante o incidente (`area_incidente`) | H1, detecção e estabilidade da latência |
 | variabilidade de P95/P99 | desvio-padrão de cada sinal durante o incidente (`p95_std`, `p99_std`; ver Seção 8) | H1, detecção e estabilidade da latência |
 | RRIndex_run | 1/(1 + V̄), com V igual à média dos D_m² | H2, convergência |
-| falsos bloqueios | fração dos controles em que houve BLOCK, abaixo do limiar da Seção 8 | H1, falsos bloqueios |
+| falsos bloqueios | fração dos controles em que houve BLOCK, no máximo 1 em 10 (Seção 8) | H1, falsos bloqueios |
 | Δ_audit,p95 | p95 do custo de enfileirar o evento, até 5 ms, nos controles com auditoria | H3, overhead |
 | Δcpu | CPU do controlador nos controles com auditoria contra sem auditoria, até 8% | H3, overhead |
 | TSR no incidente | 1 menos a taxa média de erro entre 0 e 600 s | só descritivo |
@@ -77,7 +77,10 @@ Dois rótulos diferentes para réplicas com problema:
 - **`falha_execucao`:** réplica que falhou 3 vezes na execução e não tem dados. O par dela sai da
   comparação pareada e é relatado.
 
-As duas contam para o limite de 10%: passando disso, a campanha para e eu decido o que fazer. Uma
+Limite de 10% de réplicas perdidas (minha decisão, 2026-11-11): contam as `falha_execucao` de qualquer
+braço e as `censurada` do braço MECADE. As `censurada` do baseline não contam no limite, mas continuam
+relatadas (log de parada, `desvios_execucao.jsonl` e análise). Passando do limite, a campanha para e eu
+decido o que fazer. Uma
 réplica refeita sai da ordem sorteada, e isso é um desvio, registrado em `desvios_execucao.jsonl`,
 no `CHANGELOG.md` e em `CAMPANHA_STATUS.md`.
 
@@ -128,6 +131,7 @@ Precisam estar registradas aqui, em commit anterior à primeira réplica oficial
 
 | Item | Situação |
 |---|---|
-| Limiar de falsos bloqueios (Tabela 4.6) | pendente, decisão minha |
-| TTD como critério de aceitação ou métrica descritiva | pendente; até a resposta vale a Tabela 4.6, que o inclui |
+| Limiar de falsos bloqueios (H1, Tabela 4.6) | decidido em 2026-11-11: no máximo 1 BLOCK em 10 réplicas de controle (`analysis.false_block_max_rate: 0.1` em `config/campaign.yaml`) |
+| TTD como critério de aceitação ou métrica descritiva | decidido em 2026-11-11: critério de aceitação, vale a Tabela 4.6 da v0.8 |
+| Limite de réplicas perdidas | decidido em 2026-11-11: 10%, contando `falha_execucao` de qualquer braço e `censurada` do MECADE; `censurada` do baseline é só relatada (Seção 4) |
 | Medida da variabilidade de P95/P99 | a v0.8 não define. O código usa o desvio-padrão durante o incidente, a confirmar |
