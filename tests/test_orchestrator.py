@@ -171,9 +171,62 @@ def test_censurada_conta_para_o_limite(tmp_path, monkeypatch):
     (out / plan[0]["run_id"] / "meta.json").write_text(json.dumps({"status": "falha_execucao"}))
     monkeypatch.setattr("orchestrator.run_campaign.load_runs",
                         lambda *a, **k: [({"run_id": plan[1]["run_id"]}, None), ({"run_id": "de-outro-plano"}, None)])
-    monkeypatch.setattr("orchestrator.run_campaign.metrics_table", lambda runs: pd.DataFrame({"censurada": [True] * len(runs)}))
+    monkeypatch.setattr("orchestrator.run_campaign.metrics_table",
+                        lambda runs: pd.DataFrame({"censurada": [True] * len(runs), "arm": ["mecade"] * len(runs)}))
     c = count_lost(plan, out)
     assert (c["falha_execucao"], c["censurada"], c["total"], c["plano"]) == (1, 1, 2, 4)
+
+
+def _perdas(tmp_path, monkeypatch, n, status=(), censuradas=()):
+    """Plano de n réplicas. status: run_ids em falha_execucao. censuradas: [(índice, braço)] com censurada=True."""
+    import pandas as pd
+    out, plan = tmp_path / "runs", _plan(n)
+    for i in status:
+        (out / plan[i]["run_id"]).mkdir(parents=True)
+        (out / plan[i]["run_id"] / "meta.json").write_text(json.dumps({"status": "falha_execucao"}))
+    runs = [({"run_id": plan[i]["run_id"]}, None) for i, _ in censuradas]
+    monkeypatch.setattr("orchestrator.run_campaign.load_runs", lambda *a, **k: runs)
+    monkeypatch.setattr("orchestrator.run_campaign.metrics_table", lambda r: pd.DataFrame(
+        {"censurada": [True] * len(r), "arm": [a for _, a in censuradas]}))
+    return plan, out
+
+
+def test_censurada_do_baseline_nao_conta_mas_e_relatada(tmp_path, monkeypatch):
+    from orchestrator.run_campaign import count_lost
+    plan, out = _perdas(tmp_path, monkeypatch, 10, censuradas=[(0, "baseline"), (1, "baseline"), (2, "baseline")])
+    c = count_lost(plan, out)
+    assert (c["total"], c["censurada"], c["censurada_baseline"]) == (0, 0, 3)
+
+
+def test_censurada_do_mecade_conta(tmp_path, monkeypatch):
+    from orchestrator.run_campaign import count_lost
+    plan, out = _perdas(tmp_path, monkeypatch, 10, censuradas=[(0, "mecade"), (1, "baseline")])
+    c = count_lost(plan, out)
+    assert (c["total"], c["censurada"], c["censurada_baseline"]) == (1, 1, 1)
+
+
+def test_falha_execucao_conta_nos_dois_bracos(tmp_path, monkeypatch):
+    from orchestrator.run_campaign import count_lost
+    plan, out = _perdas(tmp_path, monkeypatch, 10, status=[0, 1])
+    plan[0]["arm"], plan[1]["arm"] = "mecade", "baseline"
+    assert count_lost(plan, out)["falha_execucao"] == 2
+
+
+def test_limiar_de_10_por_cento_com_censuradas_dos_dois_bracos(tmp_path, monkeypatch):
+    out_dir = tmp_path
+    # 10 réplicas, 5 censuradas do baseline: não dispara
+    plan, out = _perdas(out_dir, monkeypatch, 10, censuradas=[(i, "baseline") for i in range(5)])
+    assert execute_plan(plan, out_root=out, execute=Fake().execute, clean=lambda: None, log=lambda *_: None,
+                        settle_s=0, sleep=lambda _: None, check_lost=True) == EXIT_OK
+    assert any(d["tipo"] == "censuradas_baseline_fora_do_limite" and d["total"] == 5 for d in _desvios(out))
+    # 10 réplicas, 2 censuradas do MECADE: 2 > 1 dispara na retomada
+    plan, out = _perdas(tmp_path / "b", monkeypatch, 10, censuradas=[(0, "mecade"), (1, "mecade")])
+    assert execute_plan(plan, out_root=out, execute=Fake().execute, clean=lambda: None, log=lambda *_: None,
+                        settle_s=0, sleep=lambda _: None, check_lost=True) == EXIT_LIMITE
+    # 1 censurada do MECADE em 10: exatamente 10%, não dispara
+    plan, out = _perdas(tmp_path / "c", monkeypatch, 10, censuradas=[(0, "mecade")])
+    assert execute_plan(plan, out_root=out, execute=Fake().execute, clean=lambda: None, log=lambda *_: None,
+                        settle_s=0, sleep=lambda _: None, check_lost=True) == EXIT_OK
 
 
 def test_controle_nunca_e_censurado_e_replica_sem_deteccao_e():

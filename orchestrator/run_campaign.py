@@ -99,13 +99,20 @@ def archive_partial_audit(out_root: Path, run_id: str, tentativa: int) -> Path |
 
 
 def count_lost(plan: list[dict], out_root: Path) -> dict:
-    """Réplicas perdidas para o limite de 10%: `falha_execucao` mais `censurada`, nas réplicas com falha
-    injetada. Só olho o agregado, para decidir a parada; isso não alimenta nenhum parâmetro."""
+    """Réplicas perdidas para o limite de 10% (decisão de 2026-11-11): `falha_execucao` de qualquer braço mais
+    `censurada` do braço MECADE. A `censurada` do baseline não entra no total, mas volta em `censurada_baseline`
+    para ser relatada. Só olho o agregado, para decidir a parada; isso não alimenta nenhum parâmetro."""
     ids = {r["run_id"] for r in plan}
     falhas = sum(1 for r in plan if read_status(out_root / r["run_id"]) == "falha_execucao")
     runs = [(m, df) for m, df in load_runs(out_root, include_sim=True) if m["run_id"] in ids]
-    censuradas = int(metrics_table(runs)["censurada"].sum()) if runs else 0
-    return {"falha_execucao": falhas, "censurada": censuradas, "total": falhas + censuradas, "plano": len(plan)}
+    cens_mecade = cens_baseline = 0
+    if runs:
+        tabela = metrics_table(runs)
+        cens = tabela[tabela["censurada"].astype(bool)]
+        cens_mecade = int((cens["arm"] == "mecade").sum())
+        cens_baseline = int((cens["arm"] == "baseline").sum())
+    return {"falha_execucao": falhas, "censurada": cens_mecade, "censurada_baseline": cens_baseline,
+            "total": falhas + cens_mecade, "plano": len(plan)}
 
 
 def execute_plan(plan: list[dict], *, out_root: Path, execute: Callable[[dict], dict],
@@ -119,13 +126,19 @@ def execute_plan(plan: list[dict], *, out_root: Path, execute: Callable[[dict], 
         _append_jsonl(desvios, {"quando": _agora(), "run_id": run_id, "tipo": tipo, **extra})
         log(f"[{run_id}] DESVIO {tipo} {extra if extra else ''}")
 
+    relatadas = [0]  # censuradas do baseline já registradas como desvio
+
     def perdeu_demais() -> bool:
         if not check_lost:
             return False
         c = count_lost(plan, out_root)
+        if c["censurada_baseline"] > relatadas[0]:  # fora do limite, mas relatada
+            relatadas[0] = c["censurada_baseline"]
+            desvio("", "censuradas_baseline_fora_do_limite", total=c["censurada_baseline"])
         if c["total"] > LIMITE_PERDIDAS * c["plano"]:
             log(f"PARADA: {c['total']} de {c['plano']} réplicas perdidas ({c['falha_execucao']} falha_execucao, "
-                f"{c['censurada']} censuradas), acima do limite de {LIMITE_PERDIDAS:.0%}.")
+                f"{c['censurada']} censuradas do MECADE; {c['censurada_baseline']} censuradas do baseline não contam), "
+                f"acima do limite de {LIMITE_PERDIDAS:.0%}.")
             return True
         return False
 
