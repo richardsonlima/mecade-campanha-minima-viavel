@@ -172,7 +172,7 @@ def test_censurada_conta_para_o_limite(tmp_path, monkeypatch):
     monkeypatch.setattr("orchestrator.run_campaign.load_runs",
                         lambda *a, **k: [({"run_id": plan[1]["run_id"]}, None), ({"run_id": "de-outro-plano"}, None)])
     monkeypatch.setattr("orchestrator.run_campaign.metrics_table",
-                        lambda runs: pd.DataFrame({"censurada": [True] * len(runs), "arm": ["mecade"] * len(runs)}))
+                        lambda runs: pd.DataFrame({"censurada": [True] * len(runs), "run_id": [m["run_id"] for m, _ in runs]}))
     c = count_lost(plan, out)
     assert (c["falha_execucao"], c["censurada"], c["total"], c["plano"]) == (1, 1, 2, 4)
 
@@ -186,8 +186,10 @@ def _perdas(tmp_path, monkeypatch, n, status=(), censuradas=()):
         (out / plan[i]["run_id"] / "meta.json").write_text(json.dumps({"status": "falha_execucao"}))
     runs = [({"run_id": plan[i]["run_id"]}, None) for i, _ in censuradas]
     monkeypatch.setattr("orchestrator.run_campaign.load_runs", lambda *a, **k: runs)
+    for i, a in censuradas:
+        plan[i]["arm"] = a
     monkeypatch.setattr("orchestrator.run_campaign.metrics_table", lambda r: pd.DataFrame(
-        {"censurada": [True] * len(r), "arm": [a for _, a in censuradas]}))
+        {"censurada": [True] * len(r), "run_id": [m["run_id"] for m, _ in r]}))
     return plan, out
 
 
@@ -444,3 +446,25 @@ def test_falha_execucao_fica_fora_da_analise_e_derruba_o_par(tmp_path):
     assert len(m) == 3
     assert paired_comparison(m, "TTR_capped").iloc[0]["n_pairs"] == 1
     assert [f["run_id"] for f in execution_failures(out)] == [plan[0]["run_id"]]
+
+
+def _executa(plan, out, log=lambda *_: None):
+    return execute_plan(plan, out_root=out, execute=Fake().execute, clean=lambda: None, log=log,
+                        settle_s=0, sleep=lambda _: None, check_lost=True)
+
+
+def test_desvio_de_censurada_do_baseline_nao_repete_na_retomada(tmp_path, monkeypatch):
+    plan, out = _perdas(tmp_path, monkeypatch, 10, censuradas=[(i, "baseline") for i in range(3)])
+    assert _executa(plan, out) == EXIT_OK
+    assert _executa(plan, out) == EXIT_OK
+    assert len([d for d in _desvios(out) if d["tipo"] == "censuradas_baseline_fora_do_limite"]) == 1
+
+
+def test_arm_desconhecido_conta_como_mecade_e_avisa(tmp_path, monkeypatch):
+    from orchestrator.run_campaign import count_lost
+    plan, out = _perdas(tmp_path, monkeypatch, 10, censuradas=[(0, "xpto"), (1, "xpto")])
+    c = count_lost(plan, out)
+    assert (c["censurada"], c["censurada_baseline"], len(c["arm_desconhecido"])) == (2, 0, 2)
+    logs = []
+    assert _executa(plan, out, logs.append) == EXIT_LIMITE
+    assert any("AVISO" in x and "xpto" in x for x in logs)

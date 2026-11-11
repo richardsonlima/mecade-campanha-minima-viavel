@@ -49,11 +49,14 @@ def _append_jsonl(path: Path, obj: dict) -> None:
         fh.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
 
-def read_attempts(run_dir: Path) -> list[dict]:
-    p = run_dir / "tentativas.jsonl"
+def _read_jsonl(p: Path) -> list[dict]:
     if not p.exists():
         return []
     return [json.loads(line) for line in p.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def read_attempts(run_dir: Path) -> list[dict]:
+    return _read_jsonl(run_dir / "tentativas.jsonl")
 
 
 def count_failures(entries: list[dict]) -> int:
@@ -103,16 +106,23 @@ def count_lost(plan: list[dict], out_root: Path) -> dict:
     `censurada` do braço MECADE. A `censurada` do baseline não entra no total, mas volta em `censurada_baseline`
     para ser relatada. Só olho o agregado, para decidir a parada; isso não alimenta nenhum parâmetro."""
     ids = {r["run_id"] for r in plan}
+    arm_do_plano = {r["run_id"]: r.get("arm") for r in plan}
     falhas = sum(1 for r in plan if read_status(out_root / r["run_id"]) == "falha_execucao")
     runs = [(m, df) for m, df in load_runs(out_root, include_sim=True) if m["run_id"] in ids]
     cens_mecade = cens_baseline = 0
+    desconhecidos: list[str] = []
     if runs:
         tabela = metrics_table(runs)
-        cens = tabela[tabela["censurada"].astype(bool)]
-        cens_mecade = int((cens["arm"] == "mecade").sum())
-        cens_baseline = int((cens["arm"] == "baseline").sum())
+        for _, linha in tabela[tabela["censurada"].astype(bool)].iterrows():
+            arm = arm_do_plano.get(linha["run_id"])
+            if arm == "baseline":
+                cens_baseline += 1
+            else:  # posição conservadora: o que não é exatamente "baseline" conta como MECADE
+                cens_mecade += 1
+                if arm != "mecade":
+                    desconhecidos.append(f"{linha['run_id']}={arm!r}")
     return {"falha_execucao": falhas, "censurada": cens_mecade, "censurada_baseline": cens_baseline,
-            "total": falhas + cens_mecade, "plano": len(plan)}
+            "total": falhas + cens_mecade, "plano": len(plan), "arm_desconhecido": desconhecidos}
 
 
 def execute_plan(plan: list[dict], *, out_root: Path, execute: Callable[[dict], dict],
@@ -126,16 +136,19 @@ def execute_plan(plan: list[dict], *, out_root: Path, execute: Callable[[dict], 
         _append_jsonl(desvios, {"quando": _agora(), "run_id": run_id, "tipo": tipo, **extra})
         log(f"[{run_id}] DESVIO {tipo} {extra if extra else ''}")
 
-    relatadas = [0]  # censuradas do baseline já registradas como desvio
+    def ultimo_total_baseline() -> int:
+        regs = [e for e in _read_jsonl(desvios) if e.get("tipo") == "censuradas_baseline_fora_do_limite"]
+        return regs[-1]["total"] if regs else 0
 
     def perdeu_demais() -> bool:
         if not check_lost:
             return False
         c = count_lost(plan, out_root)
-        if c["censurada_baseline"] > relatadas[0]:  # fora do limite, mas relatada
-            relatadas[0] = c["censurada_baseline"]
+        if c["arm_desconhecido"]:
+            log(f"AVISO: braço desconhecido no plano, contado como MECADE no limite: {c['arm_desconhecido']}")
+        if c["censurada_baseline"] != ultimo_total_baseline():  # fora do limite, mas relatada, uma vez por mudança
             desvio("", "censuradas_baseline_fora_do_limite", total=c["censurada_baseline"])
-        if c["total"] > LIMITE_PERDIDAS * c["plano"]:
+        if c["total"] * 10 > c["plano"]:  # 10% em aritmética inteira (LIMITE_PERDIDAS = 0.10)
             log(f"PARADA: {c['total']} de {c['plano']} réplicas perdidas ({c['falha_execucao']} falha_execucao, "
                 f"{c['censurada']} censuradas do MECADE; {c['censurada_baseline']} censuradas do baseline não contam), "
                 f"acima do limite de {LIMITE_PERDIDAS:.0%}.")
