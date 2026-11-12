@@ -90,11 +90,20 @@ notebook: ## regenera analysis/analysis.ipynb (sem saídas)
 analyze: ## executa o notebook sobre data/runs
 	$(PY) analysis/run_notebook.py
 
-verify-audit: ## verifica a integridade de todas as trilhas de auditoria
-	@for f in data/audit/*.jsonl; do echo -n "$$f: "; $(PY) -m mecade.cli verify-audit $$f; done
+AUDIT_DIR ?= data/audit
+verify-audit: ## verifica a integridade de todas as trilhas de auditoria (falha se qualquer uma falhar)
+	@shopt -s nullglob; n=0; falhas=0; \
+	for f in $(AUDIT_DIR)/*.jsonl; do n=$$((n+1)); echo -n "$$f: "; $(PY) -m mecade.cli verify-audit "$$f" || falhas=$$((falhas+1)); done; \
+	echo "$$n trilhas verificadas, $$falhas com falha"; test $$falhas -eq 0
+
+evidencias: ## gera data/EVIDENCIAS_MANIFESTO.json (commit, tag, plano, SHA-256 dos dados, verify-audit, versões)
+	$(PY) -m analysis.evidencias gerar
+
+verificar-evidencias: ## recalcula os hashes de uma cópia e compara com o manifesto (RAIZ=<cópia> MANIFESTO=<arquivo>)
+	$(PY) -m analysis.evidencias verificar $(if $(RAIZ),--raiz $(RAIZ)) $(if $(MANIFESTO),--manifesto $(MANIFESTO))
 
 clean-chaos: ## remove qualquer injeção ativa (uso em emergência)
 	kubectl -n $(NAMESPACE_TARGET) delete schedules.chaos-mesh.org,networkchaos.chaos-mesh.org,podchaos.chaos-mesh.org --all
 
 
-.PHONY: plan-calibracao run-calibracao calibrar analyze help venv test kind-up kind-down gke-create gke-up gke-down controller-vm port-forward-loop install port-forward smoke plan plan-contingency pilot run sim notebook verify-audit clean-chaos
+.PHONY: plan-calibracao run-calibracao calibrar analyze help venv test kind-up kind-down gke-create gke-up gke-down controller-vm port-forward-loop install port-forward smoke plan plan-contingency pilot run sim notebook verify-audit evidencias verificar-evidencias clean-chaos
