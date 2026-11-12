@@ -259,7 +259,8 @@ def _repair_incomplete_meta(row: dict, run_dir: Path) -> bool:
 
 
 def _mark_execution_failure(row: dict, run_dir: Path, entries: list[dict]) -> None:
-    meta = {"run_id": row["run_id"], "status": "falha_execucao", "scenario": row["scenario"], "arm": row["arm"],
+    meta = {"run_id": row["run_id"], "status": "falha_execucao", "campaign_id": load_campaign().get("campaign_id"),
+            "scenario": row["scenario"], "arm": row["arm"],
             "pair": row["pair"], "rep": int(row["rep"]), "order": int(row["order"]), "tentativas": entries}
     (run_dir / "meta.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
 
