@@ -441,7 +441,8 @@ def test_falha_execucao_fica_fora_da_analise_e_derruba_o_par(tmp_path):
                        kube=world, clock=clock, out_root=out, sim_world=world, log=lambda *_: None)
 
     assert execute_plan(plan, out_root=out, execute=execute, clean=lambda: None, log=lambda *_: None, settle_s=0,
-                        sleep=lambda _: None, check_lost=False) == EXIT_OK
+                        sleep=lambda _: None, check_lost=False,
+                        campaign_id=camp["campaign_id"]) == EXIT_OK
     m = metrics_table(load_runs(out, include_sim=True))
     assert len(m) == 3
     assert paired_comparison(m, "TTR_capped").iloc[0]["n_pairs"] == 1

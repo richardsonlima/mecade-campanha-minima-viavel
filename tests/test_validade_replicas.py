@@ -117,7 +117,8 @@ def test_execution_failures_filtra_pelo_campaign_id_oficial(tmp_path):
     _fake(tmp_path, "cal1_falha", status="falha_execucao", campaign_id=CID)
     _fake(tmp_path, "falha_sim", status="falha_execucao", campaign_id=CID, backend="sim")
     _fake(tmp_path, "completa", campaign_id=CID)
-    assert [f["run_id"] for f in execution_failures(tmp_path, campaign_id=CID)] == ["falha_ok"]
+    with pytest.warns(UserWarning, match="falha_sem_id.*sem campaign_id"):
+        assert [f["run_id"] for f in execution_failures(tmp_path, campaign_id=CID)] == ["falha_ok"]
 
 
 def test_paired_comparison_tolera_braco_orfao_de_par_excluido():

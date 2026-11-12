@@ -128,7 +128,7 @@ def count_lost(plan: list[dict], out_root: Path) -> dict:
 def execute_plan(plan: list[dict], *, out_root: Path, execute: Callable[[dict], dict],
                  clean: Callable[[], None], log: Callable[[str], None], limit: int = 0,
                  settle_s: float = ESPERA_APOS_FALHA_S, sleep: Callable[[float], None] = time.sleep,
-                 check_lost: bool = True) -> int:
+                 check_lost: bool = True, campaign_id: str | None = None) -> int:
     """Percorre o plano em passadas até toda réplica chegar a um estado final. Devolve o código de saída."""
     desvios = out_root.parent / "desvios_execucao.jsonl"
 
@@ -173,7 +173,7 @@ def execute_plan(plan: list[dict], *, out_root: Path, execute: Callable[[dict], 
             if count_failures(entries) >= MAX_FALHAS:
                 # acontece quando a terceira tentativa morreu com o processo
                 archive_partial_audit(out_root, run_id, max(e["tentativa"] for e in entries) + 1)
-                _mark_execution_failure(row, run_dir, entries)
+                _mark_execution_failure(row, run_dir, entries, campaign_id)
                 desvio(run_id, "falha_execucao", par=row["pair"])
                 if perdeu_demais():
                     return EXIT_LIMITE
@@ -220,7 +220,7 @@ def execute_plan(plan: list[dict], *, out_root: Path, execute: Callable[[dict], 
                 entries = read_attempts(run_dir)
                 if count_failures(entries) >= MAX_FALHAS:
                     archive_partial_audit(out_root, run_id, tentativa + 1)
-                    _mark_execution_failure(row, run_dir, entries)
+                    _mark_execution_failure(row, run_dir, entries, campaign_id)
                     desvio(run_id, "falha_execucao", par=row["pair"])
                     if perdeu_demais():
                         return EXIT_LIMITE
@@ -258,8 +258,8 @@ def _repair_incomplete_meta(row: dict, run_dir: Path) -> bool:
     return True
 
 
-def _mark_execution_failure(row: dict, run_dir: Path, entries: list[dict]) -> None:
-    meta = {"run_id": row["run_id"], "status": "falha_execucao", "campaign_id": load_campaign().get("campaign_id"),
+def _mark_execution_failure(row: dict, run_dir: Path, entries: list[dict], campaign_id: str | None) -> None:
+    meta = {"run_id": row["run_id"], "status": "falha_execucao", "campaign_id": campaign_id,
             "scenario": row["scenario"], "arm": row["arm"],
             "pair": row["pair"], "rep": int(row["rep"]), "order": int(row["order"]), "tentativas": entries}
     (run_dir / "meta.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -337,7 +337,8 @@ def main() -> None:
         _append_jsonl(out_root.parent / "desvios_execucao.jsonl",
                       {"quando": _agora(), "run_id": "", "tipo": "limite_de_perdidas_desligado"})
     sys.exit(execute_plan(plan, out_root=out_root, execute=execute, clean=clean, log=log, limit=a.limit,
-                          settle_s=0 if a.backend == "sim" else a.settle, check_lost=oficial and not a.sem_limite_perdidas))
+                          settle_s=0 if a.backend == "sim" else a.settle, check_lost=oficial and not a.sem_limite_perdidas,
+                          campaign_id=camp.get("campaign_id")))
 
 
 if __name__ == "__main__":

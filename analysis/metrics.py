@@ -96,6 +96,9 @@ def execution_failures(root: str | Path, campaign_id: str | None = None, config_
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
         if meta.get("status") != "falha_execucao":
             continue
+        if "campaign_id" not in meta:
+            warnings.warn(f"{meta_path.parent.name}: falha_execucao sem campaign_id, excluída da análise oficial", stacklevel=2)
+            continue
         if meta.get("campaign_id") != campaign_id or meta.get("backend") == "sim" or meta.get("plano") in ("sim", "calibracao") \
                 or str(meta.get("run_id", "")).startswith("cal"):
             continue

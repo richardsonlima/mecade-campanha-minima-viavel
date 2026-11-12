@@ -18,6 +18,7 @@ Regras:
 from __future__ import annotations
 
 import math
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -83,6 +84,7 @@ def cenarios_planejados(plano_csv: str | Path | None, cenarios_config: list[str]
         import csv
         with open(plano_csv, encoding="utf-8") as fh:
             return sorted({r["scenario"] for r in csv.DictReader(fh) if r["scenario"] != controle})
+    warnings.warn(f"plano oficial ausente ({plano_csv}); uso os cenários de `scenarios` do config como planejados", stacklevel=2)
     return sorted(cenarios_config)
 
 

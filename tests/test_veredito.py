@@ -1,10 +1,13 @@
 """Regra de veredito (D1, 2026-11-12) com dados sintéticos. Nada aqui é evidência da campanha."""
+import warnings
+
 import numpy as np
 import pandas as pd
+import pytest
 
 from analysis.veredito import (adicionar_holm, avaliar_componente, holm, resolver_limiares, veredito_criterios,
                                veredito_hipoteses)
-from mecade.config import load_campaign
+from mecade.config import ROOT as ROOT_REPO, load_campaign
 
 MENOR = {"metrica": "x", "favoravel": "menor"}
 MAIOR = {"metrica": "x", "favoravel": "maior"}
@@ -184,4 +187,21 @@ def test_cenarios_planejados_do_plano_ou_do_config(tmp_path):
     plano = tmp_path / "plan.csv"
     plano.write_text("order,run_id,scenario,arm,rep,pair,audit\n1,a,c0_controle,mecade,1,,0\n2,b,s2,baseline,1,s2#1,1\n3,c,s3,mecade,1,s3#1,1\n")
     assert cenarios_planejados(plano, ["s1", "s2", "s3"]) == ["s2", "s3"]      # contingência
-    assert cenarios_planejados(tmp_path / "nao_existe.csv", ["s3", "s1"]) == ["s1", "s3"]
+    with pytest.warns(UserWarning, match="plano oficial ausente"):
+        assert cenarios_planejados(tmp_path / "nao_existe.csv", ["s3", "s1"]) == ["s1", "s3"]
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")   # com plano, nenhum aviso
+        cenarios_planejados(plano, ["s1"])
+
+
+def test_estrito_so_liga_com_estrito_igual_a_1():
+    import shutil
+    import subprocess
+    if shutil.which("make") is None:
+        pytest.skip("sem make")
+    def cmd(valor):
+        args = ["make", "-n", "evidencias"] + ([f"ESTRITO={valor}"] if valor is not None else [])
+        return subprocess.run(args, capture_output=True, text=True, check=True, cwd=ROOT_REPO).stdout
+    assert "--estrito" in cmd("1")
+    assert "--estrito" not in cmd("0")
+    assert "--estrito" not in cmd(None)
