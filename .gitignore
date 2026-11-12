@@ -21,3 +21,6 @@ data/sim/*
 application_default_credentials.json
 kubeconfig
 .kube/
+
+# cópia local dos dados da nuvem; os dados versionados ficam em data/
+backup_nuvem/
