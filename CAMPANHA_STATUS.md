@@ -122,4 +122,4 @@ Rodada 1 de 01:07 a 05:11 UTC: 9 réplicas `complete`, sem falha e sem desvio de
 - Área do desvio: segui a v0.8 (`area_incidente`, durante o incidente) e mantive `area` como descritiva.
 - Cluster e VM ligados, gastando crédito. Ao fim do lote, `make gke-down`.
 - Alerta de orçamento: não consegui confirmar.
-- Nenhum desvio de protocolo em réplica, porque nenhuma oficial rodou.
+- Até 12/11 09:28 UTC, nenhum desvio de protocolo registrado nas execuções oficiais (8 de 70 concluídas, 0 falhas).
