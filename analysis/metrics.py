@@ -22,6 +22,7 @@ As definições batem com a Seção 4 de docs/PROTOCOLO.md. Todos os tempos cont
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -40,6 +41,44 @@ def load_runs(root: str | Path, include_sim: bool = False) -> list[tuple[dict, p
         df = pd.read_csv(meta_path.parent / "steps.csv")
         runs.append((meta, df))
     return runs
+
+
+def _motivo_exclusao(meta: dict, campaign_id: str) -> str | None:
+    if meta.get("status") != "complete":
+        return f"status={meta.get('status')!r}"
+    if "campaign_id" not in meta:
+        return "sem campaign_id (réplica antiga)"
+    if meta["campaign_id"] != campaign_id:
+        return f"campaign_id={meta['campaign_id']!r}, esperado {campaign_id!r}"
+    if meta.get("backend") == "sim" or meta.get("plano") == "sim":
+        return "simulação"
+    if meta.get("plano") == "calibracao" or meta.get("etapa") == "calibracao":
+        return "calibração"
+    if meta.get("plano") not in (None, "oficial"):
+        return f"plano={meta.get('plano')!r}"
+    return None
+
+
+def load_official_runs(root: str | Path, campaign_id: str | None = None,
+                       config_path: str | Path | None = None) -> tuple[list[tuple[dict, pd.DataFrame]], list[dict]]:
+    """Réplicas aceitas na análise oficial e a lista das excluídas, cada uma com o motivo. Aceito só `complete`
+    com `campaign_id` igual ao do config, fora de simulação e calibração. Réplica sem `campaign_id` sai com aviso.
+    Não mexo em `load_runs`, que o orquestrador usa com include_sim=True."""
+    if campaign_id is None:
+        import yaml
+        cfg = Path(config_path) if config_path else Path(__file__).resolve().parent.parent / "config" / "campaign.yaml"
+        campaign_id = yaml.safe_load(cfg.read_text(encoding="utf-8"))["campaign_id"]
+    runs, excluidas = [], []
+    for meta_path in sorted(Path(root).glob("*/meta.json")):
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        motivo = _motivo_exclusao(meta, campaign_id)
+        if motivo:
+            excluidas.append({"run_id": meta.get("run_id", meta_path.parent.name), "motivo": motivo})
+            if meta.get("status") == "complete" and "campaign_id" not in meta:
+                warnings.warn(f"{meta_path.parent.name}: sem campaign_id, excluída da análise oficial", stacklevel=2)
+            continue
+        runs.append((meta, pd.read_csv(meta_path.parent / "steps.csv")))
+    return runs, excluidas
 
 
 def execution_failures(root: str | Path) -> list[dict]:

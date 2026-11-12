@@ -17,11 +17,15 @@ nb.cells = [
          "ROOT = pathlib.Path.cwd().parent if pathlib.Path.cwd().name == 'analysis' else pathlib.Path.cwd()\n"
          "sys.path.insert(0, str(ROOT))\n"
          "import pandas as pd, numpy as np, matplotlib.pyplot as plt\n"
-         "from analysis.metrics import audit_overhead, execution_failures, false_block_verdict, load_runs, metrics_table, paired_comparison\n"
+         "from analysis.metrics import audit_overhead, execution_failures, false_block_verdict, load_official_runs, load_runs, metrics_table, paired_comparison\n"
          "DATA_ROOT = ROOT / 'data' / 'runs'\n"
          "INCLUDE_SIM = False\n"
          "FIG = ROOT / 'analysis' / 'figures'; FIG.mkdir(parents=True, exist_ok=True)\n"
-         "runs = load_runs(DATA_ROOT, include_sim=INCLUDE_SIM)\n"
+         "if INCLUDE_SIM:\n"
+         "    runs, excluidas = load_runs(DATA_ROOT, include_sim=True), []\n"
+         "else:  # análise oficial: só campaign_id do config, sem sim nem calibração\n"
+         "    runs, excluidas = load_official_runs(DATA_ROOT)\n"
+         "print(len(excluidas), 'réplicas excluídas:', excluidas)\n"
          "m = metrics_table(runs)\n"
          "print(len(runs), 'réplicas carregadas'); m.head()"),
     md("## 1. Visão geral por cenário e braço"),
