@@ -147,3 +147,41 @@ def test_mapa_da_config_cobre_tabela_4_6():
     for s in mapa.values():
         for c in s["componentes"]:
             assert c.get("tipo") == "limiar" or c["favoravel"] in ("menor", "maior")
+
+
+def test_cenario_planejado_sem_pares_vira_sem_dados_e_impede_aceita():
+    # S1, S2 e S3 planejados; S3 não tem nenhum par válido, então não há linha dele na tabela
+    t = tab(*[(s, k, *BOM_M) for s in ("s1", "s2") for k in ("ma", "mb")], ("controle", "taxa", *[np.nan] * 4, 0.0))
+    sem = veredito_hipoteses(veredito_criterios(t, MAPA)).set_index("hipotese")
+    assert sem.loc["H1", "veredito"] == "ACEITA"                       # sem a lista, o S3 some
+    c = veredito_criterios(t, MAPA, cenarios=["s1", "s2", "s3"])
+    s3 = c[(c["criterio"] == "a") & (c["scenario"] == "s3")].iloc[0]
+    assert s3["status"] == "SEM_DADOS"
+    h = veredito_hipoteses(c).set_index("hipotese")
+    assert h.loc["H1", "veredito"] == "PARCIAL" and h.loc["H1", "sem_dados"] == 1
+    assert "controle" in set(c[c["criterio"] == "b"]["scenario"])      # critério de controle não ganha s1..s3
+
+
+def test_todos_os_cenarios_sem_dados_nao_vira_aceita():
+    t = tab(("controle", "taxa", *[np.nan] * 4, 0.0))
+    h = veredito_hipoteses(veredito_criterios(t, MAPA, cenarios=["s1", "s2"])).set_index("hipotese")
+    assert h.loc["H1", "veredito"] == "PARCIAL"                         # o controle atende, os cenários faltam
+    h2 = veredito_hipoteses(veredito_criterios(tab(), MAPA, cenarios=["s1"])).set_index("hipotese")
+    assert h2.loc["H1", "veredito"] == "SEM_DADOS"
+
+
+def test_hipotese_com_nao_atende_e_pendente_sai_pendente():
+    mapa = {"x": {"hipotese": "H2", "componentes": [{"metrica": "ma", "favoravel": "menor"}]},
+            "y": {"hipotese": "H2", "componentes": [{"metrica": "mp", "favoravel": "maior", "pendente": "motivo"}]}}
+    t = tab(("s1", "ma", *RUIM_M), ("s1", "mp", 0.2, 0.1, 0.3, 0.01, np.nan))
+    c = veredito_criterios(t, mapa)
+    assert set(c["status"]) == {"NAO_ATENDE", "PENDENTE"}
+    assert veredito_hipoteses(c).set_index("hipotese").loc["H2", "veredito"] == "PENDENTE"
+
+
+def test_cenarios_planejados_do_plano_ou_do_config(tmp_path):
+    from analysis.veredito import cenarios_planejados
+    plano = tmp_path / "plan.csv"
+    plano.write_text("order,run_id,scenario,arm,rep,pair,audit\n1,a,c0_controle,mecade,1,,0\n2,b,s2,baseline,1,s2#1,1\n3,c,s3,mecade,1,s3#1,1\n")
+    assert cenarios_planejados(plano, ["s1", "s2", "s3"]) == ["s2", "s3"]      # contingência
+    assert cenarios_planejados(tmp_path / "nao_existe.csv", ["s3", "s1"]) == ["s1", "s3"]

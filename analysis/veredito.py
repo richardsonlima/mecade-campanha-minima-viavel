@@ -8,9 +8,11 @@ Regras:
   componente   ATENDE quando a mediana está do lado favorável, o IC 95% não cruza zero e o limiar (se houver)
                é cumprido pela mediana. Componente `tipo: limiar` compara `valor` com o limiar.
   critério     por cenário: ATENDE se todas as componentes decisivas atendem; NAO_ATENDE se alguma falha;
-               PENDENTE se nenhuma falha mas há componente marcada `pendente` no mapa.
-  hipótese     ACEITA (tudo atende), PARCIAL (algumas atendem, outras não), NAO_ACEITA (nenhuma atende) e
-               PENDENTE (há PENDENTE e o resultado ainda poderia mudar). SEM_DADOS se não há linha nenhuma.
+               PENDENTE se nenhuma falha mas há componente marcada `pendente` no mapa; SEM_DADOS se o cenário
+               planejado não tem linha nenhuma (por exemplo, sem par válido). SEM_DADOS vale como não atendido.
+  hipótese     ACEITA (tudo atende), PARCIAL (algumas atendem, outras não ou sem dados), NAO_ACEITA (nenhuma
+               atende) e PENDENTE (há PENDENTE e nenhum ATENDE junto de falha, então o resultado ainda poderia
+               mudar; NAO_ATENDE misturado com PENDENTE, sem ATENDE, sai PENDENTE). SEM_DADOS se não há dado.
   Holm         análise secundária: exige também p ajustado < alpha nas componentes pareadas.
 """
 from __future__ import annotations
@@ -74,14 +76,35 @@ def avaliar_componente(linha: dict, comp: dict, alpha: float | None = None) -> t
     return True, "atende"
 
 
-def veredito_criterios(tabela: pd.DataFrame, mapa: dict, alpha_holm: float | None = None) -> pd.DataFrame:
-    """Uma linha por (critério, cenário): `status` ATENDE, NAO_ATENDE ou PENDENTE e o motivo por componente.
-    `mapa` é `analysis.veredito.criterios`. Só entram os cenários que aparecem na tabela para alguma componente do critério."""
+def cenarios_planejados(plano_csv: str | Path | None, cenarios_config: list[str], controle: str = "c0_controle") -> list[str]:
+    """Cenários com injeção que a campanha planejou: os do plano oficial (cobre o plano de contingência) ou, sem
+    plano, os de `scenarios` em config/campaign.yaml."""
+    if plano_csv and Path(plano_csv).is_file():
+        import csv
+        with open(plano_csv, encoding="utf-8") as fh:
+            return sorted({r["scenario"] for r in csv.DictReader(fh) if r["scenario"] != controle})
+    return sorted(cenarios_config)
+
+
+def veredito_criterios(tabela: pd.DataFrame, mapa: dict, alpha_holm: float | None = None,
+                       cenarios: list[str] | None = None) -> pd.DataFrame:
+    """Uma linha por (critério, cenário): `status` ATENDE, NAO_ATENDE, PENDENTE ou SEM_DADOS e o motivo por componente.
+    `mapa` é `analysis.veredito.criterios`. Entram os cenários que aparecem na tabela para alguma componente do
+    critério e, quando `cenarios` (os planejados) é dado, também os que faltam, como SEM_DADOS: a D1 exige todos os
+    cenários aplicáveis. Critério só de limiar (controles) usa o cenário `controle`."""
     linhas = []
     for crit, spec in mapa.items():
         comps = spec["componentes"]
         sub = tabela[tabela["metric"].isin([c["metrica"] for c in comps])]
-        for sc in sorted(sub["scenario"].unique()):
+        de_controle = all(c.get("tipo") == "limiar" for c in comps)
+        esperados = set(sub["scenario"].unique())
+        if cenarios is not None:
+            esperados |= {CONTROLE} if de_controle else set(cenarios)
+        for sc in sorted(esperados):
+            if sub[sub["scenario"] == sc].empty:
+                linhas.append({"hipotese": spec["hipotese"], "criterio": crit, "scenario": sc, "status": "SEM_DADOS",
+                               "falhas": "cenário planejado sem linha na tabela (sem par válido)", "pendentes": ""})
+                continue
             falhas, pend, ok_n = [], [], 0
             for c in comps:
                 if c.get("pendente"):
@@ -112,21 +135,22 @@ def veredito_hipoteses(crit: pd.DataFrame, hipoteses=("H1", "H2", "H3")) -> pd.D
     out = []
     for h in hipoteses:
         g = crit[crit["hipotese"] == h] if len(crit) else crit
-        n_ok, n_no, n_pe = (int((g["status"] == s).sum()) for s in ("ATENDE", "NAO_ATENDE", "PENDENTE")) if len(g) else (0, 0, 0)
-        if len(g) == 0:
+        n_ok, n_no, n_pe, n_sd = (int((g["status"] == s).sum()) for s in ("ATENDE", "NAO_ATENDE", "PENDENTE", "SEM_DADOS")) \
+            if len(g) else (0, 0, 0, 0)
+        falta = n_no + n_sd  # sem dados vale como não atendido
+        if n_ok == 0 and n_no == 0 and n_pe == 0:
             v = "SEM_DADOS"
-        elif n_no == 0 and n_pe == 0:
+        elif falta == 0 and n_pe == 0:
             v = "ACEITA"
-        elif n_ok > 0 and n_no > 0:
+        elif n_ok > 0 and falta > 0:
             v = "PARCIAL"
         elif n_pe > 0:
             v = "PENDENTE"
-        elif n_ok == 0:
+        else:
             v = "NAO_ACEITA"
-        else:  # pragma: no cover
-            v = "PARCIAL"
         det = "; ".join(f"{r.criterio}/{r.scenario}={r.status}" for r in g.itertuples())
-        out.append({"hipotese": h, "veredito": v, "atende": n_ok, "nao_atende": n_no, "pendente": n_pe, "detalhe": det})
+        out.append({"hipotese": h, "veredito": v, "atende": n_ok, "nao_atende": n_no, "pendente": n_pe,
+                    "sem_dados": n_sd, "detalhe": det})
     return pd.DataFrame(out)
 
 
@@ -174,10 +198,11 @@ def montar_tabela(m: pd.DataFrame, mapa: dict, false_block_max_rate: float) -> p
     return pd.concat([tab, extra], ignore_index=True)
 
 
-def resumo(m: pd.DataFrame, veredito_cfg: dict, analysis_cfg: dict):
-    """Tudo de uma vez: (tabela com Holm, critérios, hipóteses, critérios Holm, hipóteses Holm)."""
+def resumo(m: pd.DataFrame, veredito_cfg: dict, analysis_cfg: dict, cenarios: list[str] | None = None):
+    """Tudo de uma vez: (tabela com Holm, critérios, hipóteses, critérios Holm, hipóteses Holm). `cenarios` são os
+    planejados (`cenarios_planejados`); o que faltar na tabela vira SEM_DADOS."""
     mapa = resolver_limiares(veredito_cfg, analysis_cfg)
     tab = adicionar_holm(montar_tabela(m, mapa, analysis_cfg["false_block_max_rate"]), mapa)
-    c1 = veredito_criterios(tab, mapa)
-    c2 = veredito_criterios(tab, mapa, alpha_holm=veredito_cfg["alpha"])
+    c1 = veredito_criterios(tab, mapa, cenarios=cenarios)
+    c2 = veredito_criterios(tab, mapa, alpha_holm=veredito_cfg["alpha"], cenarios=cenarios)
     return tab, c1, veredito_hipoteses(c1), c2, veredito_hipoteses(c2)

@@ -60,10 +60,14 @@ nb.cells = [
        "e limiar da Tabela 4.6 cumprido. Hipótese: ACEITA (todos os critérios em todos os cenários), PARCIAL ou NÃO ACEITA. "
        "O mapa de critério para hipótese está em `analysis.veredito` de `config/campaign.yaml`. "
        "Componente marcada como pendente não decide, e a hipótese afetada sai PENDENTE. "
+       "Cenário planejado sem par válido sai SEM_DADOS e impede a hipótese de ser ACEITA. "
        "A análise principal não tem correção; Holm é a secundária."),
-    code("from analysis.veredito import resumo\n"
-         "cfg = load_campaign()['analysis']\n"
-         "tab_v, crit, hip, crit_holm, hip_holm = resumo(m, cfg['veredito'], cfg)\n"
+    code("from analysis.veredito import cenarios_planejados, resumo\n"
+         "camp = load_campaign(); cfg = camp['analysis']\n"
+         "plano = ROOT / 'data' / f\"plan_{camp['campaign_id']}.csv\"  # o plano oficial cobre o de contingência\n"
+         "plan_sc = cenarios_planejados(plano, camp['scenarios'], camp['control_scenario'])\n"
+         "print('Cenários planejados:', plan_sc)\n"
+         "tab_v, crit, hip, crit_holm, hip_holm = resumo(m, cfg['veredito'], cfg, cenarios=plan_sc)\n"
          "print('Análise principal, sem correção')\n"
          "crit"),
     code("hip"),

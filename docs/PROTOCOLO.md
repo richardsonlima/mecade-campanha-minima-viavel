@@ -84,6 +84,10 @@ autor de 2026-11-12 e não tem relação com a tabela D1 a D8 da Seção 5.
   A análise principal fica sem correção.
 - **Critérios sem diferença pareada** seguem o próprio limiar da Tabela 4.6. É o caso da taxa de falsos
   bloqueios, que usa `false_block_verdict` com 0,1, e do overhead da auditoria (Δ_audit,p95 ≤ 5 ms e Δcpu ≤ 8%).
+- **Cenário sem dado.** Cenário planejado (os do plano oficial) sem nenhum par válido sai SEM_DADOS no critério e conta
+  como não atendido: a hipótese não pode sair ACEITA sem todos os cenários aplicáveis.
+- **Pendência.** Hipótese com critério PENDENTE e sem nenhum critério ATENDE junto de falha sai PENDENTE, inclusive quando
+  mistura NAO_ATENDE com PENDENTE: a pendência ainda pode mudar o resultado. Se há ATENDE e falha, é PARCIAL.
 - **Implementação.** `analysis/veredito.py`. O mapa de critério para hipótese e a direção favorável de cada
   métrica ficam em `analysis.veredito` de `config/campaign.yaml`. O que a Tabela 4.6 não fecha fica marcado como
   `pendente` no mapa, e a hipótese afetada sai como PENDENTE até eu decidir.
