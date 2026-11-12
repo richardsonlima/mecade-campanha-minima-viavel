@@ -22,6 +22,6 @@ gcloud compute instances create "$VM" \
   --metadata-from-file startup-script="$HERE/controller-startup.sh"
 echo "VM criada. Espero o startup-script terminar (existe /var/lib/mecade-pronto) e, na VM:"
 echo "  gcloud container clusters get-credentials ${CLUSTER:-mecade-mvc} --zone $ZONE"
-echo "  git clone do bundle do commit local (docs/RUNBOOK.md) && cd mecade-mvc-01"
+echo "  git clone do bundle do commit local (docs/RUNBOOK.md) && cd mecade-campanha-minima-viavel"
 echo "  make venv && make test"
 echo "  tmux new -s campanha   (janela 1: make port-forward-loop, janela 2: make run)"

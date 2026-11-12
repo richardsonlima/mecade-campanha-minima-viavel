@@ -66,7 +66,7 @@ Na VM, uma vez só, depois de o startup-script criar `/var/lib/mecade-pronto`:
 
 ```bash
 gcloud container clusters get-credentials mecade-mvc --zone us-central1-a
-git clone mecade.bundle mecade-mvc-01 && cd mecade-mvc-01
+git clone mecade.bundle mecade-campanha-minima-viavel && cd mecade-campanha-minima-viavel
 make venv && make test
 ```
 
@@ -95,7 +95,7 @@ crédito, ainda que pouco.
 
 Ao zerar os nós, o Prometheus perde o histórico (é emptyDir). Isso não afeta a campanha, porque cada
 réplica já exporta `steps.csv` e `prom_range.csv` para `data/runs/` na VM. No fim, copio `data/` da
-VM para o notebook com `gcloud compute scp --recurse mecade-ctl:~/mecade-mvc-01/data ./ --zone us-central1-a`.
+VM para o notebook com `gcloud compute scp --recurse mecade-ctl:~/mecade-campanha-minima-viavel/data ./ --zone us-central1-a`.
 
 ## Análise
 
