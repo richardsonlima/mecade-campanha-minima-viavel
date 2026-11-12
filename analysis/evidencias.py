@@ -1,11 +1,13 @@
 """Manifesto de evidências da campanha (docs/EVIDENCIAS.md).
 
-  python -m analysis.evidencias gerar     [--raiz DIR] [--saida ARQ]       (make evidencias)
+  python -m analysis.evidencias gerar     [--raiz DIR] [--saida ARQ] [--estrito]   (make evidencias [ESTRITO=1])
   python -m analysis.evidencias verificar [--raiz DIR] [--manifesto ARQ]   (make verificar-evidencias)
 
 `gerar` grava data/EVIDENCIAS_MANIFESTO.json com o commit e as tags do HEAD, o SHA-256 do plano oficial e
 de cada arquivo de data/runs, data/audit e data/calibracao, as contagens, o resultado do verify-audit, as
 versões de versions.env e a data em UTC. Sai com código 1 se alguma trilha de auditoria falhar.
+Com `--estrito` (fechamento da Fase 4) sai com código 3 se houver arquivo de evidência fora do git, árvore
+suja, HEAD sem tag ou ausência de repositório git; sem a opção esses casos são só alertas.
 
 `verificar` recalcula os hashes de uma cópia (VM, bucket baixado ou local) e compara com o manifesto.
 Sai com código 0 só quando nenhum arquivo foi alterado, falta ou sobra, e as trilhas continuam íntegras.
@@ -46,10 +48,27 @@ def _sha256_json(obj) -> str:
 
 def _git(raiz: Path, *args: str) -> str | None:
     try:
-        r = subprocess.run(["git", "-C", str(raiz), *args], capture_output=True, text=True, check=True)
+        r = subprocess.run(["git", "-C", str(raiz), "-c", "core.quotepath=off", *args],
+                           capture_output=True, text=True, check=True)
         return r.stdout.rstrip("\n")  # sem strip(): o porcelain começa com espaço significativo
     except (OSError, subprocess.CalledProcessError):
         return None
+
+
+def _modificados(porcelain_z: str) -> list[str]:
+    """Caminhos do `git status --porcelain -z` (sem aspas nem escape), sem o manifesto. Em renomeação ou cópia
+    o `-z` traz o caminho de origem como entrada seguinte, que pulo."""
+    campos, out, i = porcelain_z.split("\0"), [], 0
+    while i < len(campos):
+        c = campos[i]
+        i += 1
+        if len(c) < 4:
+            continue
+        if c[0] in "RC" or c[1] in "RC":
+            i += 1
+        if c[3:] != MANIFESTO.as_posix():
+            out.append(c[3:])
+    return out
 
 
 def info_git(raiz: Path) -> dict:
@@ -57,8 +76,7 @@ def info_git(raiz: Path) -> dict:
     if commit is None:
         return {"commit": None, "tags": [], "descricao": None, "arvore_limpa": None, "modificados": []}
     tags = [t for t in (_git(raiz, "tag", "--points-at", "HEAD") or "").splitlines() if t]
-    status = _git(raiz, "status", "--porcelain", "--untracked-files=no") or ""
-    modificados = [ln[3:] for ln in status.splitlines() if ln[3:] != MANIFESTO.as_posix()]
+    modificados = _modificados(_git(raiz, "status", "--porcelain", "-z", "--untracked-files=no") or "")
     return {"commit": commit, "tags": sorted(tags), "descricao": _git(raiz, "describe", "--tags", "--always", "--dirty"),
             "data_commit": _git(raiz, "show", "-s", "--format=%cI", "HEAD"),
             "arvore_limpa": not modificados, "modificados": modificados}
@@ -128,10 +146,12 @@ def hashes(raiz: Path, rels: list[str]) -> tuple[dict, list[str]]:
     return out, problemas
 
 
-def verificar_trilhas(raiz: Path, pasta: str) -> dict:
-    """O mesmo que `make verify-audit`: cada .jsonl do primeiro nível (as tentativas ficam de fora)."""
+def verificar_trilhas(raiz: Path, pasta: str, subpastas: bool = False) -> dict:
+    """O mesmo que `make verify-audit`: cada .jsonl do primeiro nível. Com `subpastas`, também os de
+    subpastas (como `tentativas/`), que o `verificar` confere."""
     trilhas = {}
-    for f in sorted((raiz / pasta).glob("*.jsonl")) if (raiz / pasta).is_dir() else []:
+    achados = ((raiz / pasta).rglob("*.jsonl") if subpastas else (raiz / pasta).glob("*.jsonl")) if (raiz / pasta).is_dir() else []
+    for f in sorted(achados):
         try:
             ok, n, msg = verify(f)
         except (OSError, ValueError, KeyError) as e:  # JSON quebrado ou campo faltando
@@ -217,7 +237,7 @@ def gerar(raiz: Path) -> dict:
     if git["commit"] and not git["tags"]:
         alertas.append("HEAD sem tag")
     if git["commit"]:
-        versionados = set((_git(raiz, "ls-files", "--", "data") or "").splitlines())
+        versionados = set(filter(None, (_git(raiz, "ls-files", "-z", "--", "data") or "").split("\0")))
         fora = [r for r in arquivos if r not in versionados]
         git["dados_fora_do_git"] = len(fora)
         if fora:
@@ -247,6 +267,20 @@ def gerar(raiz: Path) -> dict:
     }
 
 
+def violacoes_estritas(m: dict) -> list[str]:
+    """O que o modo `--estrito` não tolera: sem git, arquivo de evidência fora do git, árvore suja, HEAD sem tag."""
+    g, v = m["git"], []
+    if g["commit"] is None:
+        return ["fora de um repositório git: sem commit"]
+    if g.get("dados_fora_do_git"):
+        v.append(f"{g['dados_fora_do_git']} arquivos de evidência fora do git")
+    if not g["arvore_limpa"]:
+        v.append("árvore suja")
+    if not g["tags"]:
+        v.append("HEAD sem tag")
+    return v
+
+
 def comparar(raiz: Path, manifesto: dict) -> dict:
     raiz = Path(raiz).resolve()
     esperado = manifesto["arquivos"]
@@ -254,8 +288,8 @@ def comparar(raiz: Path, manifesto: dict) -> dict:
     alterados = sorted(r for r in esperado if r in atual and atual[r]["sha256"] != esperado[r]["sha256"])
     faltando = sorted(r for r in esperado if r not in atual)
     sobrando = sorted(r for r in atual if r not in esperado)
-    va = verificar_trilhas(raiz, "data/audit")
-    va_cal = verificar_trilhas(raiz, "data/calibracao/audit")
+    va = verificar_trilhas(raiz, "data/audit", subpastas=True)
+    va_cal = verificar_trilhas(raiz, "data/calibracao/audit", subpastas=True)
     ok = not (alterados or faltando or sobrando or problemas) and va["todas_integras"] and va_cal["todas_integras"]
     return {"ok": ok, "conferidos": len(esperado), "alterados": alterados, "faltando": faltando,
             "sobrando": sobrando, "problemas": problemas,
@@ -268,6 +302,8 @@ def main(argv: list[str] | None = None) -> int:
     g = sub.add_parser("gerar")
     g.add_argument("--raiz", default=str(ROOT))
     g.add_argument("--saida", default=None)
+    g.add_argument("--estrito", action="store_true",
+                   help="sai com código 3 se houver evidência fora do git, árvore suja ou HEAD sem tag")
     v = sub.add_parser("verificar")
     v.add_argument("--raiz", default=str(ROOT))
     v.add_argument("--manifesto", default=None)
@@ -285,7 +321,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"SHA-256 do manifesto: {sha256_arquivo(saida)}")
         for al in m["alertas"]:
             print(f"  alerta: {al}")
-        return 0 if va["todas_integras"] and m["verify_audit"]["calibracao"]["todas_integras"] else 1
+        if not (va["todas_integras"] and m["verify_audit"]["calibracao"]["todas_integras"]):
+            return 1
+        if a.estrito:
+            viol = violacoes_estritas(m)
+            for x in viol:
+                print(f"  ESTRITO: {x}")
+            return 3 if viol else 0
+        return 0
 
     mpath = Path(a.manifesto) if a.manifesto else raiz / MANIFESTO
     manifesto = json.loads(mpath.read_text(encoding="utf-8"))

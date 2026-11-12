@@ -45,8 +45,7 @@ def raiz(tmp_path):
     _replica(r, "data", "001_s2_mecade_r01")
     _replica(r, "data", "002_s2_baseline_r01", arm="baseline", audit=False)
     _replica(r, "data/calibracao", "cal1_001_c0_mecade_r01", n_audit=3)
-    (r / "data" / "audit" / "tentativas").mkdir()
-    (r / "data" / "audit" / "tentativas" / "001_parcial.jsonl").write_text("lixo que não é cadeia\n")
+    _trilha(r / "data" / "audit" / "tentativas" / "001_parcial.jsonl", 2)   # trilha parcial de tentativa que falhou
     return r
 
 
@@ -163,3 +162,58 @@ def test_make_verify_audit_falha_se_uma_trilha_do_meio_falhar(tmp_path):
     b.write_text("\n".join(linhas) + "\n")
     r = subprocess.run(cmd, capture_output=True, text=True)
     assert r.returncode != 0 and "1 com falha" in r.stdout
+
+
+def test_verificar_confere_trilha_em_subpasta_mas_gerar_nao(raiz):
+    assert ev.main(["gerar", "--raiz", str(raiz)]) == 0
+    (raiz / "data" / "audit" / "tentativas" / "001_parcial.jsonl").write_text("lixo que não é cadeia\n")
+    m = ev.gerar(raiz)
+    assert m["verify_audit"]["oficial"]["trilhas"] == 1                  # o gerar segue o make verify-audit
+    manifesto = json.loads((raiz / "data" / "EVIDENCIAS_MANIFESTO.json").read_text())
+    r = ev.comparar(raiz, manifesto)
+    assert not r["trilhas_integras"] and not r["ok"]
+    assert ev.main(["verificar", "--raiz", str(raiz)]) == 1
+
+
+def _git_repo(raiz, tag=True):
+    git = ["git", "-C", str(raiz), "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false"]
+    subprocess.run(["git", "init", "-q", str(raiz)], check=True)
+    subprocess.run(git + ["add", "-A"], check=True)
+    subprocess.run(git + ["commit", "-qm", "dados"], check=True)
+    if tag:
+        subprocess.run(git + ["tag", "final"], check=True)
+    return git
+
+
+def test_estrito_passa_limpo_e_com_tag(raiz):
+    _git_repo(raiz)
+    assert ev.main(["gerar", "--raiz", str(raiz), "--estrito"]) == 0
+
+
+def test_estrito_falha_sem_tag_sem_git_arvore_suja_e_dado_fora_do_git(raiz, capsys):
+    assert ev.main(["gerar", "--raiz", str(raiz), "--estrito"]) == 3           # sem git
+    assert ev.main(["gerar", "--raiz", str(raiz)]) == 0                          # sem --estrito é só alerta
+    (raiz / "data" / "EVIDENCIAS_MANIFESTO.json").unlink()
+    git = _git_repo(raiz, tag=False)
+    assert ev.main(["gerar", "--raiz", str(raiz), "--estrito"]) == 3
+    assert "HEAD sem tag" in capsys.readouterr().out
+    subprocess.run(git + ["tag", "final"], check=True)
+    assert ev.main(["gerar", "--raiz", str(raiz), "--estrito"]) == 0
+    (raiz / "data" / "plan_teste-01.csv").write_text("mudou\n")
+    assert ev.main(["gerar", "--raiz", str(raiz), "--estrito"]) == 3           # árvore suja
+    assert "árvore suja" in capsys.readouterr().out
+    subprocess.run(git + ["checkout", "--", "data/plan_teste-01.csv"], check=True)
+    (raiz / "data" / "runs" / "novo.txt").write_text("x")
+    assert ev.main(["gerar", "--raiz", str(raiz), "--estrito"]) == 3           # evidência fora do git
+    assert "fora do git" in capsys.readouterr().out
+
+
+def test_nomes_com_acento_e_espaco_saem_sem_escape(raiz):
+    nome = "data/desvios ação.txt"
+    (raiz / nome).write_text("a")
+    git = _git_repo(raiz)
+    (raiz / nome).write_text("b")
+    assert ev.info_git(raiz)["modificados"] == [nome]
+    # renomeação staged: só o destino, sem a origem como entrada solta
+    subprocess.run(git + ["mv", nome, "data/outro nome.txt"], check=True)
+    assert ev.info_git(raiz)["modificados"] == ["data/outro nome.txt"]

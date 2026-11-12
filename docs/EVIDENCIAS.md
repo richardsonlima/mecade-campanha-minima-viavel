@@ -49,8 +49,9 @@ réplica oficial. A banca confere a ordem assim:
 ## 3. Integridade dos dados brutos
 
 - **Trilhas da Camada 6.** `make verify-audit` recalcula a cadeia de hash de cada `data/audit/*.jsonl`
-  e sai com erro se qualquer uma falhar. As trilhas parciais de `audit/tentativas/` ficam fora da
-  verificação, mas entram no manifesto com hash. A cadeia pega alteração e troca de ordem, mas não pega
+  e sai com erro se qualquer uma falhar. As trilhas parciais de `audit/tentativas/` ficam fora do
+  `make verify-audit` e do `gerar`, mas entram no manifesto com hash, e o `make verificar-evidencias`
+  também confere a cadeia delas (e de qualquer trilha em subpasta de `data/audit`). A cadeia pega alteração e troca de ordem, mas não pega
   o corte das últimas linhas; por isso o manifesto compara a contagem com `audit.records` do `meta.json`.
 - **Manifesto.** `make evidencias` grava `data/EVIDENCIAS_MANIFESTO.json`:
   - commit, tags, data do commit e se a árvore estava limpa;
@@ -188,8 +189,10 @@ Nada foi depositado.
 6. `make verificar-evidencias` nas três cópias (Seção 3), com o manifesto do passo 5.
 7. `make analyze`. Commit do notebook executado, das figuras e do `metricas_por_replica.csv`.
 8. Escrever `RESULTADOS_CAMPANHA.md` (abaixo). Commit.
-9. `make evidencias` de novo, no commit do passo 8, para o manifesto final apontar para ele. Commit
-   do manifesto. `git tag -a mvc-2026-11-final`. Conferir que
+9. `git tag -a mvc-2026-11-final` no commit do passo 8 e, só então, `make evidencias ESTRITO=1`: o manifesto
+   final aponta para esse commit. O fechamento da Fase 4 usa o modo estrito, que sai com código 3 se
+   houver arquivo de evidência fora do git, árvore suja ou HEAD sem tag (sem ele esses casos são só
+   alertas). O manifesto em si não conta como sujeira. Commit do manifesto. Conferir que
    `git diff mvc-2026-11-calibracao mvc-2026-11-final -- config/ scenarios/ mecade/axioms.py data/plan_mvc-2026-11.csv`
    sai vazio.
 10. Cópia final de `data/` e `analysis/figures/` para o bucket, `make verificar-evidencias` na cópia do

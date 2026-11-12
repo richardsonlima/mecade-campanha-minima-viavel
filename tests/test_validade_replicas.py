@@ -6,7 +6,7 @@ import warnings
 
 import pytest
 
-from analysis.metrics import load_official_runs, load_runs
+from analysis.metrics import execution_failures, load_official_runs, load_runs, paired_comparison
 from mecade import runner
 from mecade.config import load_campaign, load_scenario
 from mecade.runner import run_one
@@ -98,3 +98,36 @@ def test_load_runs_nao_mudou_e_inclui_sim(tmp_path):
     _fake(tmp_path, "k8s")
     assert len(load_runs(tmp_path, include_sim=True)) == 2
     assert len(load_runs(tmp_path)) == 1
+
+
+def test_rotulo_de_sim_e_calibracao_vale_mesmo_sem_campaign_id(tmp_path):
+    _fake(tmp_path, "sim_velha", backend="sim")
+    _fake(tmp_path, "cal_velha", etapa="calibracao")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")   # o aviso de campaign_id só sai quando é o motivo
+        _, excl = load_official_runs(tmp_path, campaign_id=CID)
+    motivos = {e["run_id"]: e["motivo"] for e in excl}
+    assert motivos == {"sim_velha": "simulação", "cal_velha": "calibração"}
+
+
+def test_execution_failures_filtra_pelo_campaign_id_oficial(tmp_path):
+    _fake(tmp_path, "falha_ok", status="falha_execucao", campaign_id=CID)
+    _fake(tmp_path, "falha_outra", status="falha_execucao", campaign_id="outra")
+    _fake(tmp_path, "falha_sem_id", status="falha_execucao")
+    _fake(tmp_path, "cal1_falha", status="falha_execucao", campaign_id=CID)
+    _fake(tmp_path, "falha_sim", status="falha_execucao", campaign_id=CID, backend="sim")
+    _fake(tmp_path, "completa", campaign_id=CID)
+    assert [f["run_id"] for f in execution_failures(tmp_path, campaign_id=CID)] == ["falha_ok"]
+
+
+def test_paired_comparison_tolera_braco_orfao_de_par_excluido():
+    import pandas as pd
+    linhas = []
+    for pair in range(1, 6):
+        linhas.append({"scenario": "s1", "arm": "baseline", "pair": f"p{pair}", "x": 100.0 + pair})
+        if pair != 3:                                   # o par p3 perdeu o braço MECADE (falha_execucao)
+            linhas.append({"scenario": "s1", "arm": "mecade", "pair": f"p{pair}", "x": 50.0 + pair})
+    linhas.append({"scenario": "s1", "arm": "mecade", "pair": "p9", "x": 1.0})   # órfão do outro lado
+    out = paired_comparison(pd.DataFrame(linhas), "x")
+    assert len(out) == 1 and out.iloc[0]["n_pairs"] == 4
+    assert out.iloc[0]["median_diff"] == -50.0

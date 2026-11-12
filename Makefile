@@ -96,8 +96,8 @@ verify-audit: ## verifica a integridade de todas as trilhas de auditoria (falha 
 	for f in $(AUDIT_DIR)/*.jsonl; do n=$$((n+1)); echo -n "$$f: "; $(PY) -m mecade.cli verify-audit "$$f" || falhas=$$((falhas+1)); done; \
 	echo "$$n trilhas verificadas, $$falhas com falha"; test $$falhas -eq 0
 
-evidencias: ## gera data/EVIDENCIAS_MANIFESTO.json (commit, tag, plano, SHA-256 dos dados, verify-audit, versões)
-	$(PY) -m analysis.evidencias gerar
+evidencias: ## gera data/EVIDENCIAS_MANIFESTO.json (commit, tag, plano, SHA-256, verify-audit, versões; ESTRITO=1 falha se sujo, sem tag ou fora do git)
+	$(PY) -m analysis.evidencias gerar $(if $(ESTRITO),--estrito)
 
 verificar-evidencias: ## recalcula os hashes de uma cópia e compara com o manifesto (RAIZ=<cópia> MANIFESTO=<arquivo>)
 	$(PY) -m analysis.evidencias verificar $(if $(RAIZ),--raiz $(RAIZ)) $(if $(MANIFESTO),--manifesto $(MANIFESTO))
