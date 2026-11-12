@@ -333,7 +333,7 @@ def main() -> None:
     # o limite de 10% vale para as réplicas oficiais; calibração e simulação não param por ele
     oficial = a.backend == "k8s" and not a.calibracao
     if oficial and a.sem_limite_perdidas:
-        log("Limite de 10% de réplicas perdidas desligado por minha decisão.")
+        log("Limite de 10% de réplicas perdidas desligado por decisão minha.")
         _append_jsonl(out_root.parent / "desvios_execucao.jsonl",
                       {"quando": _agora(), "run_id": "", "tipo": "limite_de_perdidas_desligado"})
     sys.exit(execute_plan(plan, out_root=out_root, execute=execute, clean=clean, log=log, limit=a.limit,

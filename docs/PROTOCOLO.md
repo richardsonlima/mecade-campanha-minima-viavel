@@ -71,8 +71,8 @@ da mediana das diferenças, separado por cenário.
 
 ### Regra de veredito (minha decisão D1, 2026-11-12)
 
-Decidida antes de qualquer dado oficial. A numeração D1 e D4 desta subseção é a das decisões do
-autor de 2026-11-12 e não tem relação com a tabela D1 a D8 da Seção 5.
+Decidida antes de qualquer dado oficial. A numeração D1 e D4 desta subseção é a das minhas decisões
+de 2026-11-12 e não tem relação com a tabela D1 a D8 da Seção 5.
 
 - **Critério por cenário.** Um critério ATENDE num cenário quando a mediana da diferença pareada
   (MECADE menos baseline, ou o sinal que for favorável ao MECADE em cada métrica) está do lado favorável ao
@@ -155,7 +155,7 @@ Declaro isso nos Capítulos 4 e 5:
 - generalização (Fase 4) e produção de verdade, porque a campanha cobre os estágios E1 e E2 da
   trilha de adoção.
 
-## 8. Decisões do autor antes da primeira réplica oficial
+## 8. Minhas decisões antes da primeira réplica oficial
 
 Precisam estar registradas aqui, em commit anterior à primeira réplica oficial.
 

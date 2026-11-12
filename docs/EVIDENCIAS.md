@@ -14,14 +14,14 @@ commit, uma tag, um arquivo ou um comando. O checklist da Seção 9 é o roteiro
 | Portão A: projeto dedicado e tipo de máquina (`e2-standard-2`) | `CAMPANHA_STATUS.md` (sem o ID, que não vai ao repositório) | `1c95992`, 2026-11-11 |
 | Portão B: falsos bloqueios no máximo 1 em 10 (taxa 0,1); TTD como critério | `docs/PROTOCOLO.md` Seção 8, `config/campaign.yaml` (`analysis.false_block_max_rate`) | `031e7d0`, 2026-11-11 |
 | Limite de 10% de perdidas (`falha_execucao` de qualquer braço e `censurada` do MECADE) | `docs/PROTOCOLO.md` Seção 4, `orchestrator/run_campaign.py` | `26a1b5c` e `35c45f4`, 2026-11-11 |
-| Variabilidade de P95/P99 como desvio-padrão no incidente | `docs/PROTOCOLO.md` Seções 4 e 8 | `1ce44d3`; ainda sem minha confirmação |
+| Variabilidade de P95/P99 como desvio-padrão no incidente | `docs/PROTOCOLO.md` Seções 4 e 8 | `1ce44d3`; confirmada na D4 em 2026-11-12 |
 
 **Limite desta prova.** As datas de commit são locais e podem ser escritas por quem faz o commit. Até
 2026-11-11 o GitHub tem só até `b198a7b`; os 15 commits seguintes não foram enviados. Para a data
 anterior aos dados valer diante de terceiros, a tag de pré-registro precisa sair do computador antes da
 primeira réplica (Seção 9, passo 1): push da tag para o GitHub, depósito no Zenodo ou OSF, ou um carimbo
 de tempo (OpenTimestamps) do hash do commit. Qualquer uma das três serve; sem nenhuma, a ordem
-"protocolo antes dos dados" depende só da palavra do autor.
+"protocolo antes dos dados" depende só da minha palavra.
 
 ## 2. Congelamento da calibração
 
@@ -153,7 +153,7 @@ Recomendo depositar o pacote final num repositório com DOI. O Zenodo serve e é
 
 A dissertação cita o DOI da versão e, na Seção 4.6, o SHA-256 do manifesto e o da tag.
 
-O que isso exige de mim:
+O que isso exige de mim, e só de mim:
 
 1. Conta no Zenodo (login com ORCID ou GitHub) e, se usar a integração, ligar o repositório.
 2. Licença: o repositório não tem `LICENSE`. Sugestão: MIT ou Apache-2.0 para o código e CC BY 4.0
@@ -162,7 +162,7 @@ O que isso exige de mim:
 4. Acesso: aberto já ou embargado até a defesa. O Zenodo permite reservar o DOI antes de publicar,
    para citar no texto.
 5. Autorizar o push das tags para o GitHub (hoje a regra é sem push) e a publicação.
-6. Uma revisão de segurança do pacote antes do depósito: nenhum ID de projeto, IP,
+6. Fazer uma revisão de segurança do pacote antes do depósito: nenhum ID de projeto, IP,
    e-mail ou credencial em `campaign.log`, `meta.json` ou `ENVIRONMENT.md`.
 
 Nada foi depositado.
