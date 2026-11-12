@@ -86,6 +86,20 @@ Comecei às 01:07 UTC na VM, em `67fbcac`, com 96 testes passando.
 - A rodada 1 continua na VM, no clone `~/mecade-mvc-01` criado a partir do bundle de `67fbcac`.
 - Falta ativar o repositório novo em Zenodo > GitHub antes da release final.
 
+## 12/11 - calibração congelada
+
+Rodada 1 de 01:07 a 05:11 UTC: 9 réplicas `complete`, sem falha e sem desvio de execução. Copiei `data/calibracao/` para o bucket e para a máquina local; as três cópias têm 43 arquivos.
+
+- `D_agr` nos controles (3 réplicas, 720 amostras): P50 = 0,67, P95 = 2,31, P99 = 2,67, máximo 3,69. O ruído vem da latência (p95 e p99); `error_rate` ficou em 0 nos controles.
+- d_off = deadband = 2,7; d_on = 2,9.
+- budget_B = 26837,7: o maior I(t) antes de 300 s de falha no piloto de s1 (MECADE 26837,7; baseline 22917,4). O maior I dos controles foi 19,8, bem abaixo de 50% de B.
+- tau_dwell = 15 s: com os valores novos, os controles não têm ALERT espúrio. Os ALERTs ao vivo nos controles vinham do d_on inicial de 0,5.
+- Axiomas refeitos offline com os valores novos: s1 (MECADE) dá ALERT em 20 s e BLOCK em 300 s; s2 dá ALERT em 80 s, sem BLOCK; s3 dá ALERT em 75 s, sem BLOCK; controles sem evento.
+- `make sim` com os valores novos: 70 réplicas concluídas. O teste de ponta a ponta da simulação passou a fixar os valores iniciais dos axiomas, porque as amplitudes do mundo simulado ficam abaixo de d_on = 2,9. `make test`: 104 passam.
+- Plano oficial `data/plan_mvc-2026-11.csv`: 70 réplicas, SHA-256 `cfb49339…`, igual ao pré-registrado.
+- Os `meta.json` da calibração registram `67fbcac`, que corresponde a `ff7a20f` neste repositório.
+- Custo estimado de R$ 1,6 a 2,2/h, perto de R$ 10 desde a criação do cluster.
+
 ## Decisões
 
 - Portão A (11/11): projeto novo para a campanha, depois refeito no "My First Project" (ver 11/11). `MACHINE=e2-standard-2`.

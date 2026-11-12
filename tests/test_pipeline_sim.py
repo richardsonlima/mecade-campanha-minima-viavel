@@ -9,6 +9,9 @@ from mecade.sim import SimWorld, VirtualClock
 
 def test_sim_campaign_end_to_end(tmp_path):
     camp = copy.deepcopy(load_campaign())
+    # As amplitudes do SimWorld foram escritas para os valores iniciais dos axiomas. O teste confere o
+    # pipeline, não os parâmetros calibrados, então fixo aqui os valores de antes da calibração.
+    camp["axioms"].update(d_on=0.5, d_off=0.3, deadband=0.3, budget_B=60.0, tau_dwell=15)
     out = tmp_path / "runs"
     k = 0
     for sc in camp["scenarios"]:

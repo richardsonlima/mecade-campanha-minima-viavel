@@ -1,0 +1,95 @@
+{
+  "run_id": "cal1_001_s2_gray_currency_baseline_r01",
+  "scenario": "s2_gray_currency",
+  "scenario_version": 1,
+  "arm": "baseline",
+  "backend": "k8s",
+  "status": "complete",
+  "wall_start": 1794445786.3623333,
+  "t_inject_abs": 1794446086.3623333,
+  "M_base": {
+    "p95": 0.3919999999999998,
+    "p99": 0.8831666666666665,
+    "error_rate": 0.0
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "event": "INJECT",
+      "baseline": {
+        "p95": 0.3919999999999998,
+        "p99": 0.8831666666666665,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "t": 600.0,
+      "event": "FAULT_END"
+    }
+  ],
+  "audit": {
+    "enabled": false
+  },
+  "controller_cpu_s": 4.291220651,
+  "timing": {
+    "warmup": 120,
+    "baseline": 300,
+    "fault": 600,
+    "recovery": 600,
+    "step": 5
+  },
+  "axioms": {
+    "decision_signals": [
+      "p95",
+      "p99",
+      "error_rate"
+    ],
+    "k": 2,
+    "d_on": 0.5,
+    "d_off": 0.3,
+    "tau_dwell": 15,
+    "aggregation": "max",
+    "deadband": 0.3,
+    "budget_B": 60.0,
+    "envelope_delta": 1.0
+  },
+  "reactive": {
+    "rules": [
+      {
+        "signal": "p99",
+        "op": ">",
+        "factor_of_baseline": 2.0
+      },
+      {
+        "signal": "error_rate",
+        "op": ">",
+        "absolute": 0.05
+      }
+    ],
+    "for": 300,
+    "response_delay": 120
+  },
+  "recovery": {
+    "hold": 60
+  },
+  "block": {
+    "stop_injection": false
+  },
+  "rto_s": 180,
+  "mitigation": {
+    "acao": "restart"
+  },
+  "git_commit": "67fbcac565807768d707ed19215ca3c317c589cd",
+  "k8s_server": "v1.36.4-gke.2377000",
+  "campaign_id": "mvc-2026-10",
+  "git_dirty": false,
+  "config_sha256": "12b29dfea973162035744bce65fce208325a8ecaef1e0d8faa98d65a1cd22032",
+  "plano": "calibracao",
+  "etapa": "calibracao",
+  "pair": "s2_gray_currency#01",
+  "rep": 1,
+  "order": 1,
+  "audit_planned": 1,
+  "tentativa": 1,
+  "fora_da_ordem": false
+}

@@ -3,6 +3,19 @@
 Qualquer mudança de versão, parâmetro ou cenário depois que as réplicas oficiais começarem vai
 anotada aqui. Réplicas rodadas antes e depois de uma mudança não são comparáveis entre si.
 
+## 12/11 - calibração congelada
+
+Regra da Seção 6 do `docs/PROTOCOLO.md` aplicada à rodada 1 (`data/calibracao/resultado_r1.json`), sem mudança na regra.
+
+- `campaign_id`: `mvc-2026-10` → `mvc-2026-11`.
+- d_off e deadband: 0,3 → 2,7 (P99 de `D_agr` nos controles = 2,67, arredondado para cima; P50 = 0,67, P95 = 2,31, máximo 3,69, 720 amostras de 3 controles).
+- d_on: 0,5 → 2,9 (d_off + 0,2).
+- budget_B: 60,0 → 26837,7, o menor B em que o maior I dos controles (19,8) fica abaixo de 50% de B e o piloto de s1 não esgota B antes de 300 s de falha (I = 26837,7 no braço MECADE).
+- tau_dwell: fica em 15 s, sem ALERT espúrio nos controles com os valores novos.
+- Os `meta.json` da calibração registram `git_commit = 67fbcac`, equivalente a `ff7a20f` (docs/EQUIVALENCIA_COMMITS.md).
+- `tests/test_pipeline_sim.py` fixa os valores iniciais dos axiomas: o mundo simulado não chega a D = 2,9 em s1, e o teste confere o pipeline, não a calibração.
+- O plano oficial `data/plan_mvc-2026-11.csv` não mudou (SHA-256 `cfb49339…`, 70 réplicas).
+
 ## 12/11 - repositório e pré-registro
 
 - Reescrevi o histórico do repositório e migrei para mecade-campanha-minima-viavel; a tag de pré-registro foi recriada (equivalência de commits em docs/EQUIVALENCIA_COMMITS.md).

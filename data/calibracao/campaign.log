@@ -1,0 +1,131 @@
+2026-11-12T01:07:31 [cal1_001_s2_gray_currency_baseline_r01] reset do ambiente
+2026-11-12T01:14:47 [cal1_001_s2_gray_currency_baseline_r01] t=+0s INJECT {'baseline': {'p95': 0.3919999999999998, 'p99': 0.8831666666666665, 'error_rate': 0.0}}
+2026-11-12T01:24:46 [cal1_001_s2_gray_currency_baseline_r01] t=+600s FAULT_END 
+2026-11-12T01:34:42 [cal1_001_s2_gray_currency_baseline_r01] concluída: 300 amostras, 2 eventos
+2026-11-12T01:34:42 [cal1_002_s2_gray_currency_mecade_r01] reset do ambiente
+2026-11-12T01:41:57 [cal1_002_s2_gray_currency_mecade_r01] t=+0s INJECT {'baseline': {'p95': 0.7072303921568623, 'p99': 1.3915277777777777, 'error_rate': 0.0}}
+2026-11-12T01:42:06 [cal1_002_s2_gray_currency_mecade_r01] t=+10s ALERT {'I': 7.818}
+2026-11-12T01:42:31 [cal1_002_s2_gray_currency_mecade_r01] t=+35s ALERT_CLEAR {'I': 15.814}
+2026-11-12T01:43:01 [cal1_002_s2_gray_currency_mecade_r01] t=+65s ALERT {'I': 23.233}
+2026-11-12T01:43:06 [cal1_002_s2_gray_currency_mecade_r01] t=+70s LIMIT {'I': 73.67}
+2026-11-12T01:43:06 [cal1_002_s2_gray_currency_mecade_r01] t=+70s BLOCK {'I': 73.67}
+2026-11-12T01:43:06 [cal1_002_s2_gray_currency_mecade_r01] t=+70s MITIGATION {'action': 'restart', 'reason': 'BLOCK'}
+2026-11-12T01:44:06 [cal1_002_s2_gray_currency_mecade_r01] t=+130s ALERT_CLEAR {'I': 2181.986}
+2026-11-12T01:45:21 [cal1_002_s2_gray_currency_mecade_r01] t=+205s ALERT {'I': 2195.019}
+2026-11-12T01:45:36 [cal1_002_s2_gray_currency_mecade_r01] t=+220s ALERT_CLEAR {'I': 2199.095}
+2026-11-12T01:48:41 [cal1_002_s2_gray_currency_mecade_r01] t=+405s ALERT {'I': 2220.142}
+2026-11-12T01:51:56 [cal1_002_s2_gray_currency_mecade_r01] t=+600s FAULT_END 
+2026-11-12T01:52:36 [cal1_002_s2_gray_currency_mecade_r01] t=+640s ALERT_CLEAR {'I': 2309.829}
+2026-11-12T01:53:06 [cal1_002_s2_gray_currency_mecade_r01] t=+670s ALERT {'I': 2318.092}
+2026-11-12T01:54:01 [cal1_002_s2_gray_currency_mecade_r01] t=+725s ALERT_CLEAR {'I': 2342.501}
+2026-11-12T01:54:31 [cal1_002_s2_gray_currency_mecade_r01] t=+755s ALERT {'I': 2350.682}
+2026-11-12T01:57:21 [cal1_002_s2_gray_currency_mecade_r01] t=+925s ALERT_CLEAR {'I': 2422.712}
+2026-11-12T01:58:41 [cal1_002_s2_gray_currency_mecade_r01] t=+1005s ALERT {'I': 2442.408}
+2026-11-12T01:59:01 [cal1_002_s2_gray_currency_mecade_r01] t=+1025s ALERT_CLEAR {'I': 2446.049}
+2026-11-12T01:59:36 [cal1_002_s2_gray_currency_mecade_r01] t=+1060s ALERT {'I': 2454.743}
+2026-11-12T02:01:51 [cal1_002_s2_gray_currency_mecade_r01] concluída: 300 amostras, 20 eventos
+2026-11-12T02:01:51 [cal1_003_c0_controle_mecade_r03] reset do ambiente
+2026-11-12T02:08:53 [cal1_003_c0_controle_mecade_r03] t=+0s CONTROL_START {'baseline': {'p95': 0.2172572720125786, 'p99': 0.54542857142857, 'error_rate': 0.0}}
+2026-11-12T02:09:48 [cal1_003_c0_controle_mecade_r03] t=+55s ALERT {'I': 26.264}
+2026-11-12T02:10:18 [cal1_003_c0_controle_mecade_r03] t=+85s ALERT_CLEAR {'I': 31.919}
+2026-11-12T02:10:58 [cal1_003_c0_controle_mecade_r03] t=+125s ALERT {'I': 41.1}
+2026-11-12T02:11:07 [cal1_003_c0_controle_mecade_r03] t=+135s LIMIT {'I': 61.14}
+2026-11-12T02:11:07 [cal1_003_c0_controle_mecade_r03] t=+135s BLOCK {'I': 61.14}
+2026-11-12T02:11:07 [cal1_003_c0_controle_mecade_r03] t=+135s MITIGATION {'action': 'none', 'reason': 'BLOCK'}
+2026-11-12T02:12:57 [cal1_003_c0_controle_mecade_r03] t=+245s ALERT_CLEAR {'I': 105.833}
+2026-11-12T02:14:17 [cal1_003_c0_controle_mecade_r03] t=+325s ALERT {'I': 137.411}
+2026-11-12T02:14:43 [cal1_003_c0_controle_mecade_r03] t=+350s ALERT_CLEAR {'I': 144.908}
+2026-11-12T02:15:22 [cal1_003_c0_controle_mecade_r03] t=+390s ALERT {'I': 157.344}
+2026-11-12T02:15:43 [cal1_003_c0_controle_mecade_r03] t=+410s ALERT_CLEAR {'I': 168.307}
+2026-11-12T02:17:32 [cal1_003_c0_controle_mecade_r03] t=+520s ALERT {'I': 209.805}
+2026-11-12T02:18:33 [cal1_003_c0_controle_mecade_r03] t=+580s ALERT_CLEAR {'I': 270.569}
+2026-11-12T02:18:47 [cal1_003_c0_controle_mecade_r03] t=+595s ALERT {'I': 290.965}
+2026-11-12T02:18:52 [cal1_003_c0_controle_mecade_r03] t=+600s FAULT_END 
+2026-11-12T02:19:02 [cal1_003_c0_controle_mecade_r03] t=+610s ALERT_CLEAR {'I': 302.088}
+2026-11-12T02:19:22 [cal1_003_c0_controle_mecade_r03] t=+630s ALERT {'I': 311.104}
+2026-11-12T02:20:42 [cal1_003_c0_controle_mecade_r03] t=+710s ALERT_CLEAR {'I': 402.847}
+2026-11-12T02:22:12 [cal1_003_c0_controle_mecade_r03] t=+800s ALERT {'I': 440.235}
+2026-11-12T02:23:12 [cal1_003_c0_controle_mecade_r03] t=+860s ALERT_CLEAR {'I': 480.341}
+2026-11-12T02:23:42 [cal1_003_c0_controle_mecade_r03] t=+890s ALERT {'I': 521.517}
+2026-11-12T02:25:02 [cal1_003_c0_controle_mecade_r03] t=+970s ALERT_CLEAR {'I': 572.229}
+2026-11-12T02:28:48 [cal1_003_c0_controle_mecade_r03] concluída: 300 amostras, 23 eventos
+2026-11-12T02:28:48 [cal1_004_c0_controle_mecade_r01] reset do ambiente
+2026-11-12T02:35:49 [cal1_004_c0_controle_mecade_r01] t=+0s CONTROL_START {'baseline': {'p95': 0.23720884301732917, 'p99': 0.3538958333333333, 'error_rate': 0.0}}
+2026-11-12T02:35:59 [cal1_004_c0_controle_mecade_r01] t=+10s ALERT {'I': 40.032}
+2026-11-12T02:36:14 [cal1_004_c0_controle_mecade_r01] t=+25s LIMIT {'I': 62.238}
+2026-11-12T02:36:14 [cal1_004_c0_controle_mecade_r01] t=+25s BLOCK {'I': 62.238}
+2026-11-12T02:36:14 [cal1_004_c0_controle_mecade_r01] t=+25s MITIGATION {'action': 'none', 'reason': 'BLOCK'}
+2026-11-12T02:36:34 [cal1_004_c0_controle_mecade_r01] t=+45s ALERT_CLEAR {'I': 68.552}
+2026-11-12T02:38:29 [cal1_004_c0_controle_mecade_r01] t=+160s ALERT {'I': 141.835}
+2026-11-12T02:38:44 [cal1_004_c0_controle_mecade_r01] t=+175s ALERT_CLEAR {'I': 170.462}
+2026-11-12T02:39:14 [cal1_004_c0_controle_mecade_r01] t=+205s ALERT {'I': 199.926}
+2026-11-12T02:40:49 [cal1_004_c0_controle_mecade_r01] t=+300s ALERT_CLEAR {'I': 304.987}
+2026-11-12T02:45:29 [cal1_004_c0_controle_mecade_r01] t=+580s ALERT {'I': 369.478}
+2026-11-12T02:45:49 [cal1_004_c0_controle_mecade_r01] t=+600s FAULT_END 
+2026-11-12T02:45:59 [cal1_004_c0_controle_mecade_r01] t=+610s ALERT_CLEAR {'I': 390.144}
+2026-11-12T02:47:44 [cal1_004_c0_controle_mecade_r01] t=+715s ALERT {'I': 442.568}
+2026-11-12T02:50:44 [cal1_004_c0_controle_mecade_r01] t=+895s ALERT_CLEAR {'I': 621.243}
+2026-11-12T02:51:09 [cal1_004_c0_controle_mecade_r01] t=+920s ALERT {'I': 655.467}
+2026-11-12T02:51:54 [cal1_004_c0_controle_mecade_r01] t=+965s ALERT_CLEAR {'I': 720.194}
+2026-11-12T02:52:39 [cal1_004_c0_controle_mecade_r01] t=+1010s ALERT {'I': 741.118}
+2026-11-12T02:54:19 [cal1_004_c0_controle_mecade_r01] t=+1110s ALERT_CLEAR {'I': 855.152}
+2026-11-12T02:55:45 [cal1_004_c0_controle_mecade_r01] concluída: 300 amostras, 19 eventos
+2026-11-12T02:55:45 [cal1_005_s3_podkill_cart_mecade_r01] reset do ambiente
+2026-11-12T03:03:11 [cal1_005_s3_podkill_cart_mecade_r01] t=+0s INJECT {'baseline': {'p95': 0.3117282608695642, 'p99': 0.926208333333334, 'error_rate': 0.0}}
+2026-11-12T03:04:06 [cal1_005_s3_podkill_cart_mecade_r01] t=+55s LIMIT {'I': 187.805}
+2026-11-12T03:04:06 [cal1_005_s3_podkill_cart_mecade_r01] t=+55s BLOCK {'I': 187.805}
+2026-11-12T03:04:06 [cal1_005_s3_podkill_cart_mecade_r01] t=+55s MITIGATION {'action': 'scale', 'reason': 'BLOCK'}
+2026-11-12T03:04:11 [cal1_005_s3_podkill_cart_mecade_r01] t=+60s ALERT {'I': 415.438}
+2026-11-12T03:05:31 [cal1_005_s3_podkill_cart_mecade_r01] t=+140s ALERT_CLEAR {'I': 3724.55}
+2026-11-12T03:05:46 [cal1_005_s3_podkill_cart_mecade_r01] t=+155s ALERT {'I': 3812.569}
+2026-11-12T03:06:11 [cal1_005_s3_podkill_cart_mecade_r01] t=+180s ALERT_CLEAR {'I': 3868.69}
+2026-11-12T03:08:46 [cal1_005_s3_podkill_cart_mecade_r01] t=+335s ALERT {'I': 4001.595}
+2026-11-12T03:09:11 [cal1_005_s3_podkill_cart_mecade_r01] t=+360s ALERT_CLEAR {'I': 4067.408}
+2026-11-12T03:10:36 [cal1_005_s3_podkill_cart_mecade_r01] t=+445s ALERT {'I': 4092.862}
+2026-11-12T03:11:31 [cal1_005_s3_podkill_cart_mecade_r01] t=+500s ALERT_CLEAR {'I': 4119.191}
+2026-11-12T03:13:11 [cal1_005_s3_podkill_cart_mecade_r01] t=+600s FAULT_END 
+2026-11-12T03:20:31 [cal1_005_s3_podkill_cart_mecade_r01] t=+1040s ALERT {'I': 4311.227}
+2026-11-12T03:20:46 [cal1_005_s3_podkill_cart_mecade_r01] t=+1055s ALERT_CLEAR {'I': 4314.63}
+2026-11-12T03:23:06 [cal1_005_s3_podkill_cart_mecade_r01] concluída: 300 amostras, 15 eventos
+2026-11-12T03:23:06 [cal1_006_s3_podkill_cart_baseline_r01] reset do ambiente
+2026-11-12T03:30:40 [cal1_006_s3_podkill_cart_baseline_r01] t=+0s INJECT {'baseline': {'p95': 0.20918233082706764, 'p99': 0.48579999999999934, 'error_rate': 0.0}}
+2026-11-12T03:36:25 [cal1_006_s3_podkill_cart_baseline_r01] t=+345s REACTIVE_FIRE 
+2026-11-12T03:38:30 [cal1_006_s3_podkill_cart_baseline_r01] t=+470s MITIGATION {'action': 'scale', 'reason': 'RUNBOOK'}
+2026-11-12T03:40:40 [cal1_006_s3_podkill_cart_baseline_r01] t=+600s FAULT_END 
+2026-11-12T03:50:35 [cal1_006_s3_podkill_cart_baseline_r01] concluída: 300 amostras, 4 eventos
+2026-11-12T03:50:35 [cal1_007_s1_latencia_productcatalog_mecade_r01] reset do ambiente
+2026-11-12T03:57:43 [cal1_007_s1_latencia_productcatalog_mecade_r01] t=+0s INJECT {'baseline': {'p95': 0.24343360234776232, 'p99': 0.6844285714285697, 'error_rate': 0.0}}
+2026-11-12T03:57:52 [cal1_007_s1_latencia_productcatalog_mecade_r01] t=+10s LIMIT {'I': 63.75}
+2026-11-12T03:57:52 [cal1_007_s1_latencia_productcatalog_mecade_r01] t=+10s BLOCK {'I': 63.75}
+2026-11-12T03:57:52 [cal1_007_s1_latencia_productcatalog_mecade_r01] t=+10s MITIGATION {'action': 'restart', 'reason': 'BLOCK'}
+2026-11-12T03:58:02 [cal1_007_s1_latencia_productcatalog_mecade_r01] t=+20s ALERT {'I': 402.626}
+2026-11-12T04:07:42 [cal1_007_s1_latencia_productcatalog_mecade_r01] t=+600s FAULT_END 
+2026-11-12T04:16:22 [cal1_007_s1_latencia_productcatalog_mecade_r01] t=+1120s ALERT_CLEAR {'I': 65246.309}
+2026-11-12T04:17:37 [cal1_007_s1_latencia_productcatalog_mecade_r01] concluída: 300 amostras, 7 eventos
+2026-11-12T04:17:37 [cal1_008_s1_latencia_productcatalog_baseline_r01] reset do ambiente
+2026-11-12T04:24:41 [cal1_008_s1_latencia_productcatalog_baseline_r01] t=+0s INJECT {'baseline': {'p95': 0.22319517102615694, 'p99': 0.5682499999999985, 'error_rate': 0.0}}
+2026-11-12T04:29:36 [cal1_008_s1_latencia_productcatalog_baseline_r01] t=+295s REACTIVE_FIRE 
+2026-11-12T04:31:41 [cal1_008_s1_latencia_productcatalog_baseline_r01] t=+420s MITIGATION {'action': 'restart', 'reason': 'RUNBOOK'}
+2026-11-12T04:34:41 [cal1_008_s1_latencia_productcatalog_baseline_r01] t=+600s FAULT_END 
+2026-11-12T04:44:36 [cal1_008_s1_latencia_productcatalog_baseline_r01] concluída: 300 amostras, 4 eventos
+2026-11-12T04:44:36 [cal1_009_c0_controle_mecade_r02] reset do ambiente
+2026-11-12T04:51:37 [cal1_009_c0_controle_mecade_r02] t=+0s CONTROL_START {'baseline': {'p95': 0.25302439637826957, 'p99': 0.7306666666666655, 'error_rate': 0.0}}
+2026-11-12T04:53:22 [cal1_009_c0_controle_mecade_r02] t=+105s ALERT {'I': 51.124}
+2026-11-12T04:53:33 [cal1_009_c0_controle_mecade_r02] t=+115s LIMIT {'I': 60.143}
+2026-11-12T04:53:33 [cal1_009_c0_controle_mecade_r02] t=+115s BLOCK {'I': 60.143}
+2026-11-12T04:53:33 [cal1_009_c0_controle_mecade_r02] t=+115s MITIGATION {'action': 'none', 'reason': 'BLOCK'}
+2026-11-12T04:53:52 [cal1_009_c0_controle_mecade_r02] t=+135s ALERT_CLEAR {'I': 64.447}
+2026-11-12T04:54:43 [cal1_009_c0_controle_mecade_r02] t=+185s ALERT {'I': 78.33}
+2026-11-12T04:54:53 [cal1_009_c0_controle_mecade_r02] t=+195s ALERT_CLEAR {'I': 80.805}
+2026-11-12T04:57:57 [cal1_009_c0_controle_mecade_r02] t=+380s ALERT {'I': 124.009}
+2026-11-12T04:58:33 [cal1_009_c0_controle_mecade_r02] t=+415s ALERT_CLEAR {'I': 135.854}
+2026-11-12T05:00:42 [cal1_009_c0_controle_mecade_r02] t=+545s ALERT {'I': 187.822}
+2026-11-12T05:01:37 [cal1_009_c0_controle_mecade_r02] t=+600s FAULT_END 
+2026-11-12T05:02:17 [cal1_009_c0_controle_mecade_r02] t=+640s ALERT_CLEAR {'I': 259.791}
+2026-11-12T05:08:28 [cal1_009_c0_controle_mecade_r02] t=+1010s ALERT {'I': 405.881}
+2026-11-12T05:08:47 [cal1_009_c0_controle_mecade_r02] t=+1030s ALERT_CLEAR {'I': 414.019}
+2026-11-12T05:10:27 [cal1_009_c0_controle_mecade_r02] t=+1130s ALERT {'I': 460.682}
+2026-11-12T05:11:13 [cal1_009_c0_controle_mecade_r02] t=+1175s ALERT_CLEAR {'I': 481.318}
+2026-11-12T05:11:27 [cal1_009_c0_controle_mecade_r02] t=+1190s ALERT {'I': 495.664}
+2026-11-12T05:11:33 [cal1_009_c0_controle_mecade_r02] concluída: 300 amostras, 18 eventos
+2026-11-12T05:11:33 Execução encerrada: 9 réplica(s) concluída(s) nesta sessão.

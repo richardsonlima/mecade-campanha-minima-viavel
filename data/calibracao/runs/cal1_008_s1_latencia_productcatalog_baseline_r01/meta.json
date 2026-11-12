@@ -1,0 +1,105 @@
+{
+  "run_id": "cal1_008_s1_latencia_productcatalog_baseline_r01",
+  "scenario": "s1_latencia_productcatalog",
+  "scenario_version": 1,
+  "arm": "baseline",
+  "backend": "k8s",
+  "status": "complete",
+  "wall_start": 1794457181.2382693,
+  "t_inject_abs": 1794457481.2382693,
+  "M_base": {
+    "p95": 0.22319517102615694,
+    "p99": 0.5682499999999985,
+    "error_rate": 0.0
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "event": "INJECT",
+      "baseline": {
+        "p95": 0.22319517102615694,
+        "p99": 0.5682499999999985,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "t": 295.0,
+      "event": "REACTIVE_FIRE"
+    },
+    {
+      "t": 420.0,
+      "event": "MITIGATION",
+      "action": "restart",
+      "reason": "RUNBOOK"
+    },
+    {
+      "t": 600.0,
+      "event": "FAULT_END"
+    }
+  ],
+  "audit": {
+    "enabled": false
+  },
+  "controller_cpu_s": 4.2852797339999995,
+  "timing": {
+    "warmup": 120,
+    "baseline": 300,
+    "fault": 600,
+    "recovery": 600,
+    "step": 5
+  },
+  "axioms": {
+    "decision_signals": [
+      "p95",
+      "p99",
+      "error_rate"
+    ],
+    "k": 2,
+    "d_on": 0.5,
+    "d_off": 0.3,
+    "tau_dwell": 15,
+    "aggregation": "max",
+    "deadband": 0.3,
+    "budget_B": 60.0,
+    "envelope_delta": 1.0
+  },
+  "reactive": {
+    "rules": [
+      {
+        "signal": "p99",
+        "op": ">",
+        "factor_of_baseline": 2.0
+      },
+      {
+        "signal": "error_rate",
+        "op": ">",
+        "absolute": 0.05
+      }
+    ],
+    "for": 300,
+    "response_delay": 120
+  },
+  "recovery": {
+    "hold": 60
+  },
+  "block": {
+    "stop_injection": false
+  },
+  "rto_s": 180,
+  "mitigation": {
+    "acao": "restart"
+  },
+  "git_commit": "67fbcac565807768d707ed19215ca3c317c589cd",
+  "k8s_server": "v1.36.4-gke.2377000",
+  "campaign_id": "mvc-2026-10",
+  "git_dirty": false,
+  "config_sha256": "12b29dfea973162035744bce65fce208325a8ecaef1e0d8faa98d65a1cd22032",
+  "plano": "calibracao",
+  "etapa": "calibracao",
+  "pair": "s1_latencia_productcatalog#01",
+  "rep": 1,
+  "order": 8,
+  "audit_planned": 1,
+  "tentativa": 1,
+  "fora_da_ordem": false
+}
