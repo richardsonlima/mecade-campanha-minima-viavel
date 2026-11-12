@@ -57,7 +57,7 @@ As definições exatas estão em `analysis/metrics.py`.
 | dentro do RTO | proporção de réplicas com `MTTR ≤ RTO` do cenário | H2, recuperação |
 | classe | crítico, degradado ou aceitável, com a mesma regra offline nos dois braços | H2, classificação |
 | área | soma de D_agr·Δt durante o incidente (`area_incidente`) | H1, detecção e estabilidade da latência |
-| variabilidade de P95/P99 | desvio-padrão de cada sinal durante o incidente (`p95_std`, `p99_std`; ver Seção 8) | H1, detecção e estabilidade da latência |
+| variabilidade de P95/P99 | desvio-padrão de cada sinal durante o incidente (`p95_std`, `p99_std`; decisão D4 de 2026-11-12, Seção 8) | H1, detecção e estabilidade da latência |
 | RRIndex_run | 1/(1 + V̄), com V igual à média dos D_m² | H2, convergência |
 | falsos bloqueios | fração dos controles em que houve BLOCK, no máximo 1 em 10 (Seção 8) | H1, falsos bloqueios |
 | Δ_audit,p95 | p95 do custo de enfileirar o evento, até 5 ms, nos controles com auditoria | H3, overhead |
@@ -68,6 +68,25 @@ A vazão de 1000 eventos/s da Camada 6 não é exercida pela carga da campanha, 
 
 Para a análise uso Wilcoxon pareado, delta de Cliff e intervalo de confiança de 95% por bootstrap
 da mediana das diferenças, separado por cenário.
+
+### Regra de veredito (minha decisão D1, 2026-11-12)
+
+Decidida antes de qualquer dado oficial. A numeração D1 e D4 desta subseção é a das decisões do
+autor de 2026-11-12 e não tem relação com a tabela D1 a D8 da Seção 5.
+
+- **Critério por cenário.** Um critério ATENDE num cenário quando a mediana da diferença pareada
+  (MECADE menos baseline, ou o sinal que for favorável ao MECADE em cada métrica) está do lado favorável ao
+  MECADE, o IC 95% bootstrap não cruza zero e o limiar da Tabela 4.6, quando houver, é cumprido pela mediana.
+- **Hipótese.** H1, H2 e H3 são ACEITAS quando todos os seus critérios atendem em todos os cenários
+  aplicáveis. Quando só alguns atendem, a hipótese é PARCIAL e o resultado é relatado cenário a cenário.
+  Quando nenhum atende, é NÃO ACEITA.
+- **Múltiplas comparações.** A correção de Holm sobre os p-valores de Wilcoxon entra como análise secundária.
+  A análise principal fica sem correção.
+- **Critérios sem diferença pareada** seguem o próprio limiar da Tabela 4.6. É o caso da taxa de falsos
+  bloqueios, que usa `false_block_verdict` com 0,1, e do overhead da auditoria (Δ_audit,p95 ≤ 5 ms e Δcpu ≤ 8%).
+- **Implementação.** `analysis/veredito.py`. O mapa de critério para hipótese e a direção favorável de cada
+  métrica ficam em `analysis.veredito` de `config/campaign.yaml`. O que a Tabela 4.6 não fecha fica marcado como
+  `pendente` no mapa, e a hipótese afetada sai como PENDENTE até eu decidir.
 
 Dois rótulos diferentes para réplicas com problema:
 
@@ -133,4 +152,5 @@ Precisam estar registradas aqui, em commit anterior à primeira réplica oficial
 | Limiar de falsos bloqueios (H1, Tabela 4.6) | decidido em 2026-11-11: no máximo 1 BLOCK em 10 réplicas de controle (`analysis.false_block_max_rate: 0.1` em `config/campaign.yaml`). O limiar é uma taxa: com 10 controles tolera 1 BLOCK, com 9 já reprova com 1, com 20 tolera 2 |
 | TTD como critério de aceitação ou métrica descritiva | decidido em 2026-11-11: critério de aceitação, vale a Tabela 4.6 da v0.8 |
 | Limite de réplicas perdidas | decidido em 2026-11-11: 10%, contando `falha_execucao` de qualquer braço e `censurada` do MECADE; `censurada` do baseline é só relatada (Seção 4) |
-| Medida da variabilidade de P95/P99 | a v0.8 não define. O código usa o desvio-padrão durante o incidente, a confirmar |
+| Medida da variabilidade de P95/P99 | decidido em 2026-11-12 (D4): desvio-padrão durante o incidente (`p95_std`, `p99_std`). A v0.8 não define a medida; confirma o que o código já fazia |
+| Regra de veredito | decidido em 2026-11-12 (D1): critério atende por cenário com mediana favorável, IC 95% bootstrap sem cruzar zero e limiar cumprido; hipótese ACEITA, PARCIAL ou NÃO ACEITA; Holm só como análise secundária (Seção 4, "Regra de veredito") |
