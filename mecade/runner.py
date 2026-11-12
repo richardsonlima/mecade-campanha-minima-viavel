@@ -14,6 +14,7 @@ steps.csv e prom_range.csv.
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import statistics
 import subprocess
@@ -36,8 +37,26 @@ def _git_commit() -> str:
         return "sem-git"
 
 
+def _git_dirty() -> bool | None:
+    """Árvore suja fora de data/ (os dados das próprias réplicas não contam). None se não há git."""
+    try:
+        r = subprocess.run(["git", "status", "--porcelain", "--", ".", ":(exclude)data"], cwd=ROOT,
+                           capture_output=True, text=True, check=True)
+        return bool(r.stdout.strip())
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _config_sha256(path: Path = ROOT / "config" / "campaign.yaml") -> str:
+    try:
+        return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    except OSError:
+        return "sem-config"
+
+
 def run_one(*, run_id: str, scenario: dict, arm: str, campaign: dict, prom, kube, clock,
-            out_root: Path, audit_enabled: bool | None = None, sim_world=None, log=print) -> dict:
+            out_root: Path, audit_enabled: bool | None = None, sim_world=None, plano: str | None = None, log=print) -> dict:
+    """`plano` é oficial, calibracao ou sim. Sem ele, o backend sim vira \"sim\" e o resto vira \"oficial\"."""
     tm, ns = campaign["timing"], campaign["namespace"]
     step = float(tm["step"])
     target = scenario["alvo"]
@@ -195,6 +214,8 @@ def run_one(*, run_id: str, scenario: dict, arm: str, campaign: dict, prom, kube
         "recovery": campaign["recovery"], "block": campaign["block"],
         "rto_s": scenario.get("rto_s"), "mitigation": scenario.get("mitigacao"),
         "git_commit": _git_commit(), "k8s_server": kube.server_version(),
+        "campaign_id": campaign.get("campaign_id"), "git_dirty": _git_dirty(),
+        "config_sha256": _config_sha256(), "plano": "sim" if is_sim else (plano or "oficial"),
     }
     (out / "meta.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
     log(f"[{run_id}] concluída: {len(rows)} amostras, {len(events)} eventos")

@@ -319,7 +319,8 @@ def main() -> None:
         kube_atual["k"] = kube
         meta = run_one(run_id=row["run_id"], scenario=scenario, arm=row["arm"], campaign=camp,
                        prom=prom, kube=kube, clock=clock, out_root=out_root,
-                       audit_enabled=bool(int(row["audit"])), sim_world=world, log=log)
+                       audit_enabled=bool(int(row["audit"])), sim_world=world, log=log,
+                       plano="sim" if a.backend == "sim" else ("calibracao" if a.calibracao else "oficial"))
         meta["campaign_id"] = camp["campaign_id"]
         meta["etapa"] = "calibracao" if a.calibracao else "oficial"
         return meta
