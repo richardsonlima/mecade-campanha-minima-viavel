@@ -18,5 +18,6 @@
 | Tabela 4.1, hipóteses H1 a H3 | `docs/PROTOCOLO.md`, Seção 4 |
 | Tabela 4.5, decisões D1 a D8 | `docs/PROTOCOLO.md`, Seção 5 |
 | Tabela 4.6, critérios de aceitação | `analysis/analysis.ipynb`, Seções 2 a 5 |
+| Tabela 4.6, mapa de critério para hipótese e regra de veredito (D1, 2026-11-12) | `analysis.veredito` em `config/campaign.yaml`, `analysis/veredito.py` e Seção 6 do notebook |
 | Seção 4.6, reprodutibilidade | `versions.env`, `CHANGELOG.md`, `data/README.md` e os metadados de cada réplica (commit, versões, parâmetros) |
 | Seção 4.6, cadeia de evidências e Cap. 5 | `docs/EVIDENCIAS.md` e `data/EVIDENCIAS_MANIFESTO.json` (`make evidencias`, `make verificar-evidencias`) |

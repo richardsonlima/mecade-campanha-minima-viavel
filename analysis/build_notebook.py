@@ -55,7 +55,23 @@ nb.cells = [
          "print(aud)\n"
          "o = audit_overhead(m); print(o)\n"
          "print('Critério: Δ_audit,p95 <= 5 ms ->', o['delta_audit_p95_ms'] <= 5, '| Δcpu <= 8% ->', o['delta_cpu_pct'] <= 8)"),
-    md("## 6. Figuras"),
+    md("## 6. Vereditos (decisão D1, 2026-11-12)\n\n"
+       "Critério por cenário: mediana da diferença pareada do lado favorável ao MECADE, IC 95% *bootstrap* sem cruzar zero "
+       "e limiar da Tabela 4.6 cumprido. Hipótese: ACEITA (todos os critérios em todos os cenários), PARCIAL ou NÃO ACEITA. "
+       "O mapa de critério para hipótese está em `analysis.veredito` de `config/campaign.yaml`. "
+       "Componente marcada como pendente não decide, e a hipótese afetada sai PENDENTE. "
+       "A análise principal não tem correção; Holm é a secundária."),
+    code("from analysis.veredito import resumo\n"
+         "cfg = load_campaign()['analysis']\n"
+         "tab_v, crit, hip, crit_holm, hip_holm = resumo(m, cfg['veredito'], cfg)\n"
+         "print('Análise principal, sem correção')\n"
+         "crit"),
+    code("hip"),
+    code("print('Análise secundária, com Holm (família única das componentes pareadas decisivas)')\n"
+         "crit_holm"),
+    code("hip_holm"),
+    code("tab_v.round(4)"),
+    md("## 7. Figuras"),
     code("def fig_series(scenario):\n"
          "    fig, ax = plt.subplots(figsize=(7, 3.6), dpi=150)\n"
          "    for meta, df in runs:\n"
@@ -71,7 +87,7 @@ nb.cells = [
     code("fig, ax = plt.subplots(figsize=(6, 3.6), dpi=150)\n"
          "main.boxplot(column='TTR_capped', by=['scenario','arm'], ax=ax, rot=30)\n"
          "ax.set_ylabel('TTR (s)'); plt.suptitle(''); fig.tight_layout(); fig.savefig(FIG / 'TTR_box.png', dpi=300)"),
-    md("## 7. Exportação para a dissertação"),
+    md("## 8. Exportação para a dissertação"),
     code("m.to_csv(ROOT / 'analysis' / 'metricas_por_replica.csv', index=False)\n"
          "print('analysis/metricas_por_replica.csv gravado')"),
 ]

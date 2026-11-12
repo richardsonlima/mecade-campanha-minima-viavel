@@ -18,6 +18,46 @@ replicas:
 
 analysis:
   false_block_max_rate: 0.1    # H1: no máximo 1 BLOCK em 10 controles (decisão de 2026-11-11, docs/PROTOCOLO.md Seção 8)
+  # Regra de veredito (decisão D1 de 2026-11-12, docs/PROTOCOLO.md Seção 4). Mapa da Tabela 4.6 da v0.8.
+  # favoravel: "menor" ou "maior" valor de MECADE menos baseline. Sem diferença pareada: tipo limiar.
+  # `pendente` marca o que a Tabela 4.6 não fecha; essa componente não decide e a hipótese sai PENDENTE.
+  veredito:
+    alpha: 0.05                # nível do Holm (análise secundária)
+    criterios:
+      recuperacao:             # H2, Tabela 4.6 linha 1
+        hipotese: H2
+        componentes:
+          - {metrica: MTTR_capped, favoravel: menor}
+          - {metrica: TTR_capped, favoravel: menor}
+          - metrica: rto_ok
+            favoravel: maior
+            pendente: "proporção dentro do RTO: a Tabela 4.6 não define a diferença pareada de um indicador 0/1"
+      classificacao:           # H2, Tabela 4.6 linha 2
+        hipotese: H2
+        componentes:
+          - metrica: classe_pior
+            favoravel: menor
+            pendente: "proporção de degradadas ou críticas: a Tabela 4.6 não define a diferença pareada de um indicador 0/1"
+      deteccao_estabilidade:   # H1, Tabela 4.6 linha 3
+        hipotese: H1
+        componentes:
+          - {metrica: TTD_capped, favoravel: menor}
+          - {metrica: area_incidente, favoravel: menor}
+          - {metrica: p95_std, favoravel: menor}
+          - {metrica: p99_std, favoravel: menor}
+      convergencia:            # H2, Tabela 4.6 linha 4
+        hipotese: H2
+        componentes:
+          - {metrica: RRIndex_run, favoravel: maior}
+      falsos_bloqueios:        # H1, Tabela 4.6 linha 5, sem diferença pareada (controles)
+        hipotese: H1
+        componentes:
+          - {metrica: taxa_falsos_bloqueios, tipo: limiar, op: "<=", limiar_ref: false_block_max_rate}
+      overhead_auditoria:      # H3, Tabela 4.6 linha 6, sem diferença pareada (controles com e sem auditoria)
+        hipotese: H3
+        componentes:
+          - {metrica: delta_audit_p95_ms, tipo: limiar, op: "<=", limiar: 5}
+          - {metrica: delta_cpu_pct, tipo: limiar, op: "<=", limiar: 8}
 
 scenarios:                     # arquivos em scenarios/
   - s1_latencia_productcatalog
