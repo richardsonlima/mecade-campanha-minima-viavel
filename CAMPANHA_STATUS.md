@@ -1,8 +1,8 @@
 # Diário da campanha MECADE (2026)
 
-Fase atual: calibração, rodada 1 rodando na VM desde 12/11 01:07 UTC.
-Custo estimado: menos de R$ 5 até 01:15 UTC, com taxa de R$ 1,6 a 2,2/h. O faturamento confirma com atraso.
-Próximo passo: terminar a rodada 1, aplicar a regra de calibração, congelar e criar a tag `mvc-2026-11-calibracao`.
+Fase atual: execuções oficiais (70), rodando na VM desde 12/11, com a calibração congelada (tag `mvc-2026-11-calibracao`).
+Custo estimado: cerca de R$ 11 até 12/11 07:30 UTC, com taxa de R$ 1,5 a 2,2/h. O faturamento confirma com atraso.
+Próximo passo: terminar as execuções oficiais (fim previsto em 13/11), verificar as trilhas, analisar e criar a tag `mvc-2026-11-final`.
 
 ## 05/11 - pré-voo e preparação
 
