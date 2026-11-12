@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from analysis.veredito import (adicionar_holm, avaliar_componente, holm, resolver_limiares, veredito_criterios,
-                               veredito_hipoteses)
+from analysis.veredito import (adicionar_holm, avaliar_componente, holm, mcnemar_comparison, mcnemar_exato,
+                               resolver_limiares, veredito_criterios, veredito_hipoteses)
 from mecade.config import ROOT as ROOT_REPO, load_campaign
 
 MENOR = {"metrica": "x", "favoravel": "menor"}
@@ -205,3 +205,89 @@ def test_estrito_so_liga_com_estrito_igual_a_1():
     assert "--estrito" in cmd("1")
     assert "--estrito" not in cmd("0")
     assert "--estrito" not in cmd(None)
+
+
+# D5: proporções da H2 por McNemar exato
+PROP_MAIOR = {"metrica": "rto_ok", "tipo": "proporcao", "favoravel": "maior"}
+PROP_MENOR = {"metrica": "classe_pior", "tipo": "proporcao", "favoravel": "menor"}
+
+
+def test_mcnemar_exato_valores_conhecidos():
+    assert mcnemar_exato(0, 0) == 1.0
+    assert mcnemar_exato(3, 3) == pytest.approx(1.0)
+    assert mcnemar_exato(5, 0) == pytest.approx(2 * 0.5 ** 5)
+    assert mcnemar_exato(0, 5) == pytest.approx(0.0625)
+    assert mcnemar_exato(8, 1) == pytest.approx(2 * (1 + 9) / 512)
+
+
+def _pares(scenario, metric, pares):
+    """pares: lista de (mecade, baseline) com indicador 0/1."""
+    linhas = []
+    for i, (mec, base) in enumerate(pares):
+        for arm, v in (("mecade", mec), ("baseline", base)):
+            linhas.append({"scenario": scenario, "pair": f"{scenario}#{i}", "arm": arm, metric: float(v)})
+    return pd.DataFrame(linhas)
+
+
+def test_mcnemar_comparison_conta_discordantes():
+    m = _pares("s1", "rto_ok", [(1, 0)] * 6 + [(1, 1)] * 2 + [(0, 0)])
+    r = mcnemar_comparison(m, "rto_ok").iloc[0]
+    assert (r["discordantes_mecade"], r["discordantes_baseline"], r["n_pairs"]) == (6, 0, 9)
+    assert r["diff_prop"] == pytest.approx(8 / 9 - 2 / 9)
+    assert r["mcnemar_p"] == pytest.approx(2 * 0.5 ** 6)
+
+
+def test_proporcao_atende_com_diferenca_favoravel_e_p_menor_que_alfa():
+    ok = {"diff_prop": 0.5, "mcnemar_p": 0.03}
+    assert avaliar_componente(ok, PROP_MAIOR)[0]
+    assert avaliar_componente({"diff_prop": -0.5, "mcnemar_p": 0.03}, PROP_MENOR)[0]
+    assert not avaliar_componente({"diff_prop": 0.5, "mcnemar_p": 0.05}, PROP_MAIOR)[0]       # p = alfa não passa
+    assert not avaliar_componente({"diff_prop": 0.5, "mcnemar_p": 0.2}, PROP_MAIOR)[0]
+    assert not avaliar_componente({"diff_prop": -0.5, "mcnemar_p": 0.01}, PROP_MAIOR)[0]      # lado contrário
+    assert not avaliar_componente({"diff_prop": 0.0, "mcnemar_p": 1.0}, PROP_MAIOR)[0]
+    assert not avaliar_componente({"diff_prop": 0.5, "mcnemar_p": np.nan}, PROP_MAIOR)[0]
+    assert not avaliar_componente({"diff_prop": 0.5, "mcnemar_p": 0.03}, PROP_MENOR)[0]       # menor é o favorável
+
+
+def test_proporcao_entra_na_familia_h2_do_holm():
+    mapa = {"r": {"hipotese": "H2", "componentes": [{"metrica": "mc", "favoravel": "maior"}, PROP_MAIOR]}}
+    t = pd.DataFrame([{"scenario": "s1", "metric": "mc", "wilcoxon_p": 0.02, "mcnemar_p": np.nan},
+                      {"scenario": "s1", "metric": "rto_ok", "wilcoxon_p": np.nan, "mcnemar_p": 0.03}])
+    h = adicionar_holm(t, mapa)
+    assert h["p_holm"].tolist() == pytest.approx([0.04, 0.04])
+    linha_ = {"diff_prop": 0.5, "mcnemar_p": 0.03, "p_holm": 0.04}
+    assert avaliar_componente(linha_, PROP_MAIOR, alpha=0.05)[0]
+    assert not avaliar_componente({**linha_, "p_holm": 0.06}, PROP_MAIOR, alpha=0.05)[0]
+
+
+# D6: uma família de Holm por hipótese
+def test_holm_uma_familia_por_hipotese():
+    mapa = {"a": {"hipotese": "H1", "componentes": [{"metrica": "h1a", "favoravel": "menor"}, {"metrica": "h1b", "favoravel": "menor"}]},
+            "b": {"hipotese": "H2", "componentes": [{"metrica": "h2a", "favoravel": "menor"}]}}
+    t = pd.DataFrame([{"scenario": "s1", "metric": "h1a", "wilcoxon_p": 0.01},
+                      {"scenario": "s1", "metric": "h1b", "wilcoxon_p": 0.04},
+                      {"scenario": "s1", "metric": "h2a", "wilcoxon_p": 0.03}])
+    h = adicionar_holm(t, mapa).set_index("metric")["p_holm"]
+    assert h["h1a"] == pytest.approx(0.02) and h["h1b"] == pytest.approx(0.04)   # m = 2 só dentro da H1
+    assert h["h2a"] == pytest.approx(0.03)                                         # família da H2 tem m = 1
+    # com família única o h2a sairia 0.06 (m = 3 no passo de p = 0.03 vira 2 * 0.03, monótono com 0.04: 0.06)
+
+
+# D7: valor igual ao limiar atende (<=)
+def test_limiar_igual_atende_nos_tres_limiares_da_config():
+    cfg = load_campaign()["analysis"]
+    mapa = resolver_limiares(cfg["veredito"], cfg)
+    for crit in ("falsos_bloqueios", "overhead_auditoria"):
+        for c in mapa[crit]["componentes"]:
+            assert c["op"] == "<="
+            assert avaliar_componente({"valor": c["limiar"]}, c)[0]
+            assert not avaliar_componente({"valor": c["limiar"] * 1.01 + 1e-6}, c)[0]
+
+
+def test_proporcoes_da_h2_nao_estao_mais_pendentes_na_config():
+    cfg = load_campaign()["analysis"]
+    mapa = resolver_limiares(cfg["veredito"], cfg)
+    comps = {c["metrica"]: c for s in mapa.values() for c in s["componentes"]}
+    assert comps["rto_ok"]["tipo"] == "proporcao" and comps["rto_ok"]["favoravel"] == "maior"
+    assert comps["classe_pior"]["tipo"] == "proporcao" and comps["classe_pior"]["favoravel"] == "menor"
+    assert not any(c.get("pendente") for c in comps.values())

@@ -29,15 +29,11 @@ analysis:
         componentes:
           - {metrica: MTTR_capped, favoravel: menor}
           - {metrica: TTR_capped, favoravel: menor}
-          - metrica: rto_ok
-            favoravel: maior
-            pendente: "proporção dentro do RTO: a Tabela 4.6 não define a diferença pareada de um indicador 0/1"
+          - {metrica: rto_ok, tipo: proporcao, favoravel: maior}   # D5: McNemar exato, p < alpha
       classificacao:           # H2, Tabela 4.6 linha 2
         hipotese: H2
         componentes:
-          - metrica: classe_pior
-            favoravel: menor
-            pendente: "proporção de degradadas ou críticas: a Tabela 4.6 não define a diferença pareada de um indicador 0/1"
+          - {metrica: classe_pior, tipo: proporcao, favoravel: menor}   # D5: McNemar exato, p < alpha
       deteccao_estabilidade:   # H1, Tabela 4.6 linha 3
         hipotese: H1
         componentes:

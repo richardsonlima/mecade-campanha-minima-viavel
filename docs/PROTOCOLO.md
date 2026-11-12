@@ -80,8 +80,16 @@ autor de 2026-11-12 e não tem relação com a tabela D1 a D8 da Seção 5.
 - **Hipótese.** H1, H2 e H3 são ACEITAS quando todos os seus critérios atendem em todos os cenários
   aplicáveis. Quando só alguns atendem, a hipótese é PARCIAL e o resultado é relatado cenário a cenário.
   Quando nenhum atende, é NÃO ACEITA.
-- **Múltiplas comparações.** A correção de Holm sobre os p-valores de Wilcoxon entra como análise secundária.
-  A análise principal fica sem correção.
+- **Múltiplas comparações.** A correção de Holm sobre os p-valores de Wilcoxon e de McNemar entra como análise
+  secundária, com uma família por hipótese (H1, H2 e H3; decisão D6). A análise principal fica sem correção.
+- **Proporções da H2 (decisão D5).** Réplicas dentro do RTO (`rto_ok`, critério de recuperação, maior é favorável) e
+  réplicas degradadas ou críticas (`classe_pior`, critério de classificação, menor é favorável) são indicadores 0/1.
+  Comparo cada um por McNemar exato sobre os pares (MECADE, baseline): teste binomial bilateral de p = 1/2 sobre os pares
+  discordantes (sem discordantes, p = 1). A componente ATENDE quando a diferença de proporções (MECADE menos baseline)
+  está do lado favorável e p < 0,05, já na análise principal; no Holm secundário exige também o p ajustado abaixo de
+  0,05. Os p de McNemar entram na família da H2. Por isso essas duas componentes deixaram de ser `pendente`.
+- **Igualdade no limiar (decisão D7).** Nos limiares "abaixo de" (taxa de falsos bloqueios, Δ_audit,p95 e Δcpu), valor
+  igual ao limiar atende (≤).
 - **Critérios sem diferença pareada** seguem o próprio limiar da Tabela 4.6. É o caso da taxa de falsos
   bloqueios, que usa `false_block_verdict` com 0,1, e do overhead da auditoria (Δ_audit,p95 ≤ 5 ms e Δcpu ≤ 8%).
 - **Cenário sem dado.** Cenário planejado (os do plano oficial) sem nenhum par válido sai SEM_DADOS no critério e conta
@@ -158,3 +166,6 @@ Precisam estar registradas aqui, em commit anterior à primeira réplica oficial
 | Limite de réplicas perdidas | decidido em 2026-11-11: 10%, contando `falha_execucao` de qualquer braço e `censurada` do MECADE; `censurada` do baseline é só relatada (Seção 4) |
 | Medida da variabilidade de P95/P99 | decidido em 2026-11-12 (D4): desvio-padrão durante o incidente (`p95_std`, `p99_std`). A v0.8 não define a medida; confirma o que o código já fazia |
 | Regra de veredito | decidido em 2026-11-12 (D1): critério atende por cenário com mediana favorável, IC 95% bootstrap sem cruzar zero e limiar cumprido; hipótese ACEITA, PARCIAL ou NÃO ACEITA; Holm só como análise secundária (Seção 4, "Regra de veredito") |
+| Proporções da H2 (RTO e degradadas ou críticas) | decidido em 2026-11-12 (D5 = A): McNemar exato sobre os pares (MECADE, baseline); atende com diferença favorável e p < 0,05 (Seção 4) |
+| Família do Holm | decidido em 2026-11-12 (D6 = A): uma família por hipótese (H1, H2, H3); os p de McNemar entram na H2 |
+| Igualdade no limiar | decidido em 2026-11-12 (D7 = A): valor igual ao limiar "abaixo de" atende (≤) |

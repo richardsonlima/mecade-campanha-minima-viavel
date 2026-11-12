@@ -13,7 +13,12 @@ Regras:
   hipótese     ACEITA (tudo atende), PARCIAL (algumas atendem, outras não ou sem dados), NAO_ACEITA (nenhuma
                atende) e PENDENTE (há PENDENTE e nenhum ATENDE junto de falha, então o resultado ainda poderia
                mudar; NAO_ATENDE misturado com PENDENTE, sem ATENDE, sai PENDENTE). SEM_DADOS se não há dado.
-  Holm         análise secundária: exige também p ajustado < alpha nas componentes pareadas.
+  proporção    `tipo: proporcao` (decisão D5, 2026-11-12): indicador 0/1 comparado por McNemar exato sobre os pares
+               (MECADE, baseline). ATENDE quando a diferença de proporções (MECADE menos baseline) está do lado
+               favorável e p < alpha (0,05), já na análise principal.
+  limiar       "abaixo de" é <=: valor igual ao limiar atende (decisão D7).
+  Holm         análise secundária: exige também p ajustado < alpha nas componentes pareadas e nas proporções, com uma
+               família por hipótese (H1, H2, H3; decisão D6). Os p de McNemar entram na família da H2.
 """
 from __future__ import annotations
 
@@ -23,6 +28,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 from analysis.metrics import audit_overhead, false_block_verdict, paired_comparison
 
@@ -50,8 +56,48 @@ def _ausente(x) -> bool:
     return x is None or (isinstance(x, float) and math.isnan(x))
 
 
-def avaliar_componente(linha: dict, comp: dict, alpha: float | None = None) -> tuple[bool, str]:
-    """(atende, motivo) de uma componente numa linha da tabela. `alpha` liga o Holm: exige `p_holm` < alpha."""
+def mcnemar_exato(b: int, c: int) -> float:
+    """p bilateral do McNemar exato: binomial(b + c, 1/2) sobre os pares discordantes. Sem discordantes, p = 1."""
+    n = int(b) + int(c)
+    if n == 0:
+        return 1.0
+    return float(stats.binomtest(int(min(b, c)), n, 0.5, alternative="two-sided").pvalue)
+
+
+def mcnemar_comparison(m: pd.DataFrame, metric: str) -> pd.DataFrame:
+    """Indicador 0/1 `metric`, MECADE contra baseline, pareado por (cenário, réplica). `diff_prop` é a proporção do
+    MECADE menos a do baseline; `mcnemar_p` é o McNemar exato (D5). Mesmas colunas-chave de `paired_comparison`."""
+    out = []
+    main = m[m["pair"].astype(str) != ""]
+    for sc, g in main.groupby("scenario"):
+        w = g.pivot_table(index="pair", columns="arm", values=metric, aggfunc="first").dropna()
+        if not {"baseline", "mecade"} <= set(w.columns) or len(w) == 0:
+            continue
+        mec, base = w["mecade"] > 0.5, w["baseline"] > 0.5
+        b, c = int((mec & ~base).sum()), int((~mec & base).sum())
+        out.append({"scenario": sc, "metric": metric, "n_pairs": len(w),
+                    "prop_baseline": float(base.mean()), "prop_mecade": float(mec.mean()),
+                    "diff_prop": float(mec.mean() - base.mean()), "discordantes_mecade": b, "discordantes_baseline": c,
+                    "mcnemar_p": mcnemar_exato(b, c)})
+    return pd.DataFrame(out)
+
+
+def avaliar_componente(linha: dict, comp: dict, alpha: float | None = None, alpha_prop: float = 0.05) -> tuple[bool, str]:
+    """(atende, motivo) de uma componente numa linha da tabela. `alpha` liga o Holm: exige `p_holm` < alpha.
+    `alpha_prop` é o nível do McNemar das componentes `tipo: proporcao`, que vale também na análise principal."""
+    if comp.get("tipo") == "proporcao":
+        d, p = linha.get("diff_prop"), linha.get("mcnemar_p")
+        if _ausente(d) or _ausente(p):
+            return False, "sem pares ou McNemar indisponível"
+        if (-1 if comp["favoravel"] == "menor" else 1) * d <= 0:
+            return False, "diferença de proporções do lado contrário ou nula"
+        if p >= alpha_prop:
+            return False, f"McNemar exato p = {p:.3g} não passa em {alpha_prop}"
+        if alpha is not None:
+            ph = linha.get("p_holm")
+            if _ausente(ph) or ph >= alpha:
+                return False, "p ajustado por Holm não passa"
+        return True, "atende"
     if comp.get("tipo") == "limiar":
         v = linha.get("valor")
         if _ausente(v):
@@ -89,7 +135,7 @@ def cenarios_planejados(plano_csv: str | Path | None, cenarios_config: list[str]
 
 
 def veredito_criterios(tabela: pd.DataFrame, mapa: dict, alpha_holm: float | None = None,
-                       cenarios: list[str] | None = None) -> pd.DataFrame:
+                       cenarios: list[str] | None = None, alpha_prop: float = 0.05) -> pd.DataFrame:
     """Uma linha por (critério, cenário): `status` ATENDE, NAO_ATENDE, PENDENTE ou SEM_DADOS e o motivo por componente.
     `mapa` é `analysis.veredito.criterios`. Entram os cenários que aparecem na tabela para alguma componente do
     critério e, quando `cenarios` (os planejados) é dado, também os que faltam, como SEM_DADOS: a D1 exige todos os
@@ -116,7 +162,7 @@ def veredito_criterios(tabela: pd.DataFrame, mapa: dict, alpha_holm: float | Non
                 if rows.empty:
                     falhas.append(f"{c['metrica']}: sem linha")
                     continue
-                ok, motivo = avaliar_componente(rows.iloc[0].to_dict(), c, alpha_holm)
+                ok, motivo = avaliar_componente(rows.iloc[0].to_dict(), c, alpha_holm, alpha_prop)
                 if ok:
                     ok_n += 1
                 else:
@@ -157,13 +203,22 @@ def veredito_hipoteses(crit: pd.DataFrame, hipoteses=("H1", "H2", "H3")) -> pd.D
 
 
 def adicionar_holm(tabela: pd.DataFrame, mapa: dict) -> pd.DataFrame:
-    """Coluna `p_holm`: Holm sobre todos os p de Wilcoxon das componentes pareadas decisivas do mapa (família única)."""
+    """Coluna `p_holm`: Holm com uma família por hipótese (D6), sobre os p das componentes pareadas decisivas
+    (Wilcoxon, ou McNemar nas `tipo: proporcao`) de todos os cenários da hipótese."""
     t = tabela.copy()
-    decisivas = {c["metrica"] for s in mapa.values() for c in s["componentes"] if c.get("tipo") != "limiar" and not c.get("pendente")}
-    mask = t["metric"].isin(decisivas) & t["wilcoxon_p"].notna() if "wilcoxon_p" in t else pd.Series(False, index=t.index)
     t["p_holm"] = np.nan
-    if mask.any():
-        t.loc[mask, "p_holm"] = holm(t.loc[mask, "wilcoxon_p"].to_numpy())
+    for h in sorted({s["hipotese"] for s in mapa.values()}):
+        mets = {c["metrica"]: ("mcnemar_p" if c.get("tipo") == "proporcao" else "wilcoxon_p")
+                for s in mapa.values() if s["hipotese"] == h for c in s["componentes"]
+                if c.get("tipo") != "limiar" and not c.get("pendente")}
+        p = pd.Series(np.nan, index=t.index)
+        for met, col in mets.items():
+            if col in t:
+                sel = t["metric"] == met
+                p[sel] = t.loc[sel, col]
+        mask = p.notna()
+        if mask.any():
+            t.loc[mask, "p_holm"] = holm(p[mask].to_numpy())
     return t
 
 
@@ -187,8 +242,9 @@ def montar_tabela(m: pd.DataFrame, mapa: dict, false_block_max_rate: float) -> p
     d = m.copy()
     d["rto_ok"] = d["rto_ok"].astype(float)
     d["classe_pior"] = (d["classe"] != "aceitavel").astype(float)
-    metricas = [c["metrica"] for s in mapa.values() for c in s["componentes"] if c.get("tipo") != "limiar"]
-    partes = [paired_comparison(d, k) for k in metricas]
+    comps = [c for s in mapa.values() for c in s["componentes"] if c.get("tipo") != "limiar"]
+    partes = [mcnemar_comparison(d, c["metrica"]) if c.get("tipo") == "proporcao" else paired_comparison(d, c["metrica"])
+              for c in comps]
     tab = pd.concat([p for p in partes if len(p)] or [pd.DataFrame()], ignore_index=True)
     fb = false_block_verdict(m, false_block_max_rate)
     ov = audit_overhead(m)
@@ -205,6 +261,7 @@ def resumo(m: pd.DataFrame, veredito_cfg: dict, analysis_cfg: dict, cenarios: li
     planejados (`cenarios_planejados`); o que faltar na tabela vira SEM_DADOS."""
     mapa = resolver_limiares(veredito_cfg, analysis_cfg)
     tab = adicionar_holm(montar_tabela(m, mapa, analysis_cfg["false_block_max_rate"]), mapa)
-    c1 = veredito_criterios(tab, mapa, cenarios=cenarios)
-    c2 = veredito_criterios(tab, mapa, alpha_holm=veredito_cfg["alpha"], cenarios=cenarios)
+    alfa = veredito_cfg["alpha"]
+    c1 = veredito_criterios(tab, mapa, cenarios=cenarios, alpha_prop=alfa)
+    c2 = veredito_criterios(tab, mapa, alpha_holm=alfa, cenarios=cenarios, alpha_prop=alfa)
     return tab, c1, veredito_hipoteses(c1), c2, veredito_hipoteses(c2)

@@ -60,8 +60,9 @@ nb.cells = [
        "e limiar da Tabela 4.6 cumprido. Hipótese: ACEITA (todos os critérios em todos os cenários), PARCIAL ou NÃO ACEITA. "
        "O mapa de critério para hipótese está em `analysis.veredito` de `config/campaign.yaml`. "
        "Componente marcada como pendente não decide, e a hipótese afetada sai PENDENTE. "
+       "As proporções da H2 (`rto_ok`, `classe_pior`) usam McNemar exato sobre os pares e exigem p < 0,05 (D5). "
        "Cenário planejado sem par válido sai SEM_DADOS e impede a hipótese de ser ACEITA. "
-       "A análise principal não tem correção; Holm é a secundária."),
+       "A análise principal não tem correção; Holm é a secundária, com uma família por hipótese (D6)."),
     code("from analysis.veredito import cenarios_planejados, resumo\n"
          "camp = load_campaign(); cfg = camp['analysis']\n"
          "plano = ROOT / 'data' / f\"plan_{camp['campaign_id']}.csv\"  # o plano oficial cobre o de contingência\n"
@@ -71,7 +72,7 @@ nb.cells = [
          "print('Análise principal, sem correção')\n"
          "crit"),
     code("hip"),
-    code("print('Análise secundária, com Holm (família única das componentes pareadas decisivas)')\n"
+    code("print('Análise secundária, com Holm (uma família por hipótese: H1, H2, H3)')\n"
          "crit_holm"),
     code("hip_holm"),
     code("tab_v.round(4)"),
