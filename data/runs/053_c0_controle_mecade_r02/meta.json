@@ -1,0 +1,125 @@
+{
+  "run_id": "053_c0_controle_mecade_r02",
+  "scenario": "c0_controle",
+  "scenario_version": 1,
+  "arm": "mecade",
+  "backend": "k8s",
+  "status": "complete",
+  "wall_start": 1794545903.9918838,
+  "t_inject_abs": 1794546203.9918838,
+  "M_base": {
+    "p95": 0.2407786885245902,
+    "p99": 0.4985833333333326,
+    "error_rate": 0.0
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "event": "CONTROL_START",
+      "baseline": {
+        "p95": 0.2407786885245902,
+        "p99": 0.4985833333333326,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "t": 305.0,
+      "event": "ALERT",
+      "I": 66.513
+    },
+    {
+      "t": 320.0,
+      "event": "ALERT_CLEAR",
+      "I": 105.843
+    },
+    {
+      "t": 365.0,
+      "event": "ALERT",
+      "I": 194.163
+    },
+    {
+      "t": 385.0,
+      "event": "ALERT_CLEAR",
+      "I": 300.411
+    },
+    {
+      "t": 425.0,
+      "event": "ALERT",
+      "I": 416.139
+    },
+    {
+      "t": 445.0,
+      "event": "ALERT_CLEAR",
+      "I": 511.633
+    },
+    {
+      "t": 600.0,
+      "event": "FAULT_END"
+    }
+  ],
+  "audit": {
+    "enabled": false
+  },
+  "controller_cpu_s": 4.405241787999984,
+  "timing": {
+    "warmup": 120,
+    "baseline": 300,
+    "fault": 600,
+    "recovery": 600,
+    "step": 5
+  },
+  "axioms": {
+    "decision_signals": [
+      "p95",
+      "p99",
+      "error_rate"
+    ],
+    "k": 2,
+    "d_on": 2.9,
+    "d_off": 2.7,
+    "tau_dwell": 15,
+    "aggregation": "max",
+    "deadband": 2.7,
+    "budget_B": 26837.7,
+    "envelope_delta": 1.0
+  },
+  "reactive": {
+    "rules": [
+      {
+        "signal": "p99",
+        "op": ">",
+        "factor_of_baseline": 2.0
+      },
+      {
+        "signal": "error_rate",
+        "op": ">",
+        "absolute": 0.05
+      }
+    ],
+    "for": 300,
+    "response_delay": 120
+  },
+  "recovery": {
+    "hold": 60
+  },
+  "block": {
+    "stop_injection": false
+  },
+  "rto_s": 180,
+  "mitigation": {
+    "acao": "none"
+  },
+  "git_commit": "6ebcd9752c054c50c8d1729bc736687d71b6fdce",
+  "k8s_server": "v1.36.4-gke.2377000",
+  "campaign_id": "mvc-2026-11",
+  "git_dirty": false,
+  "config_sha256": "b43291c43eb591cabeb082093e4f7d516a9014605e41582a018fce7c67ac3317",
+  "plano": "oficial",
+  "etapa": "oficial",
+  "pair": "",
+  "rep": 2,
+  "order": 53,
+  "audit_planned": 0,
+  "tentativa": 1,
+  "fora_da_ordem": false
+}

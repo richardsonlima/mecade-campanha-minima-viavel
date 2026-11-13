@@ -1,0 +1,134 @@
+{
+  "run_id": "066_s3_podkill_cart_mecade_r03",
+  "scenario": "s3_podkill_cart",
+  "scenario_version": 1,
+  "arm": "mecade",
+  "backend": "k8s",
+  "status": "complete",
+  "wall_start": 1794567085.8350613,
+  "t_inject_abs": 1794567385.8350613,
+  "M_base": {
+    "p95": 0.2447406045751634,
+    "p99": 0.37302597402597404,
+    "error_rate": 0.0
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "event": "INJECT",
+      "baseline": {
+        "p95": 0.2447406045751634,
+        "p99": 0.37302597402597404,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "t": 60.0,
+      "event": "ALERT",
+      "I": 403.461
+    },
+    {
+      "t": 405.0,
+      "event": "LIMIT",
+      "I": 26995.195
+    },
+    {
+      "t": 405.0,
+      "event": "BLOCK",
+      "I": 26995.195
+    },
+    {
+      "t": 405.0,
+      "event": "MITIGATION",
+      "action": "scale",
+      "reason": "BLOCK"
+    },
+    {
+      "t": 475.0,
+      "event": "ALERT_CLEAR",
+      "I": 30808.726
+    },
+    {
+      "t": 515.0,
+      "event": "ALERT",
+      "I": 30882.986
+    },
+    {
+      "t": 530.0,
+      "event": "ALERT_CLEAR",
+      "I": 30931.42
+    },
+    {
+      "t": 600.0,
+      "event": "FAULT_END"
+    }
+  ],
+  "audit": {
+    "enabled": true,
+    "records": 9,
+    "enqueue_p95_ms": 0.04081000224687159
+  },
+  "controller_cpu_s": 4.549320662000014,
+  "timing": {
+    "warmup": 120,
+    "baseline": 300,
+    "fault": 600,
+    "recovery": 600,
+    "step": 5
+  },
+  "axioms": {
+    "decision_signals": [
+      "p95",
+      "p99",
+      "error_rate"
+    ],
+    "k": 2,
+    "d_on": 2.9,
+    "d_off": 2.7,
+    "tau_dwell": 15,
+    "aggregation": "max",
+    "deadband": 2.7,
+    "budget_B": 26837.7,
+    "envelope_delta": 1.0
+  },
+  "reactive": {
+    "rules": [
+      {
+        "signal": "p99",
+        "op": ">",
+        "factor_of_baseline": 2.0
+      },
+      {
+        "signal": "error_rate",
+        "op": ">",
+        "absolute": 0.05
+      }
+    ],
+    "for": 300,
+    "response_delay": 120
+  },
+  "recovery": {
+    "hold": 60
+  },
+  "block": {
+    "stop_injection": false
+  },
+  "rto_s": 180,
+  "mitigation": {
+    "acao": "scale",
+    "replicas": 3
+  },
+  "git_commit": "6ebcd9752c054c50c8d1729bc736687d71b6fdce",
+  "k8s_server": "v1.36.4-gke.2377000",
+  "campaign_id": "mvc-2026-11",
+  "git_dirty": false,
+  "config_sha256": "b43291c43eb591cabeb082093e4f7d516a9014605e41582a018fce7c67ac3317",
+  "plano": "oficial",
+  "etapa": "oficial",
+  "pair": "s3_podkill_cart#03",
+  "rep": 3,
+  "order": 66,
+  "audit_planned": 1,
+  "tentativa": 1,
+  "fora_da_ordem": false
+}

@@ -3,6 +3,15 @@
 Qualquer mudança de versão, parâmetro ou cenário depois que as réplicas oficiais começarem vai
 anotada aqui. Réplicas rodadas antes e depois de uma mudança não são comparáveis entre si.
 
+## 13/11 - execuções oficiais e análise final
+
+Nenhuma mudança de versão, parâmetro, cenário ou código entre a tag `mvc-2026-11-calibracao` e as 70 execuções (`git_commit` `6ebcd97` em todas).
+
+- 70 de 70 `complete`, 0 `falha_execucao`, nenhuma refeita nem fora da ordem.
+- Desvio de execução: `censuradas_baseline_fora_do_limite`, total 10, todas do baseline em s2 sem detecção na janela. Pela regra do limite de 10%, não contam; ficam relatadas em `data/desvios_execucao.jsonl` e `RESULTADOS_CAMPANHA.md`. Perdidas no limite: 0.
+- Desvio de procedimento: os dados brutos entram no mesmo commit da análise, e não num commit separado antes dela (Seção 9 de `docs/EVIDENCIAS.md`, passos 4 a 7). O manifesto e a conferência das três cópias vêm depois, antes da tag final. Os dados são os mesmos da VM e do bucket.
+- Resultados em `RESULTADOS_CAMPANHA.md`: H1 PARCIAL, H2 PARCIAL, H3 ACEITA.
+
 ## 12/11 - calibração congelada
 
 Regra da Seção 6 do `docs/PROTOCOLO.md` aplicada à rodada 1 (`data/calibracao/resultado_r1.json`), sem mudança na regra.

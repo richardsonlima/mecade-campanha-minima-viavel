@@ -1,8 +1,8 @@
 # Diário da campanha MECADE (2026)
 
-Fase atual: execuções oficiais (70), rodando na VM desde 12/11, com a calibração congelada (tag `mvc-2026-11-calibracao`).
+Fase atual: análise final das 70 execuções oficiais, concluídas em 13/11 13:05 UTC. Nós do GKE em 0; a VM `mecade-ctl` continua ligada, com os dados.
 Custo estimado: cerca de R$ 11 até 12/11 07:30 UTC, com taxa de R$ 1,5 a 2,2/h. O faturamento confirma com atraso.
-Próximo passo: terminar as execuções oficiais (fim previsto em 13/11), verificar as trilhas, analisar e criar a tag `mvc-2026-11-final`.
+Próximo passo: `make evidencias`, conferência das três cópias, tag `mvc-2026-11-final` e `make evidencias ESTRITO=1`.
 
 ## 05/11 - pré-voo e preparação
 
@@ -100,6 +100,20 @@ Rodada 1 de 01:07 a 05:11 UTC: 9 réplicas `complete`, sem falha e sem desvio de
 - Os `meta.json` da calibração registram `67fbcac`, que corresponde a `ff7a20f` neste repositório.
 - Custo estimado de R$ 1,6 a 2,2/h, perto de R$ 10 desde a criação do cluster.
 
+## 13/11 - execuções oficiais e análise final
+
+- 70 de 70 execuções `complete`, de 12/11 05:24 a 13/11 13:05 UTC, todas em `6ebcd97`, na primeira tentativa e na ordem sorteada. 0 `falha_execucao`.
+- 10 execuções sem detecção na janela (`censurada`), todas do baseline em s2. Não contam no limite de 10%; o orquestrador registrou `censuradas_baseline_fora_do_limite` com total 10. Perdidas no limite: 0 de 70.
+- Copiei `data/runs` (70 execuções), `data/audit` (35 trilhas), `campaign.log` e `desvios_execucao.jsonl`. Os SHA-256 batem com a cópia da nuvem e, numa amostra de 14 arquivos, com a VM.
+- `make verify-audit`: 35 trilhas, 0 com falha.
+- `make analyze`: figuras em `analysis/figures/`, métricas em `analysis/metricas_por_replica.csv`.
+- H1 PARCIAL: TTD menor nos três cenários (mediana da diferença de -285 s em s1, -1115 s em s2, -255 s em s3), área menor em s1 e s3, P95/P99 sem diferença; 0 BLOCK em 10 controles.
+- H2 PARCIAL: RRIndex_run atende em s1 e s3; recuperação e classificação não atendem. O MTTR do MECADE sai maior em s1 (+230 s) e s3 (+177,5 s), porque detecta antes; nenhuma execução do MECADE dentro do RTO de 180 s.
+- H3 ACEITA: Δ_audit,p95 = 0,0435 ms e Δcpu = -2,26%, com 5 controles por estado de auditoria.
+- No Holm por família, H1 e H2 seguem PARCIAL e H3 ACEITA.
+- 5 de 10 controles tiveram ALERT, sem BLOCK. Em s2 o MECADE não chega a BLOCK e nenhum braço aplica o runbook.
+- Números completos e origem de cada um em `RESULTADOS_CAMPANHA.md`.
+
 ## Decisões
 
 - Portão A (11/11): projeto novo para a campanha, depois refeito no "My First Project" (ver 11/11). `MACHINE=e2-standard-2`.
@@ -118,8 +132,9 @@ Rodada 1 de 01:07 a 05:11 UTC: 9 réplicas `complete`, sem falha e sem desvio de
 - Na simulação, 20 de 70 réplicas saem censuradas (todas de s2 e s3 no baseline). Só as 10 de s2 dariam 14%. O piloto da calibração mostra o comportamento real.
 - H3: um controle sem ALERT registra só `CONTROL_START`. O Δ_audit,p95 sai de poucas amostras e a auditoria quase não pesa no Δcpu. Vai para o Cap. 5 se os dados confirmarem.
 - `meta.json` truncado em queda faz a réplica ser refeita e conta uma falha a mais. É raro e conservador.
-- MTTR pode sair negativo se a detecção vier depois da restauração. Confiro nos dados.
+- MTTR pode sair negativo se a detecção vier depois da restauração. Conferi nos dados oficiais: nenhum negativo. MTTR é TTR menos TTD, então detectar antes aumenta o MTTR.
 - Área do desvio: segui a v0.8 (`area_incidente`, durante o incidente) e mantive `area` como descritiva.
-- Cluster e VM ligados, gastando crédito. Ao fim do lote, `make gke-down`.
+- Nós do GKE em 0 desde o fim das execuções; cluster e VM ainda existem até o desmonte.
 - Alerta de orçamento: não consegui confirmar.
-- Até 12/11 09:28 UTC, nenhum desvio de protocolo registrado nas execuções oficiais (8 de 70 concluídas, 0 falhas).
+- Execuções oficiais sem desvio de protocolo além do registro das 10 sem detecção do baseline em s2.
+- Com `envelope_delta` = 1,0 abaixo do P99 do ruído (2,67), todas as execuções saem pelo menos `degradado`, inclusive os controles, e o critério de classificação não separa os braços.

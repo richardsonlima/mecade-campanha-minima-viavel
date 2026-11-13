@@ -1,0 +1,187 @@
+{
+  "run_id": "006_s2_gray_currency_mecade_r03",
+  "scenario": "s2_gray_currency",
+  "scenario_version": 1,
+  "arm": "mecade",
+  "backend": "k8s",
+  "status": "complete",
+  "wall_start": 1794469194.9562488,
+  "t_inject_abs": 1794469494.9562488,
+  "M_base": {
+    "p95": 0.3625781250000001,
+    "p99": 0.8075000000000003,
+    "error_rate": 0.0
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "event": "INJECT",
+      "baseline": {
+        "p95": 0.3625781250000001,
+        "p99": 0.8075000000000003,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "t": 80.0,
+      "event": "ALERT",
+      "I": 550.451
+    },
+    {
+      "t": 120.0,
+      "event": "ALERT_CLEAR",
+      "I": 2383.469
+    },
+    {
+      "t": 140.0,
+      "event": "ALERT",
+      "I": 3096.783
+    },
+    {
+      "t": 175.0,
+      "event": "ALERT_CLEAR",
+      "I": 4604.261
+    },
+    {
+      "t": 200.0,
+      "event": "ALERT",
+      "I": 5267.672
+    },
+    {
+      "t": 240.0,
+      "event": "ALERT_CLEAR",
+      "I": 6983.212
+    },
+    {
+      "t": 260.0,
+      "event": "ALERT",
+      "I": 7604.324
+    },
+    {
+      "t": 295.0,
+      "event": "ALERT_CLEAR",
+      "I": 8977.493
+    },
+    {
+      "t": 320.0,
+      "event": "ALERT",
+      "I": 9552.011
+    },
+    {
+      "t": 380.0,
+      "event": "ALERT_CLEAR",
+      "I": 13610.269
+    },
+    {
+      "t": 400.0,
+      "event": "ALERT",
+      "I": 14207.591
+    },
+    {
+      "t": 435.0,
+      "event": "ALERT_CLEAR",
+      "I": 15535.713
+    },
+    {
+      "t": 460.0,
+      "event": "ALERT",
+      "I": 16136.729
+    },
+    {
+      "t": 495.0,
+      "event": "ALERT_CLEAR",
+      "I": 17540.47
+    },
+    {
+      "t": 520.0,
+      "event": "ALERT",
+      "I": 18133.717
+    },
+    {
+      "t": 555.0,
+      "event": "ALERT_CLEAR",
+      "I": 19451.792
+    },
+    {
+      "t": 580.0,
+      "event": "ALERT",
+      "I": 20089.617
+    },
+    {
+      "t": 600.0,
+      "event": "FAULT_END"
+    },
+    {
+      "t": 615.0,
+      "event": "ALERT_CLEAR",
+      "I": 21421.597
+    }
+  ],
+  "audit": {
+    "enabled": true,
+    "records": 20,
+    "enqueue_p95_ms": 0.042150000808760524
+  },
+  "controller_cpu_s": 4.374386030999997,
+  "timing": {
+    "warmup": 120,
+    "baseline": 300,
+    "fault": 600,
+    "recovery": 600,
+    "step": 5
+  },
+  "axioms": {
+    "decision_signals": [
+      "p95",
+      "p99",
+      "error_rate"
+    ],
+    "k": 2,
+    "d_on": 2.9,
+    "d_off": 2.7,
+    "tau_dwell": 15,
+    "aggregation": "max",
+    "deadband": 2.7,
+    "budget_B": 26837.7,
+    "envelope_delta": 1.0
+  },
+  "reactive": {
+    "rules": [
+      {
+        "signal": "p99",
+        "op": ">",
+        "factor_of_baseline": 2.0
+      },
+      {
+        "signal": "error_rate",
+        "op": ">",
+        "absolute": 0.05
+      }
+    ],
+    "for": 300,
+    "response_delay": 120
+  },
+  "recovery": {
+    "hold": 60
+  },
+  "block": {
+    "stop_injection": false
+  },
+  "rto_s": 180,
+  "mitigation": {
+    "acao": "restart"
+  },
+  "git_commit": "6ebcd9752c054c50c8d1729bc736687d71b6fdce",
+  "k8s_server": "v1.36.4-gke.2377000",
+  "campaign_id": "mvc-2026-11",
+  "git_dirty": false,
+  "config_sha256": "b43291c43eb591cabeb082093e4f7d516a9014605e41582a018fce7c67ac3317",
+  "plano": "oficial",
+  "etapa": "oficial",
+  "pair": "s2_gray_currency#03",
+  "rep": 3,
+  "order": 6,
+  "audit_planned": 1,
+  "tentativa": 1,
+  "fora_da_ordem": false
+}
