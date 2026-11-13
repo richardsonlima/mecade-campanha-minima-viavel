@@ -6,6 +6,10 @@
           acumulado não esgota B antes de 300 s de falha
   tau_dwell = 15 s; sobe de 5 em 5 até 30 s se os controles tiverem ALERT espúrio
 
+Campanha 2 (`calibracao.regra_B: margem_ruido` no config, pré-registro em docs/PROTOCOLO_C2.md): B só pela
+condição (a), B = 2 x maior I dos controles; sem a condição (b). Se nenhum tau até 30 s zerar o ALERT
+espúrio, tau_dwell = 30 s e a contagem fica registrada (`calibracao.tau_sem_solucao: 30`).
+
 Os D_m não dependem dos parâmetros calibrados, então refaço I(t) e o ALERT offline, com o próprio
 AxiomEvaluator. Só calcula e mostra: quem grava em config/campaign.yaml é o congelamento.
 
@@ -21,7 +25,7 @@ import numpy as np
 
 from analysis.metrics import DECISION, load_runs
 from mecade.axioms import AxiomEvaluator, AxiomParams
-from mecade.config import ROOT
+from mecade.config import ROOT, load_campaign
 
 JANELA_B_S = 300.0
 TAUS = (15, 20, 25, 30)
@@ -47,10 +51,12 @@ def _alertas(df, params: AxiomParams, step: float) -> int:
     return n
 
 
-def calibrate(runs: list) -> dict:
+def calibrate(runs: list, regra_B: str = "margem_ruido_e_piloto", tau_sem_solucao: float | None = None) -> dict:
     ctrl = [(m, df) for m, df in runs if not m.get("pair")]
     s1 = [(m, df) for m, df in runs if m.get("pair") and m["scenario"].startswith("s1_")]
-    if not ctrl or not s1:
+    if regra_B not in ("margem_ruido_e_piloto", "margem_ruido"):
+        raise ValueError(f"regra_B desconhecida: {regra_B}")
+    if not ctrl or (regra_B == "margem_ruido_e_piloto" and not s1):
         raise ValueError(f"Faltam dados: {len(ctrl)} controles e {len(s1)} pilotos de s1.")
     step = float(ctrl[0][0]["timing"]["step"])
     dagr = np.concatenate([df[df["t"] >= 0]["D_agr"].dropna().to_numpy() for _, df in ctrl])
@@ -62,7 +68,10 @@ def calibrate(runs: list) -> dict:
     I_s1: dict[str, float] = {}
     for m, df in s1:  # com duas rodadas há mais de um piloto por braço, e vale o maior
         I_s1[m["arm"]] = max(I_s1.get(m["arm"], 0.0), _I(df, deadband, step, JANELA_B_S))
-    budget = _ceil1(max(2 * I_ctrl, max(I_s1.values())))
+    if regra_B == "margem_ruido":  # campanha 2: o piloto de s1 não entra na regra
+        budget = _ceil1(2 * I_ctrl)
+    else:
+        budget = _ceil1(max(2 * I_ctrl, max(I_s1.values())))
 
     tau = None
     espurios = {}
@@ -73,10 +82,12 @@ def calibrate(runs: list) -> dict:
         if espurios[t] == 0:
             tau = t
             break
+    if tau is None and tau_sem_solucao is not None:
+        tau = int(tau_sem_solucao)
 
     # B positivo é o que torna a regra satisfazível; sem desvio em s1 ou sem tau válido, paro e pergunto
     viavel = budget > 0 and tau is not None
-    return {"viavel": viavel, "d_off": d_off, "deadband": deadband, "d_on": d_on, "budget_B": budget, "tau_dwell": tau,
+    return {"viavel": viavel, "regra_B": regra_B, "d_off": d_off, "deadband": deadband, "d_on": d_on, "budget_B": budget, "tau_dwell": tau,
             "medido": {"p50_D_agr": float(np.percentile(dagr, 50)), "p95_D_agr": float(np.percentile(dagr, 95)),
                        "p99_D_agr": p99, "max_D_agr": float(dagr.max()), "n_amostras": int(len(dagr)),
                        "n_controles": len(ctrl), "I_max_controles": I_ctrl, "I_s1_antes_300s": I_s1,
@@ -85,7 +96,9 @@ def calibrate(runs: list) -> dict:
 
 def main() -> int:
     root = sys.argv[1] if len(sys.argv) > 1 else ROOT / "data" / "calibracao" / "runs"
-    r = calibrate(load_runs(root, include_sim=True))
+    cal = load_campaign().get("calibracao") or {}
+    r = calibrate(load_runs(root, include_sim=True), regra_B=cal.get("regra_B", "margem_ruido_e_piloto"),
+                  tau_sem_solucao=cal.get("tau_sem_solucao"))
     print(json.dumps(r, indent=2, ensure_ascii=False))
     if not r["viavel"]:
         print("A regra não tem solução com estes dados. Paro e registro os números e decido.")

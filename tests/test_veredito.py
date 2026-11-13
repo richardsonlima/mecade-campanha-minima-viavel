@@ -137,11 +137,12 @@ def test_holm_como_analise_secundaria():
     assert veredito_criterios(t, MAPA, alpha_holm=0.05).set_index("criterio").loc["a", "status"] == "ATENDE"
 
 
-def test_mapa_da_config_cobre_tabela_4_6():
+def test_mapa_da_config_cobre_tabela_4_7():
+    # campanha 2: a classificação é descritiva e sai do mapa (Tabela 4.7 da v0.9, docs/PROTOCOLO_C2.md)
     cfg = load_campaign()["analysis"]
     mapa = resolver_limiares(cfg["veredito"], cfg)
     assert {s["hipotese"] for s in mapa.values()} == {"H1", "H2", "H3"}
-    assert set(mapa) == {"recuperacao", "classificacao", "deteccao_estabilidade", "convergencia", "falsos_bloqueios",
+    assert set(mapa) == {"recuperacao", "deteccao_estabilidade", "convergencia", "falsos_bloqueios",
                          "overhead_auditoria"}
     fb = mapa["falsos_bloqueios"]["componentes"][0]
     assert fb["limiar"] == cfg["false_block_max_rate"] == 0.1
@@ -288,6 +289,7 @@ def test_proporcoes_da_h2_nao_estao_mais_pendentes_na_config():
     cfg = load_campaign()["analysis"]
     mapa = resolver_limiares(cfg["veredito"], cfg)
     comps = {c["metrica"]: c for s in mapa.values() for c in s["componentes"]}
-    assert comps["rto_ok"]["tipo"] == "proporcao" and comps["rto_ok"]["favoravel"] == "maior"
-    assert comps["classe_pior"]["tipo"] == "proporcao" and comps["classe_pior"]["favoravel"] == "menor"
+    assert comps["rto_ok_ttr"]["tipo"] == "proporcao" and comps["rto_ok_ttr"]["favoravel"] == "maior"
+    assert [c["metrica"] for c in mapa["recuperacao"]["componentes"]] == ["TTR_capped", "rto_ok_ttr"]
+    assert "MTTR_capped" not in comps and "classe_pior" not in comps
     assert not any(c.get("pendente") for c in comps.values())

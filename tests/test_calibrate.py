@@ -48,3 +48,30 @@ def test_sem_solucao_quando_nem_30s_resolve():
     D[100:120] = 2.0
     r = calibrate([(_m(), _df(D)), (_m("s1#01", "s1_x", "baseline"), _df(np.full(240, 2.0)))])
     assert r["tau_dwell"] is None and not r["viavel"]
+
+
+def test_modo_protecao_b_so_pela_margem_de_ruido():
+    # campanha 2: o piloto de s1 não entra; B = 2 x maior I dos controles
+    ctrl = _df(np.r_[np.full(239, 0.1), 3.0])
+    s1 = _df(np.r_[np.full(60, 1.5), np.full(180, 0.1)])
+    pilotos = [(_m("s1#01", "s1_x", "baseline"), s1), (_m("s1#01", "s1_x", "mecade"), s1)]
+    antiga = calibrate([(_m(), ctrl), *pilotos])
+    nova = calibrate([(_m(), ctrl), *pilotos], regra_B="margem_ruido")
+    I_ctrl = nova["medido"]["I_max_controles"]
+    assert nova["budget_B"] == np.ceil(round(2 * I_ctrl * 10, 9)) / 10
+    assert nova["budget_B"] < antiga["budget_B"]
+    assert nova["regra_B"] == "margem_ruido" and nova["viavel"]
+
+
+def test_modo_protecao_dispensa_piloto_de_s1():
+    ctrl = _df(np.r_[np.full(239, 0.1), 3.0])
+    r = calibrate([(_m(), ctrl)], regra_B="margem_ruido")
+    assert r["viavel"] and r["budget_B"] > 0
+
+
+def test_tau_sem_solucao_fica_no_valor_declarado():
+    D = np.full(2000, 0.1)
+    D[100:110] = 2.0  # 50 s acima de d_on: nenhum tau até 30 s zera o ALERT
+    r = calibrate([(_m(), _df(D))], regra_B="margem_ruido", tau_sem_solucao=30)
+    assert r["medido"]["alertas_espurios_por_tau"][30] >= 1
+    assert r["tau_dwell"] == 30 and r["viavel"]

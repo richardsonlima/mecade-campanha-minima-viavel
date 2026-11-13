@@ -1,7 +1,7 @@
 # Configuração da Campanha Mínima Viável. Todos os parâmetros ficam só aqui, e cada réplica
 # copia esses valores para o próprio metadado (rastreabilidade, Cap. 4).
-campaign_id: mvc-2026-11
-seed: 20261011                 # semente da randomização da ordem dos braços
+campaign_id: mvc-2026-11-c2   # campanha 2, confirmatória (docs/PROTOCOLO_C2.md); a campanha 1 está na tag mvc-2026-11-final
+seed: 20261113                 # semente da randomização da ordem dos braços (nova na campanha 2)
 namespace: boutique
 prometheus_url: http://localhost:9090   # via `make port-forward`
 
@@ -24,16 +24,13 @@ analysis:
   veredito:
     alpha: 0.05                # nível do Holm (análise secundária)
     criterios:
-      recuperacao:             # H2, Tabela 4.6 linha 1
+      # Campanha 2 (docs/PROTOCOLO_C2.md, Tabela 4.7 da v0.9): o TTR decide a recuperação e o RTO é contado da
+      # injeção (rto_ok_ttr). MTTR e classe tripartite passam a descritivos e saem do mapa de critérios.
+      recuperacao:             # H2
         hipotese: H2
         componentes:
-          - {metrica: MTTR_capped, favoravel: menor}
           - {metrica: TTR_capped, favoravel: menor}
-          - {metrica: rto_ok, tipo: proporcao, favoravel: maior}   # D5: McNemar exato, p < alpha
-      classificacao:           # H2, Tabela 4.6 linha 2
-        hipotese: H2
-        componentes:
-          - {metrica: classe_pior, tipo: proporcao, favoravel: menor}   # D5: McNemar exato, p < alpha
+          - {metrica: rto_ok_ttr, tipo: proporcao, favoravel: maior}   # McNemar exato, p < alpha
       deteccao_estabilidade:   # H1, Tabela 4.6 linha 3
         hipotese: H1
         componentes:
@@ -83,13 +80,22 @@ aux_signals:
 axioms:
   decision_signals: [p95, p99, error_rate]   # n = 3
   k: 2                         # correlação multi-sinal: k de n
-  d_on: 2.9                    # mesmo papel de delta_alert / epsilon (limiar de ativação)
-  d_off: 2.7                   # limiar de desativação (histerese)
+  # Valores iniciais, os mesmos da campanha 1 antes da calibração. A Fase 1 da campanha 2 recalibra.
+  d_on: 0.5                    # mesmo papel de delta_alert / epsilon (limiar de ativação)
+  d_off: 0.3                   # limiar de desativação (histerese)
   tau_dwell: 15                # janela de confirmação (s)
   aggregation: max             # D_agr = max(D_m) ou média
-  deadband: 2.7                # LIMIT integra max(0, D_agr - deadband) (ver docs/PROTOCOLO.md, D1)
-  budget_B: 26837.7            # Chaos Budget (unidades de D·s)
-  envelope_delta: 1.0          # desvio máximo do Safety Envelope (classificação "degradado")
+  deadband: 0.3                # LIMIT integra max(0, D_agr - deadband) (ver docs/PROTOCOLO.md, D1)
+  budget_B: 60.0               # Chaos Budget (unidades de D·s)
+  envelope: d_on_tau           # classificação: degradado se D_agr > d_on por tau_dwell seguidos (campanha 2)
+  envelope_delta: 1.0          # só vale com envelope: delta (campanha 1)
+
+# Fase 1 da campanha 2 (docs/PROTOCOLO_C2.md, Seção 3). Regras fixadas antes dos dados.
+calibracao:
+  controles: 10                # a campanha 1 usou 3, que subestimaram o ruído
+  pares_por_cenario: 1         # só para conferir o pipeline; não entram em nenhuma regra
+  regra_B: margem_ruido        # B = 2 x maior I dos controles; sem a condição do piloto de s1 (modo proteção)
+  tau_sem_solucao: 30          # se nenhum tau até 30 s zerar o ALERT espúrio, fica 30 s e a contagem é relatada
 
 # Braço baseline: alerta convencional no estilo do Prometheus e runbook com atraso fixo.
 reactive:

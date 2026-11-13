@@ -44,7 +44,9 @@ def build_plan(campaign: dict, scenarios: list[str], per_cell: int, control: int
 
 
 def build_calibration_plan(campaign: dict, rodada: int) -> list[dict]:
-    return build_plan(campaign, campaign["scenarios"], CALIB_PER_CELL, CALIB_CONTROL,
+    cal = campaign.get("calibracao") or {}
+    return build_plan(campaign, campaign["scenarios"], int(cal.get("pares_por_cenario", CALIB_PER_CELL)),
+                      int(cal.get("controles", CALIB_CONTROL)),
                       seed=int(campaign["seed"]) + 1000 * rodada, prefix=f"cal{rodada}_")
 
 

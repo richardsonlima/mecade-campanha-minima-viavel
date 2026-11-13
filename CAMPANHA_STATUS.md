@@ -1,8 +1,8 @@
 # Diário da campanha MECADE (2026)
 
-Fase atual: campanha mvc-2026-11 fechada (tag `mvc-2026-11-final`). Nós do GKE em 0; a VM `mecade-ctl` e o cluster ficam para a campanha 2.
+Fase atual: campanha 2 (`mvc-2026-11-c2`), pré-registro no branch `campanha-2` (`docs/PROTOCOLO_C2.md`). A campanha 1 está fechada na tag `mvc-2026-11-final`.
 Custo estimado: cerca de R$ 11 até 12/11 07:30 UTC, com taxa de R$ 1,5 a 2,2/h. O faturamento confirma com atraso.
-Próximo passo: pré-registro da campanha 2 (modo proteção), com push antes da calibração. Depósito no Zenodo só por ordem minha.
+Próximo passo: tag `mvc-2026-11-c2-prereg` e push; depois a calibração da campanha 2 na VM, numa pasta separada da campanha 1. Depósito no Zenodo só por ordem minha.
 
 ## 05/11 - pré-voo e preparação
 

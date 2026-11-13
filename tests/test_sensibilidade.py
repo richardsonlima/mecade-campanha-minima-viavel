@@ -13,7 +13,7 @@ def _run(run_id, d_agr, eventos=(), mitigacao="none"):
                        "D_error_rate": [0.0] * n, "p95": [0.1] * n, "p99": [0.1] * n, "error_rate": [0.0] * n})
     meta = {"run_id": run_id, "scenario": "s", "arm": "mecade", "timing": {**camp["timing"], "fault": 10},
             "axioms": {**camp["axioms"], "d_on": 2.9, "d_off": 2.7, "deadband": 2.7, "tau_dwell": 15,
-                       "budget_B": 1e9, "envelope_delta": 1.0},
+                       "budget_B": 1e9, "envelope": "delta", "envelope_delta": 1.0},  # regra da campanha 1
             "recovery": {**camp["recovery"], "hold": 10}, "events": list(eventos), "rto_s": 30,
             "mitigation": {"acao": mitigacao}}
     return meta, df
@@ -45,13 +45,41 @@ def test_rto_conta_da_injecao_e_nao_da_deteccao():
     assert x.loc[0, "rto_ok_ttr"] == 0.0
 
 
+C1_VEREDITO = {  # mapa da campanha 1 (tag mvc-2026-11-final), só as partes que a sensibilidade toca
+    "alpha": 0.05,
+    "criterios": {
+        "recuperacao": {"hipotese": "H2", "componentes": [
+            {"metrica": "MTTR_capped", "favoravel": "menor"}, {"metrica": "TTR_capped", "favoravel": "menor"},
+            {"metrica": "rto_ok", "tipo": "proporcao", "favoravel": "maior"}]},
+        "classificacao": {"hipotese": "H2", "componentes": [
+            {"metrica": "classe_pior", "tipo": "proporcao", "favoravel": "menor"}]},
+        "convergencia": {"hipotese": "H2", "componentes": [{"metrica": "RRIndex_run", "favoravel": "maior"}]},
+    },
+}
+
+
 def test_config_troca_so_recuperacao_e_classificacao():
-    import yaml
-    from pathlib import Path
-    cfg = Path(__file__).resolve().parent.parent / "config" / "campaign.yaml"
-    orig = yaml.safe_load(cfg.read_text(encoding="utf-8"))["analysis"]["veredito"]
+    import copy
+    orig = copy.deepcopy(C1_VEREDITO)
     s = config_sensibilidade(orig)
     assert [c["metrica"] for c in s["criterios"]["recuperacao"]["componentes"]] == ["TTR_capped", "rto_ok_ttr"]
     assert [c["metrica"] for c in s["criterios"]["classificacao"]["componentes"]] == ["classe_pior_env"]
     assert s["criterios"]["convergencia"] == orig["criterios"]["convergencia"]
     assert orig["criterios"]["recuperacao"]["componentes"][0]["metrica"] == "MTTR_capped"  # original intocado
+
+
+def test_campanha_2_classifica_pelo_envelope_d_on_tau_no_proprio_run_metrics():
+    curto = _run("a", [3.0, 3.0, 0.1, 0.1, 0.1, 0.1, 0.1])
+    longo = _run("b", [3.0, 3.0, 3.0, 0.1, 0.1, 0.1, 0.1])
+    for meta, _ in (curto, longo):
+        meta["axioms"]["envelope"] = "d_on_tau"
+    x = metrics_table([curto, longo]).set_index("run_id")
+    assert x.loc["a", "classe"] == "aceitavel"
+    assert x.loc["b", "classe"] == "degradado"
+
+
+def test_run_metrics_traz_rto_ok_ttr_igual_ao_da_sensibilidade():
+    run = _run("r", [5.0] * 7 + [0.1] * 6, eventos=[{"t": 25.0, "event": "ALERT"}, {"t": 30.0, "event": "MITIGATION"}],
+               mitigacao="restart")
+    x = metrics_table([run])
+    assert bool(x.loc[0, "rto_ok"]) is True and bool(x.loc[0, "rto_ok_ttr"]) is False

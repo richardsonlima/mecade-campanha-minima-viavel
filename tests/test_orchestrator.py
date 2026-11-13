@@ -53,10 +53,13 @@ def _desvios(out):
 def test_calibracao_nao_coincide_com_o_plano_oficial():
     camp = load_campaign()
     oficial = {r["run_id"] for r in build_plan(camp, camp["scenarios"], 10, 10)}
+    cal_cfg = camp["calibracao"]
+    n_ctrl, n_pares = cal_cfg["controles"], cal_cfg["pares_por_cenario"] * len(camp["scenarios"])
+    assert n_ctrl == 10  # campanha 2: 10 controles na calibração (docs/PROTOCOLO_C2.md)
     for rodada in (1, 2):
         cal = build_calibration_plan(camp, rodada)
-        assert len(cal) == 9
-        assert sum(r["pair"] == "" for r in cal) == 3
+        assert len(cal) == n_ctrl + 2 * n_pares
+        assert sum(r["pair"] == "" for r in cal) == n_ctrl
         assert not oficial & {r["run_id"] for r in cal}
     assert not {r["run_id"] for r in build_calibration_plan(camp, 1)} & {r["run_id"] for r in build_calibration_plan(camp, 2)}
 

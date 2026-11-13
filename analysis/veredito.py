@@ -243,6 +243,9 @@ def montar_tabela(m: pd.DataFrame, mapa: dict, false_block_max_rate: float) -> p
     d["rto_ok"] = d["rto_ok"].astype(float)
     d["classe_pior"] = (d["classe"] != "aceitavel").astype(float)
     comps = [c for s in mapa.values() for c in s["componentes"] if c.get("tipo") != "limiar"]
+    for c in comps:  # proporções entram no McNemar como 0/1
+        if c.get("tipo") == "proporcao" and c["metrica"] in d:
+            d[c["metrica"]] = d[c["metrica"]].astype(float)
     partes = [mcnemar_comparison(d, c["metrica"]) if c.get("tipo") == "proporcao" else paired_comparison(d, c["metrica"])
               for c in comps]
     tab = pd.concat([p for p in partes if len(p)] or [pd.DataFrame()], ignore_index=True)

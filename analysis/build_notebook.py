@@ -35,14 +35,14 @@ nb.cells = [
     md("## 2. Classificação tripartite (Tabela 3.5) e detecção"),
     code("pd.crosstab([main['scenario'], main['arm']], main['classe'])"),
     code("main.groupby(['scenario','arm']).agg(n=('run_id','count'), detectadas=('detected','sum'), "
-         "censuradas=('censurada','sum'), rto_ok=('rto_ok','sum'))"),
+         "censuradas=('censurada','sum'), rto_ok=('rto_ok','sum'), rto_ok_ttr=('rto_ok_ttr','sum'))"),
     code("falhas = execution_failures(DATA_ROOT)\n"
          "print('falha_execucao (o par sai da comparação):', [(f['run_id'], f['pair']) for f in falhas])\n"
          "print('censuradas:', list(main[main['censurada']]['run_id']))"),
     md("## 3. Comparações pareadas (MECADE menos baseline)\n\n"
        "Wilcoxon pareado, delta de Cliff e IC de 95% por *bootstrap* da mediana das diferenças. "
        "Réplicas censuradas entram com o fim da janela (`_capped`), como manda a Seção 4.4.1 da v0.8."),
-    code("pd.concat([paired_comparison(m, k) for k in ['TTD_capped','TTR_capped','MTTR_capped','area_incidente','p95_std','p99_std','RRIndex_run','TSR_fault','p99_fault']], "
+    code("pd.concat([paired_comparison(m, k) for k in ['TTD_capped','TTR_capped','MTTR_capped','area_incidente','p95_std','p99_std','RRIndex_run','log10_V','I_rel','TSR_fault','p99_fault']], "
          "ignore_index=True).round(4)"),
     md("## 4. Taxa de falsos bloqueios (réplicas de controle)"),
     code("from mecade.config import load_campaign\n"
@@ -60,7 +60,8 @@ nb.cells = [
        "e limiar da Tabela 4.6 cumprido. Hipótese: ACEITA (todos os critérios em todos os cenários), PARCIAL ou NÃO ACEITA. "
        "O mapa de critério para hipótese está em `analysis.veredito` de `config/campaign.yaml`. "
        "Componente marcada como pendente não decide, e a hipótese afetada sai PENDENTE. "
-       "As proporções da H2 (`rto_ok`, `classe_pior`) usam McNemar exato sobre os pares e exigem p < 0,05 (D5). "
+       "As proporções da H2 usam McNemar exato sobre os pares e exigem p < 0,05 (D5). Na campanha 2 a proporção que decide é `rto_ok_ttr` "
+       "(TTR <= RTO, contado da injeção), e a classe tripartite é só descritiva (docs/PROTOCOLO_C2.md). "
        "Cenário planejado sem par válido sai SEM_DADOS e impede a hipótese de ser ACEITA. "
        "A análise principal não tem correção; Holm é a secundária, com uma família por hipótese (D6)."),
     code("from analysis.veredito import cenarios_planejados, resumo\n"

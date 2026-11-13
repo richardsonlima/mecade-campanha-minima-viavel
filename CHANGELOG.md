@@ -3,6 +3,19 @@
 Qualquer mudança de versão, parâmetro ou cenário depois que as réplicas oficiais começarem vai
 anotada aqui. Réplicas rodadas antes e depois de uma mudança não são comparáveis entre si.
 
+## 13/11 - pré-registro da campanha 2 (`mvc-2026-11-c2`)
+
+Branch `campanha-2`, a partir do `main` depois da tag `mvc-2026-11-final`. Protocolo em `docs/PROTOCOLO_C2.md`.
+
+- `campaign_id`: `mvc-2026-11` → `mvc-2026-11-c2`; semente `20261011` → `20261113`.
+- Axiomas de volta aos valores iniciais (d_on 0,5; d_off e deadband 0,3; B 60; tau 15 s), para a calibração da campanha 2.
+- `axioms.envelope: d_on_tau`: classe degradada quando D_agr fica acima de d_on por tau_dwell seguidos (`analysis/metrics.py`). Com `delta` (padrão), vale a regra da campanha 1.
+- `analysis/metrics.py` passa a calcular `rto_ok_ttr` (TTR ≤ RTO, contado da injeção), `log10_V` e `I_rel`. As colunas da campanha 1 não mudam.
+- Mapa de critérios: a recuperação decide por `TTR_capped` e `rto_ok_ttr`; MTTR e classificação saem do mapa e ficam descritivos.
+- Calibração (`calibracao` no config): 10 controles e 1 par por cenário; `regra_B: margem_ruido` (B = 2 × maior I dos controles, sem a condição do piloto de s1); `tau_sem_solucao: 30`.
+- Os dados, o notebook e as figuras da campanha 1 saem do branch (ficam no `main` e na tag). `RESULTADOS_CAMPANHA.md` vira `docs/RESULTADOS_CAMPANHA_1.md`.
+- RTO, cenários, versões, braço baseline, linha do tempo e número de execuções não mudam.
+
 ## 13/11 - análise de sensibilidade da H2 (exploratória)
 
 - `analysis/sensibilidade.py` e `tests/test_sensibilidade.py`: análise exploratória post hoc da H2 (TTR e RTO

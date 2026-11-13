@@ -111,6 +111,16 @@ def _first(events: list[dict], *names: str) -> float | None:
     return min(ts) if ts else None
 
 
+def _sustentado(acima: np.ndarray, n: int) -> bool:
+    """True se houver n amostras seguidas verdadeiras."""
+    run = 0
+    for a in acima:
+        run = run + 1 if a else 0
+        if run >= n:
+            return True
+    return False
+
+
 def run_metrics(meta: dict, df: pd.DataFrame) -> dict:
     tm, ax, rec = meta["timing"], meta["axioms"], meta["recovery"]
     step, fault, hold = float(tm["step"]), float(tm["fault"]), float(rec["hold"])
@@ -141,8 +151,13 @@ def run_metrics(meta: dict, df: pd.DataFrame) -> dict:
     excess = np.clip(d["D_agr"].fillna(0).to_numpy() - ax["deadband"], 0, None) * step
     I_max = float(np.cumsum(excess).max()) if len(excess) else 0.0
     max_D = float(d["D_agr"].max()) if len(d) else 0.0
+    # envelope "delta" (campanha 1): degradado se max D_agr > envelope_delta. Envelope "d_on_tau" (campanha 2):
+    # degradado se D_agr fica acima de d_on por tau_dwell seguidos, o mesmo limiar do ALERT.
     if I_max > ax["budget_B"]:
         classe = "critico"
+    elif ax.get("envelope", "delta") == "d_on_tau":
+        n_dwell = max(1, int(round(float(ax.get("tau_dwell", 15)) / step)))
+        classe = "degradado" if _sustentado(d["D_agr"].fillna(0).to_numpy() > ax["d_on"], n_dwell) else "aceitavel"
     elif max_D > ax.get("envelope_delta", 1.0):
         classe = "degradado"
     else:
@@ -165,6 +180,8 @@ def run_metrics(meta: dict, df: pd.DataFrame) -> dict:
         "TTD_capped": ttd_capped, "MTTR_capped": ttr_capped - ttd_capped if t_det is not None else window_end,
         "censurada": bool(com_falha and (t_det is None or t_rec is None)),
         "MTTR": mttr, "rto_ok": bool(not pd.isna(mttr) and mttr <= meta.get("rto_s", np.inf)),
+        # RTO contado da injeção (campanha 2): compara com o TTR, e não com o MTTR, que começa na detecção
+        "rto_ok_ttr": bool(t_rec is not None and t_rec <= meta.get("rto_s", np.inf)),
         "area": float((d["D_agr"].fillna(0) * step).sum()),
         "area_incidente": float((fw["D_agr"].fillna(0) * step).sum()),
         "p95_std": float(fw["p95"].std()) if len(fw) else np.nan,
@@ -173,6 +190,8 @@ def run_metrics(meta: dict, df: pd.DataFrame) -> dict:
         "p99_fault": float(fw["p99"].mean()) if len(fw) else np.nan,
         "classe": classe, "block": t_block is not None, "I_max": I_max, "max_D": max_D,
         "RRIndex_run": float(1 / (1 + V.mean())) if len(V) else np.nan,
+        "log10_V": float(np.log10(V.mean())) if len(V) and V.mean() > 0 else np.nan,
+        "I_rel": I_max / ax["budget_B"] if ax["budget_B"] else np.nan,
         "audit_p95_ms": (meta.get("audit") or {}).get("enqueue_p95_ms"),
         "controller_cpu_s": meta.get("controller_cpu_s"),
     }
