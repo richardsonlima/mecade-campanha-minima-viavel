@@ -1,8 +1,8 @@
 # Diário da campanha MECADE (2026)
 
-Fase atual: análise final das 70 execuções oficiais, concluídas em 13/11 13:05 UTC. Nós do GKE em 0; a VM `mecade-ctl` continua ligada, com os dados.
+Fase atual: campanha mvc-2026-11 fechada (tag `mvc-2026-11-final`). Nós do GKE em 0; a VM `mecade-ctl` e o cluster ficam para a campanha 2.
 Custo estimado: cerca de R$ 11 até 12/11 07:30 UTC, com taxa de R$ 1,5 a 2,2/h. O faturamento confirma com atraso.
-Próximo passo: `make evidencias`, conferência das três cópias, tag `mvc-2026-11-final` e `make evidencias ESTRITO=1`.
+Próximo passo: pré-registro da campanha 2 (modo proteção), com push antes da calibração. Depósito no Zenodo só por ordem minha.
 
 ## 05/11 - pré-voo e preparação
 
@@ -113,6 +113,13 @@ Rodada 1 de 01:07 a 05:11 UTC: 9 réplicas `complete`, sem falha e sem desvio de
 - No Holm por família, H1 e H2 seguem PARCIAL e H3 ACEITA.
 - 5 de 10 controles tiveram ALERT, sem BLOCK. Em s2 o MECADE não chega a BLOCK e nenhum braço aplica o runbook.
 - Números completos e origem de cada um em `RESULTADOS_CAMPANHA.md`.
+
+## 13/11 - fechamento
+
+- Decidi tratar as correções da H2 como análise exploratória post hoc, e não como emenda: a análise principal fica como foi pré-registrada. `analysis/sensibilidade.py` no commit `6e5b690`; o veredito não muda (Seção 10 de `RESULTADOS_CAMPANHA.md`).
+- Tag `mvc-2026-11-final` em `6e5b690`. `make evidencias ESTRITO=1`: 362 arquivos, 35/35 trilhas, SHA-256 do manifesto `5d24630b37a99867070b1d151c2e4ff06712e4fff459e551b61ec30c0aed391b`.
+- Três cópias conferidas contra esse manifesto: local, bucket e VM, as três com `CONFERE` em 362 arquivos.
+- Não desmontei a infraestrutura: decidi rodar a campanha 2, confirmatória, com o Chaos Budget em modo proteção.
 
 ## Decisões
 

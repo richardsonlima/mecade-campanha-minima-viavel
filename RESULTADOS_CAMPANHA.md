@@ -18,7 +18,8 @@ executado (1 visão geral, 2 classificação e detecção, 3 comparações parea
 - Ordem no tempo: tag de calibração em 12/11 05:17 UTC; primeira execução oficial em 12/11 05:24 UTC,
   última iniciada em 13/11 12:40 UTC (`wall_start` dos `meta.json`); fim em 13/11 13:05 UTC
   (`data/campaign.log`).
-- Tag `mvc-2026-11-final` e SHA-256 do manifesto: ainda não existem. Entram depois do `make evidencias ESTRITO=1`.
+- Tag `mvc-2026-11-final` no commit `6e5b690`. Manifesto `data/EVIDENCIAS_MANIFESTO.json` gerado com
+  `make evidencias ESTRITO=1` sobre a tag: 362 arquivos, trilhas íntegras 35/35, SHA-256 `5d24630b37a99867070b1d151c2e4ff06712e4fff459e551b61ec30c0aed391b`.
 
 ## 2. Calibração (Cap. 4)
 
@@ -48,8 +49,12 @@ Ficaram como estavam: `k` = 2 de 3, `aggregation` = max, `envelope_delta` = 1,0 
   com a VM do controlador.
 - `make verify-audit`: 35 trilhas verificadas, 0 com falha. São 30 do braço MECADE e 5 dos controles
   com auditoria ligada.
-- Pendente: `make evidencias` e `make verificar-evidencias` nas três cópias (VM, bucket e local).
-  Registro as três saídas aqui quando rodar.
+- `make verificar-evidencias` com o manifesto da tag final, em 13/11:
+  - local: `CONFERE: 362 arquivos no manifesto, 0 alterados, 0 faltando, 0 sobrando`;
+  - bucket (baixado para um diretório vazio): `CONFERE: 362 arquivos no manifesto, 0 alterados, 0 faltando, 0 sobrando`.
+    Na primeira conferência faltavam `data/calibracao/resultado_r1.json` e `data/plan_mvc-2026-11.csv`, que
+    nasceram no git e não na VM; copiei os dois para o bucket, junto com `analysis/figures/` e o manifesto;
+  - VM do controlador: `CONFERE: 362 arquivos no manifesto, 0 alterados, 0 faltando, 0 sobrando`.
 
 ## 4. Desfechos por cenário e braço
 
