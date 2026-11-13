@@ -235,3 +235,31 @@ Na H2, a análise principal tem 2 de 9 combinações de critério e cenário ate
 - **Múltiplas comparações.** A análise principal não tem correção; o Holm por família é secundário.
 - Valem também as limitações da Seção 7 do protocolo e de `docs/EVIDENCIAS.md` (D3, D5 e D6 da Seção 5 do
   protocolo, Online Boutique como único sistema-alvo).
+
+## 10. Análise de sensibilidade da H2 (exploratória, post hoc)
+
+Defini esta análise durante as execuções e só a fechei depois das 70 réplicas, então ela é exploratória e
+não muda o veredito da Seção 6. Código em `analysis/sensibilidade.py`, testes em `tests/test_sensibilidade.py`.
+Troca só dois critérios da H2:
+
+- recuperação: `TTR_capped` menor e `rto_ok_ttr` maior, com o RTO comparado ao TTR contado da injeção, e não
+  ao MTTR, que começa na detecção;
+- classificação: `classe_env`, degradada quando `D_agr` fica acima de d_on por tau_dwell seguidos; crítica
+  quando I > B.
+
+| Cenário | rto_ok_ttr baseline | rto_ok_ttr MECADE | classe pior (env) baseline | classe pior (env) MECADE | I_max/B mediano baseline / MECADE |
+|---|---|---|---|---|---|
+| s1 | 0/10 | 0/10 | 10/10 | 10/10 | 1,53 / 1,21 |
+| s2 | 0/10 | 0/10 | 10/10 | 10/10 | 0,67 / 0,69 |
+| s3 | 0/10 | 0/10 | 10/10 | 10/10 | 1,25 / 1,13 |
+| c0 | - | - | - | 6/10 | - / 0,0013 |
+
+- O TTR passa a atender em s1 e s3 (Seção 5). A recuperação continua NÃO ATENDE, porque nenhuma execução
+  de nenhum braço tem TTR dentro de 180 s.
+- `classe_env` tira 4 dos 10 controles de degradado. Os 6 restantes são os 5 com ALERT e o
+  `055_c0_controle_mecade_r01`, sem ALERT, com max D de 4,49 (D_agr é o máximo dos sinais e o ALERT pede 2).
+- Veredito da H2 na sensibilidade: PARCIAL, igual ao principal.
+- Causa do resultado da recuperação: a condição (b) da regra de B (`analysis/calibrate.py`) fez o B
+  acomodar 300 s de falha no piloto de s1. O BLOCK sai em 330 s (s1) e 427,5 s (s3), depois do RTO, e não
+  sai em s2 (I_max de 17 mil a 25 mil, abaixo de B). A campanha 2 tira essa condição.
+

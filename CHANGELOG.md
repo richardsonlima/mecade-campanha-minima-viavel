@@ -3,6 +3,12 @@
 Qualquer mudança de versão, parâmetro ou cenário depois que as réplicas oficiais começarem vai
 anotada aqui. Réplicas rodadas antes e depois de uma mudança não são comparáveis entre si.
 
+## 13/11 - análise de sensibilidade da H2 (exploratória)
+
+- `analysis/sensibilidade.py` e `tests/test_sensibilidade.py`: análise exploratória post hoc da H2 (TTR e RTO
+  contado da injeção na recuperação; envelope igual a d_on por tau_dwell na classificação; I_max/B e log10 V̄
+  descritivos). Não muda a análise principal nem o veredito. Resultado na Seção 10 de `RESULTADOS_CAMPANHA.md`.
+
 ## 13/11 - execuções oficiais e análise final
 
 Nenhuma mudança de versão, parâmetro, cenário ou código entre a tag `mvc-2026-11-calibracao` e as 70 execuções (`git_commit` `6ebcd97` em todas).
