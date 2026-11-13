@@ -54,6 +54,8 @@ Ficaram como estavam: `k` = 2 de 3, `aggregation` = max, `envelope_delta` = 1,0 
 ## 4. Desfechos por cenário e braço
 
 Medianas das 10 execuções de cada célula (notebook Seção 1; `run_metrics`). Tempos em segundos desde a injeção.
+TTM é o tempo até a mitigação, contado a partir da injeção: o primeiro evento `MITIGATION` da execução
+(`_first(ev, "MITIGATION")` em `analysis/metrics.py::run_metrics`; o evento é emitido em `mecade/runner.py`).
 
 | Cenário | Braço | TTD | TTM | TTR_capped | MTTR | area_incidente | BLOCK |
 |---|---|---|---|---|---|---|---|
@@ -112,7 +114,8 @@ bilateral de 95% [0; 0,308] (`scipy.stats.beta.ppf(0.975, 1, 10)`).
 
 Os controles tiveram ALERT, mas nenhum BLOCK: 5 de 10 com ALERT, em t = 45, 110, 305, 540 e 1150 s, e
 I máximo de 514,1, abaixo de 2% de B (`detected`, `TTD` e `I_max` dos controles em
-`analysis/metricas_por_replica.csv`). Na calibração, os 3 controles não tiveram ALERT.
+`analysis/metricas_por_replica.csv`). Na reprodução offline da calibração com os valores calibrados, os 3
+controles não tiveram ALERT; ao vivo, com d_on = 0,5, tiveram.
 
 ### H2, recuperação (Tabela 4.6, linha 1)
 
@@ -153,6 +156,11 @@ cenários, diferença 0,0, sem discordantes, p = 1,0000 (Holm 1,0000). NÃO ATEN
 | RRIndex_run | s3 | 1,27e-3 | 1,43e-3 | 1,66e-4 | [7,57e-5; 2,11e-4] | 0,86 | 0,0020 | 0,0293 |
 
 Veredito do critério: ATENDE em s1 e s3, NÃO ATENDE em s2. No Holm, só s3 atende.
+
+Escala: RRIndex_run = 1/(1 + V̄), e nas medianas por célula V̄ vai de cerca de 350 (s2) a cerca de 1080
+(baseline de s1) (`1/RRIndex_run - 1`, `analysis/metricas_por_replica.csv`). Por isso o índice fica perto de
+zero e as diferenças são da ordem de 1e-4. A Tabela 4.6 não fixa limiar para a convergência, então o veredito
+vale pelo sinal da mediana da diferença e pelo IC que não cruza zero, e não pelo tamanho absoluto.
 
 ### H3, overhead da auditoria (Tabela 4.6, linha 6)
 
@@ -220,6 +228,10 @@ Na H2, a análise principal tem 2 de 9 combinações de critério e cenário ate
 - **Falsos bloqueios.** 0 em 10 é compatível com taxa real de até 0,259 (unilateral) ou 0,308 (bilateral).
 - **Camada 6 em perfil mínimo.** JSONL com hash encadeado, sem blockchain. Δ_audit,p95 vem de poucos eventos
   por controle e Δcpu é razão de medianas de 5 valores. A vazão de 1000 eventos/s não é exercida.
+- **Ruído subestimado na calibração.** Os 3 controles da calibração tiveram max D de 3,69 e I máximo de
+  19,75 (`data/calibracao/resultado_r1.json`); os 10 controles oficiais chegaram a max D de 10,50 e I máximo
+  de 514,1 (`max_D` e `I_max` em `analysis/metricas_por_replica.csv`). Isso explica o ALERT em 5 de 10
+  controles, sem BLOCK, porque I ficou abaixo de 2% de B.
 - **Múltiplas comparações.** A análise principal não tem correção; o Holm por família é secundário.
 - Valem também as limitações da Seção 7 do protocolo e de `docs/EVIDENCIAS.md` (D3, D5 e D6 da Seção 5 do
   protocolo, Online Boutique como único sistema-alvo).

@@ -167,7 +167,7 @@ O que isso exige de mim, e só de mim:
 
 Nada foi depositado.
 
-## 9. Checklist da Fase 4
+## 9. Checklist da análise final
 
 **Antes das réplicas oficiais**
 
@@ -190,7 +190,7 @@ Nada foi depositado.
 7. `make analyze`. Commit do notebook executado, das figuras e do `metricas_por_replica.csv`.
 8. Escrever `RESULTADOS_CAMPANHA.md` (abaixo). Commit.
 9. `git tag -a mvc-2026-11-final` no commit do passo 8 e, só então, `make evidencias ESTRITO=1`: o manifesto
-   final aponta para esse commit. O fechamento da Fase 4 usa o modo estrito, que sai com código 3 se
+   final aponta para esse commit. O fechamento da análise final usa o modo estrito, que sai com código 3 se
    houver arquivo de evidência fora do git, árvore suja ou HEAD sem tag (sem ele esses casos são só
    alertas). O manifesto em si não conta como sujeira. Commit do manifesto. Conferir que
    `git diff mvc-2026-11-calibracao mvc-2026-11-final -- config/ scenarios/ mecade/axioms.py data/plan_mvc-2026-11.csv`
