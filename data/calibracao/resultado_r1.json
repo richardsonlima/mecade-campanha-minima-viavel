@@ -1,0 +1,25 @@
+{
+  "viavel": true,
+  "regra_B": "margem_ruido",
+  "d_off": 2.9,
+  "deadband": 2.9,
+  "d_on": 3.1,
+  "budget_B": 47.0,
+  "tau_dwell": 15,
+  "medido": {
+    "p50_D_agr": 0.582387246341832,
+    "p95_D_agr": 2.1914166765646907,
+    "p99_D_agr": 2.8314943780936033,
+    "max_D_agr": 3.652513834078269,
+    "n_amostras": 2400,
+    "n_controles": 10,
+    "I_max_controles": 23.468426223072285,
+    "I_s1_antes_300s": {
+      "baseline": 22879.448345866414,
+      "mecade": 26732.183317985153
+    },
+    "alertas_espurios_por_tau": {
+      "15": 0
+    }
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "run_id": "cal1_015_c0_controle_mecade_r08",
+  "scenario": "c0_controle",
+  "scenario_version": 1,
+  "arm": "mecade",
+  "backend": "k8s",
+  "status": "complete",
+  "wall_start": 1794619656.2962718,
+  "t_inject_abs": 1794619956.2962718,
+  "M_base": {
+    "p95": 0.23672984716811502,
+    "p99": 0.36823000000000017,
+    "error_rate": 0.0
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "event": "CONTROL_START",
+      "baseline": {
+        "p95": 0.23672984716811502,
+        "p99": 0.36823000000000017,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "t": 135.0,
+      "event": "LIMIT",
+      "I": 60.69
+    },
+    {
+      "t": 135.0,
+      "event": "BLOCK",
+      "I": 60.69
+    },
+    {
+      "t": 135.0,
+      "event": "MITIGATION",
+      "action": "none",
+      "reason": "BLOCK"
+    },
+    {
+      "t": 225.0,
+      "event": "ALERT",
+      "I": 106.912
+    },
+    {
+      "t": 455.0,
+      "event": "ALERT_CLEAR",
+      "I": 353.494
+    },
+    {
+      "t": 480.0,
+      "event": "ALERT",
+      "I": 383.196
+    },
+    {
+      "t": 600.0,
+      "event": "FAULT_END"
+    },
+    {
+      "t": 695.0,
+      "event": "ALERT_CLEAR",
+      "I": 562.943
+    },
+    {
+      "t": 785.0,
+      "event": "ALERT",
+      "I": 590.671
+    },
+    {
+      "t": 885.0,
+      "event": "ALERT_CLEAR",
+      "I": 783.179
+    },
+    {
+      "t": 970.0,
+      "event": "ALERT",
+      "I": 807.282
+    },
+    {
+      "t": 990.0,
+      "event": "ALERT_CLEAR",
+      "I": 834.018
+    },
+    {
+      "t": 1075.0,
+      "event": "ALERT",
+      "I": 879.278
+    },
+    {
+      "t": 1110.0,
+      "event": "ALERT_CLEAR",
+      "I": 928.826
+    }
+  ],
+  "audit": {
+    "enabled": false
+  },
+  "controller_cpu_s": 4.347379517999997,
+  "timing": {
+    "warmup": 120,
+    "baseline": 300,
+    "fault": 600,
+    "recovery": 600,
+    "step": 5
+  },
+  "axioms": {
+    "decision_signals": [
+      "p95",
+      "p99",
+      "error_rate"
+    ],
+    "k": 2,
+    "d_on": 0.5,
+    "d_off": 0.3,
+    "tau_dwell": 15,
+    "aggregation": "max",
+    "deadband": 0.3,
+    "budget_B": 60.0,
+    "envelope": "d_on_tau",
+    "envelope_delta": 1.0
+  },
+  "reactive": {
+    "rules": [
+      {
+        "signal": "p99",
+        "op": ">",
+        "factor_of_baseline": 2.0
+      },
+      {
+        "signal": "error_rate",
+        "op": ">",
+        "absolute": 0.05
+      }
+    ],
+    "for": 300,
+    "response_delay": 120
+  },
+  "recovery": {
+    "hold": 60
+  },
+  "block": {
+    "stop_injection": false
+  },
+  "rto_s": 180,
+  "mitigation": {
+    "acao": "none"
+  },
+  "git_commit": "9ea4f9a5741cd1b4a162cee005d34948368f4bf4",
+  "k8s_server": "v1.36.4-gke.2377000",
+  "campaign_id": "mvc-2026-11-c2",
+  "git_dirty": false,
+  "config_sha256": "2f98bd06c7aa5c2ba80e75ac4c77729d347536e1350611545d1e88fd9f4345d5",
+  "plano": "calibracao",
+  "etapa": "calibracao",
+  "pair": "",
+  "rep": 8,
+  "order": 15,
+  "audit_planned": 0,
+  "tentativa": 1,
+  "fora_da_ordem": false
+}

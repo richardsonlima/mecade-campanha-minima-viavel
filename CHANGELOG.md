@@ -3,6 +3,17 @@
 Qualquer mudança de versão, parâmetro ou cenário depois que as réplicas oficiais começarem vai
 anotada aqui. Réplicas rodadas antes e depois de uma mudança não são comparáveis entre si.
 
+## 14/11 - calibração da campanha 2 congelada
+
+Regra da Seção 3 do `docs/PROTOCOLO_C2.md` aplicada à rodada 1 da campanha 2 (`data/calibracao/resultado_r1.json`), sem mudança na regra.
+
+- d_off e deadband: 0,3 → 2,9 (P99 de `D_agr` nos controles = 2,83, arredondado para cima; P50 = 0,58, P95 = 2,19, máximo 3,65, 2400 amostras de 10 controles).
+- d_on: 0,5 → 3,1 (d_off + 0,2).
+- budget_B: 60,0 → 47,0, só pela condição (a): 2 × o maior I dos controles (23,47), arredondado para cima.
+- tau_dwell: fica em 15 s, sem ALERT espúrio nos controles com os valores novos.
+- Plano oficial `data/plan_mvc-2026-11-c2.csv`, gerado com a semente 20261113: 70 execuções, SHA-256 `cf4eb65d…`.
+- `make test`: 113 passam.
+
 ## 13/11 - pré-registro da campanha 2 (`mvc-2026-11-c2`)
 
 Branch `campanha-2`, a partir do `main` depois da tag `mvc-2026-11-final`. Protocolo em `docs/PROTOCOLO_C2.md`.

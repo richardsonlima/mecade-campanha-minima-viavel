@@ -121,6 +121,15 @@ Rodada 1 de 01:07 a 05:11 UTC: 9 réplicas `complete`, sem falha e sem desvio de
 - Três cópias conferidas contra esse manifesto: local, bucket e VM, as três com `CONFERE` em 362 arquivos.
 - Não desmontei a infraestrutura: decidi rodar a campanha 2, confirmatória, com o Chaos Budget em modo proteção.
 
+## 14/11 - calibração da campanha 2 congelada
+
+Rodada 1 da campanha 2 terminou às 02:19 UTC: 16 execuções concluídas (10 controles e 1 par por cenário). Backup em `calibracao-c2/` no bucket.
+
+- `D_agr` nos controles (10 controles, 2400 amostras): P50 = 0,58, P95 = 2,19, P99 = 2,83, máximo 3,65.
+- d_off = deadband = 2,9; d_on = 3,1; tau_dwell = 15 s, sem ALERT espúrio.
+- budget_B = 47,0 = 2 × 23,47 (maior I dos controles), arredondado para cima. No piloto de s1, I antes de 300 s chega a 26732,2 (MECADE) e 22879,4 (baseline), bem acima de B: o modo proteção deve bloquear s1 cedo.
+- Plano oficial com 70 execuções, SHA-256 `cf4eb65d…`.
+
 ## Decisões
 
 - Portão A (11/11): projeto novo para a campanha, depois refeito no "My First Project" (ver 11/11). `MACHINE=e2-standard-2`.

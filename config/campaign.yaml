@@ -80,13 +80,13 @@ aux_signals:
 axioms:
   decision_signals: [p95, p99, error_rate]   # n = 3
   k: 2                         # correlação multi-sinal: k de n
-  # Valores iniciais, os mesmos da campanha 1 antes da calibração. A Fase 1 da campanha 2 recalibra.
-  d_on: 0.5                    # mesmo papel de delta_alert / epsilon (limiar de ativação)
-  d_off: 0.3                   # limiar de desativação (histerese)
+  # Calibrados na Fase 1 da campanha 2 (data/calibracao/resultado_r1.json, tag mvc-2026-11-c2-calibracao).
+  d_on: 3.1                    # mesmo papel de delta_alert / epsilon (limiar de ativação)
+  d_off: 2.9                   # limiar de desativação (histerese)
   tau_dwell: 15                # janela de confirmação (s)
   aggregation: max             # D_agr = max(D_m) ou média
-  deadband: 0.3                # LIMIT integra max(0, D_agr - deadband) (ver docs/PROTOCOLO.md, D1)
-  budget_B: 60.0               # Chaos Budget (unidades de D·s)
+  deadband: 2.9                # LIMIT integra max(0, D_agr - deadband) (ver docs/PROTOCOLO.md, D1)
+  budget_B: 47.0               # Chaos Budget (unidades de D·s)
   envelope: d_on_tau           # classificação: degradado se D_agr > d_on por tau_dwell seguidos (campanha 2)
   envelope_delta: 1.0          # só vale com envelope: delta (campanha 1)
 

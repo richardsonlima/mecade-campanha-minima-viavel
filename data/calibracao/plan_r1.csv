@@ -1,0 +1,17 @@
+order,run_id,scenario,arm,rep,pair,audit
+1,cal1_001_c0_controle_mecade_r05,c0_controle,mecade,5,,1
+2,cal1_002_c0_controle_mecade_r06,c0_controle,mecade,6,,0
+3,cal1_003_s2_gray_currency_baseline_r01,s2_gray_currency,baseline,1,s2_gray_currency#01,1
+4,cal1_004_s2_gray_currency_mecade_r01,s2_gray_currency,mecade,1,s2_gray_currency#01,1
+5,cal1_005_s3_podkill_cart_mecade_r01,s3_podkill_cart,mecade,1,s3_podkill_cart#01,1
+6,cal1_006_s3_podkill_cart_baseline_r01,s3_podkill_cart,baseline,1,s3_podkill_cart#01,1
+7,cal1_007_s1_latencia_productcatalog_baseline_r01,s1_latencia_productcatalog,baseline,1,s1_latencia_productcatalog#01,1
+8,cal1_008_s1_latencia_productcatalog_mecade_r01,s1_latencia_productcatalog,mecade,1,s1_latencia_productcatalog#01,1
+9,cal1_009_c0_controle_mecade_r10,c0_controle,mecade,10,,0
+10,cal1_010_c0_controle_mecade_r01,c0_controle,mecade,1,,1
+11,cal1_011_c0_controle_mecade_r03,c0_controle,mecade,3,,1
+12,cal1_012_c0_controle_mecade_r09,c0_controle,mecade,9,,1
+13,cal1_013_c0_controle_mecade_r07,c0_controle,mecade,7,,1
+14,cal1_014_c0_controle_mecade_r04,c0_controle,mecade,4,,0
+15,cal1_015_c0_controle_mecade_r08,c0_controle,mecade,8,,0
+16,cal1_016_c0_controle_mecade_r02,c0_controle,mecade,2,,0
