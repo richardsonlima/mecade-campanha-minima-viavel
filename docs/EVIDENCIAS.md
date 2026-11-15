@@ -145,7 +145,13 @@ campo do manifesto. Um número que não sai dessa tabela não entra no Cap. 5.
 
 Recomendo depositar o pacote final num repositório com DOI. O Zenodo serve e é gratuito. O pacote leva:
 
-- o código no commit da tag `mvc-2026-11-final` (a integração GitHub do Zenodo arquiva uma release);
+- o código e os dados no commit da tag de pacote `<campaign_id>-pacote`, nunca no da tag final. O manifesto
+  final é calculado sobre a árvore da tag `<campaign_id>-final`, e por isso não pode estar dentro dela: entra
+  num commit posterior, junto com o `RESULTADOS` que cita o hash. A tag de pacote aponta para esse commit, e a
+  release sai só dela (a integração GitHub do Zenodo arquiva cada release publicada, e uma versão publicada
+  não pode ser apagada). Antes da release, `git archive <tag de pacote>` numa pasta vazia e
+  `make verificar-evidencias RAIZ=<pasta> MANIFESTO=<pasta>/data/EVIDENCIAS_MANIFESTO.json` têm de dar CONFERE,
+  e o `CITATION.cff` tem de trazer o título e a versão da campanha;
 - `data/` com `runs/`, `audit/`, `calibracao/`, o plano, `campaign.log`, `desvios_execucao.jsonl` e o
   manifesto;
 - `analysis/analysis.ipynb` executado, `analysis/figures/` e `metricas_por_replica.csv`;
@@ -165,7 +171,9 @@ O que isso exige de mim, e só de mim:
 6. Fazer uma revisão de segurança do pacote antes do depósito: nenhum ID de projeto, IP,
    e-mail ou credencial em `campaign.log`, `meta.json` ou `ENVIRONMENT.md`.
 
-Nada foi depositado.
+Depósitos em 15/11 (conceito 10.5281/zenodo.24247519). As versões das tags finais, 10.5281/zenodo.24247520
+(campanha 1, sem o manifesto) e 10.5281/zenodo.24247523 (campanha 2, com o manifesto preliminar), ficaram
+incompletas e foram substituídas pelas versões das tags de pacote. A dissertação cita só as de pacote.
 
 ## 9. Checklist da análise final
 

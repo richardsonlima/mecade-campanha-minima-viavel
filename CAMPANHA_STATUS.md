@@ -2,7 +2,7 @@
 
 Fase atual: campanha 2 (`mvc-2026-11-c2`) fechada na tag `mvc-2026-11-c2-final`, branch `campanha-2`. A campanha 1 está fechada na tag `mvc-2026-11-final`.
 Custo estimado: cerca de R$ 11 até 12/11 07:30 UTC, com taxa de R$ 1,5 a 2,2/h. O faturamento confirma com atraso.
-Próximo passo: release da tag `mvc-2026-11-c2-final` no GitHub para o depósito no Zenodo, que autorizei em 15/11.
+Próximo passo: releases das tags de pacote `mvc-2026-11-pacote` e `mvc-2026-11-c2-pacote` para o Zenodo, que substituem as versões incompletas das tags finais.
 
 ## 05/11 - pré-voo e preparação
 
@@ -162,3 +162,16 @@ Rodada 1 da campanha 2 terminou às 02:19 UTC: 16 execuções concluídas (10 co
 - Tag `mvc-2026-11-c2-final` em `333dbf5`. `make evidencias ESTRITO=1`: 393 arquivos, 35/35 trilhas, SHA-256 do
   manifesto `b1effa76c7e18201440cc06aa01b682a0b39571e4e39403c4484f313b2867967`. Três cópias conferem.
 - Nós do GKE em 0 desde 15/11 13:30 UTC. A VM do controlador segue ligada.
+
+## 15/11 - depósito no Zenodo
+
+- Publiquei as releases das tags `mvc-2026-11-final` e `mvc-2026-11-c2-final`. O Zenodo arquivou as duas
+  (10.5281/zenodo.24247520 e 10.5281/zenodo.24247523, conceito 10.5281/zenodo.24247519).
+- Erro meu: o manifesto final é calculado sobre a tag final, então não está dentro dela. A versão da
+  campanha 1 saiu sem manifesto e com o `RESULTADOS` dizendo que o hash ainda não existia; a da campanha 2
+  saiu com o manifesto preliminar (`6423eb84…`) e com o título da campanha 1 na citação.
+- Correção: tags de pacote no commit que já tem o manifesto final. `mvc-2026-11-pacote` em `f889d1a`
+  (manifesto `5d24630b…`, CONFERE 362/362 no `git archive`) e `mvc-2026-11-c2-pacote` no commit deste
+  registro (manifesto `b1effa76…`, CONFERE 393/393). Título e versão da citação corrigidos para a
+  campanha 2. A regra ficou na Seção 8 de `docs/EVIDENCIAS.md`: release só de tag de pacote.
+- As duas versões incompletas não podem ser apagadas por mim; ficam marcadas como substituídas.
