@@ -3,6 +3,14 @@
 Qualquer mudança de versão, parâmetro ou cenário depois que as réplicas oficiais começarem vai
 anotada aqui. Réplicas rodadas antes e depois de uma mudança não são comparáveis entre si.
 
+## 15/11 - análise final da campanha 2
+
+Sem mudança de versão, parâmetro, cenário ou critério depois da tag `mvc-2026-11-c2-calibracao`.
+
+- 70 de 70 execuções oficiais, 0 `falha_execucao`; 11 censuradas (10 do baseline em s2, 1 do MECADE em s3), 1 de 70 no limite de 10%.
+- Dados brutos, manifesto (`6423eb84…7a2b2`), análise e `docs/RESULTADOS_CAMPANHA_2.md` em commits separados.
+- Vereditos pré-registrados: H1 PARCIAL, H2 PARCIAL, H3 ACEITA, iguais no Holm. Falsos bloqueios 5/10.
+
 ## 14/11 - calibração da campanha 2 congelada
 
 Regra da Seção 3 do `docs/PROTOCOLO_C2.md` aplicada à rodada 1 da campanha 2 (`data/calibracao/resultado_r1.json`), sem mudança na regra.
