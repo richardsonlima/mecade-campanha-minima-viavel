@@ -1,0 +1,106 @@
+{
+  "run_id": "060_s1_latencia_productcatalog_baseline_r04",
+  "scenario": "s1_latencia_productcatalog",
+  "scenario_version": 1,
+  "arm": "baseline",
+  "backend": "k8s",
+  "status": "complete",
+  "wall_start": 1794720189.0454328,
+  "t_inject_abs": 1794720489.0454328,
+  "M_base": {
+    "p95": 0.09889211886304909,
+    "p99": 0.190028571428571,
+    "error_rate": 0.0
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "event": "INJECT",
+      "baseline": {
+        "p95": 0.09889211886304909,
+        "p99": 0.190028571428571,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "t": 300.0,
+      "event": "REACTIVE_FIRE"
+    },
+    {
+      "t": 420.0,
+      "event": "MITIGATION",
+      "action": "restart",
+      "reason": "RUNBOOK"
+    },
+    {
+      "t": 600.0,
+      "event": "FAULT_END"
+    }
+  ],
+  "audit": {
+    "enabled": false
+  },
+  "controller_cpu_s": 4.376097926999989,
+  "timing": {
+    "warmup": 120,
+    "baseline": 300,
+    "fault": 600,
+    "recovery": 600,
+    "step": 5
+  },
+  "axioms": {
+    "decision_signals": [
+      "p95",
+      "p99",
+      "error_rate"
+    ],
+    "k": 2,
+    "d_on": 3.1,
+    "d_off": 2.9,
+    "tau_dwell": 15,
+    "aggregation": "max",
+    "deadband": 2.9,
+    "budget_B": 47.0,
+    "envelope": "d_on_tau",
+    "envelope_delta": 1.0
+  },
+  "reactive": {
+    "rules": [
+      {
+        "signal": "p99",
+        "op": ">",
+        "factor_of_baseline": 2.0
+      },
+      {
+        "signal": "error_rate",
+        "op": ">",
+        "absolute": 0.05
+      }
+    ],
+    "for": 300,
+    "response_delay": 120
+  },
+  "recovery": {
+    "hold": 60
+  },
+  "block": {
+    "stop_injection": false
+  },
+  "rto_s": 180,
+  "mitigation": {
+    "acao": "restart"
+  },
+  "git_commit": "f947e600f5c044e2b7584cb8f4a3e10c2b8d6de8",
+  "k8s_server": "v1.36.4-gke.2377000",
+  "campaign_id": "mvc-2026-11-c2",
+  "git_dirty": false,
+  "config_sha256": "10f9ce906ebc39fb53ec079f1ff19d2398b8a0852a69ac9715e7fc1a976dee5b",
+  "plano": "oficial",
+  "etapa": "oficial",
+  "pair": "s1_latencia_productcatalog#04",
+  "rep": 4,
+  "order": 60,
+  "audit_planned": 1,
+  "tentativa": 1,
+  "fora_da_ordem": false
+}

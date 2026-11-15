@@ -1,0 +1,169 @@
+{
+  "run_id": "051_s2_gray_currency_mecade_r05",
+  "scenario": "s2_gray_currency",
+  "scenario_version": 1,
+  "arm": "mecade",
+  "backend": "k8s",
+  "status": "complete",
+  "wall_start": 1794705467.3637123,
+  "t_inject_abs": 1794705767.3637123,
+  "M_base": {
+    "p95": 0.09314732142857142,
+    "p99": 0.20652678571428545,
+    "error_rate": 0.0
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "event": "INJECT",
+      "baseline": {
+        "p95": 0.09314732142857142,
+        "p99": 0.20652678571428545,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "t": 70.0,
+      "event": "LIMIT",
+      "I": 147.643
+    },
+    {
+      "t": 70.0,
+      "event": "BLOCK",
+      "I": 147.643
+    },
+    {
+      "t": 70.0,
+      "event": "MITIGATION",
+      "action": "restart",
+      "reason": "BLOCK"
+    },
+    {
+      "t": 80.0,
+      "event": "ALERT",
+      "I": 725.822
+    },
+    {
+      "t": 130.0,
+      "event": "ALERT_CLEAR",
+      "I": 2747.536
+    },
+    {
+      "t": 540.0,
+      "event": "ALERT",
+      "I": 2865.466
+    },
+    {
+      "t": 555.0,
+      "event": "ALERT_CLEAR",
+      "I": 2903.773
+    },
+    {
+      "t": 600.0,
+      "event": "FAULT_END"
+    },
+    {
+      "t": 750.0,
+      "event": "ALERT",
+      "I": 3043.666
+    },
+    {
+      "t": 775.0,
+      "event": "ALERT_CLEAR",
+      "I": 3078.902
+    },
+    {
+      "t": 960.0,
+      "event": "ALERT",
+      "I": 3117.147
+    },
+    {
+      "t": 975.0,
+      "event": "ALERT_CLEAR",
+      "I": 3137.04
+    },
+    {
+      "t": 1085.0,
+      "event": "ALERT",
+      "I": 3148.537
+    },
+    {
+      "t": 1100.0,
+      "event": "ALERT_CLEAR",
+      "I": 3155.554
+    },
+    {
+      "t": 1185.0,
+      "event": "ALERT",
+      "I": 3187.5
+    }
+  ],
+  "audit": {
+    "enabled": true,
+    "records": 16,
+    "enqueue_p95_ms": 0.04164999700151384
+  },
+  "controller_cpu_s": 4.484360035000009,
+  "timing": {
+    "warmup": 120,
+    "baseline": 300,
+    "fault": 600,
+    "recovery": 600,
+    "step": 5
+  },
+  "axioms": {
+    "decision_signals": [
+      "p95",
+      "p99",
+      "error_rate"
+    ],
+    "k": 2,
+    "d_on": 3.1,
+    "d_off": 2.9,
+    "tau_dwell": 15,
+    "aggregation": "max",
+    "deadband": 2.9,
+    "budget_B": 47.0,
+    "envelope": "d_on_tau",
+    "envelope_delta": 1.0
+  },
+  "reactive": {
+    "rules": [
+      {
+        "signal": "p99",
+        "op": ">",
+        "factor_of_baseline": 2.0
+      },
+      {
+        "signal": "error_rate",
+        "op": ">",
+        "absolute": 0.05
+      }
+    ],
+    "for": 300,
+    "response_delay": 120
+  },
+  "recovery": {
+    "hold": 60
+  },
+  "block": {
+    "stop_injection": false
+  },
+  "rto_s": 180,
+  "mitigation": {
+    "acao": "restart"
+  },
+  "git_commit": "f947e600f5c044e2b7584cb8f4a3e10c2b8d6de8",
+  "k8s_server": "v1.36.4-gke.2377000",
+  "campaign_id": "mvc-2026-11-c2",
+  "git_dirty": false,
+  "config_sha256": "10f9ce906ebc39fb53ec079f1ff19d2398b8a0852a69ac9715e7fc1a976dee5b",
+  "plano": "oficial",
+  "etapa": "oficial",
+  "pair": "s2_gray_currency#05",
+  "rep": 5,
+  "order": 51,
+  "audit_planned": 1,
+  "tentativa": 1,
+  "fora_da_ordem": false
+}

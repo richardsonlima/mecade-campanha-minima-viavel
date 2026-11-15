@@ -1,0 +1,195 @@
+{
+  "run_id": "024_s3_podkill_cart_mecade_r02",
+  "scenario": "s3_podkill_cart",
+  "scenario_version": 1,
+  "arm": "mecade",
+  "backend": "k8s",
+  "status": "complete",
+  "wall_start": 1794661530.8193128,
+  "t_inject_abs": 1794661830.8193128,
+  "M_base": {
+    "p95": 0.19897435897435883,
+    "p99": 0.2623750000000012,
+    "error_rate": 0.0
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "event": "INJECT",
+      "baseline": {
+        "p95": 0.19897435897435883,
+        "p99": 0.2623750000000012,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "t": 55.0,
+      "event": "LIMIT",
+      "I": 97.518
+    },
+    {
+      "t": 55.0,
+      "event": "BLOCK",
+      "I": 97.518
+    },
+    {
+      "t": 55.0,
+      "event": "MITIGATION",
+      "action": "scale",
+      "reason": "BLOCK"
+    },
+    {
+      "t": 75.0,
+      "event": "ALERT",
+      "I": 1478.347
+    },
+    {
+      "t": 115.0,
+      "event": "ALERT_CLEAR",
+      "I": 3355.561
+    },
+    {
+      "t": 290.0,
+      "event": "ALERT",
+      "I": 3493.627
+    },
+    {
+      "t": 305.0,
+      "event": "ALERT_CLEAR",
+      "I": 3555.449
+    },
+    {
+      "t": 425.0,
+      "event": "ALERT",
+      "I": 3660.369
+    },
+    {
+      "t": 460.0,
+      "event": "ALERT_CLEAR",
+      "I": 3741.887
+    },
+    {
+      "t": 515.0,
+      "event": "ALERT",
+      "I": 3830.725
+    },
+    {
+      "t": 530.0,
+      "event": "ALERT_CLEAR",
+      "I": 3885.449
+    },
+    {
+      "t": 560.0,
+      "event": "ALERT",
+      "I": 3934.609
+    },
+    {
+      "t": 575.0,
+      "event": "ALERT_CLEAR",
+      "I": 3966.796
+    },
+    {
+      "t": 600.0,
+      "event": "FAULT_END"
+    },
+    {
+      "t": 610.0,
+      "event": "ALERT",
+      "I": 3995.209
+    },
+    {
+      "t": 625.0,
+      "event": "ALERT_CLEAR",
+      "I": 3995.942
+    },
+    {
+      "t": 1100.0,
+      "event": "ALERT",
+      "I": 4055.615
+    },
+    {
+      "t": 1105.0,
+      "event": "ALERT_CLEAR",
+      "I": 4055.615
+    },
+    {
+      "t": 1130.0,
+      "event": "ALERT",
+      "I": 4076.955
+    },
+    {
+      "t": 1145.0,
+      "event": "ALERT_CLEAR",
+      "I": 4088.581
+    }
+  ],
+  "audit": {
+    "enabled": true,
+    "records": 21,
+    "enqueue_p95_ms": 0.04710999201051891
+  },
+  "controller_cpu_s": 4.343414043999999,
+  "timing": {
+    "warmup": 120,
+    "baseline": 300,
+    "fault": 600,
+    "recovery": 600,
+    "step": 5
+  },
+  "axioms": {
+    "decision_signals": [
+      "p95",
+      "p99",
+      "error_rate"
+    ],
+    "k": 2,
+    "d_on": 3.1,
+    "d_off": 2.9,
+    "tau_dwell": 15,
+    "aggregation": "max",
+    "deadband": 2.9,
+    "budget_B": 47.0,
+    "envelope": "d_on_tau",
+    "envelope_delta": 1.0
+  },
+  "reactive": {
+    "rules": [
+      {
+        "signal": "p99",
+        "op": ">",
+        "factor_of_baseline": 2.0
+      },
+      {
+        "signal": "error_rate",
+        "op": ">",
+        "absolute": 0.05
+      }
+    ],
+    "for": 300,
+    "response_delay": 120
+  },
+  "recovery": {
+    "hold": 60
+  },
+  "block": {
+    "stop_injection": false
+  },
+  "rto_s": 180,
+  "mitigation": {
+    "acao": "scale",
+    "replicas": 3
+  },
+  "git_commit": "f947e600f5c044e2b7584cb8f4a3e10c2b8d6de8",
+  "k8s_server": "v1.36.4-gke.2377000",
+  "campaign_id": "mvc-2026-11-c2",
+  "git_dirty": false,
+  "config_sha256": "10f9ce906ebc39fb53ec079f1ff19d2398b8a0852a69ac9715e7fc1a976dee5b",
+  "plano": "oficial",
+  "etapa": "oficial",
+  "pair": "s3_podkill_cart#02",
+  "rep": 2,
+  "order": 24,
+  "audit_planned": 1,
+  "tentativa": 1,
+  "fora_da_ordem": false
+}
