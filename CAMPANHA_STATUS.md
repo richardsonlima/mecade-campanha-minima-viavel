@@ -2,7 +2,7 @@
 
 Fase atual: campanha 2 (`mvc-2026-11-c2`) fechada na tag `mvc-2026-11-c2-final`, branch `campanha-2`. A campanha 1 está fechada na tag `mvc-2026-11-final`.
 Custo estimado: cerca de R$ 11 até 12/11 07:30 UTC, com taxa de R$ 1,5 a 2,2/h. O faturamento confirma com atraso.
-Próximo passo: releases das tags de pacote `mvc-2026-11-pacote` e `mvc-2026-11-c2-pacote` para o Zenodo, que substituem as versões incompletas das tags finais.
+Próximo passo: pré-registro da campanha 3. Depósitos: campanha 1 10.5281/zenodo.24247614, campanha 2 10.5281/zenodo.24247615.
 
 ## 05/11 - pré-voo e preparação
 
@@ -175,3 +175,7 @@ Rodada 1 da campanha 2 terminou às 02:19 UTC: 16 execuções concluídas (10 co
   registro (manifesto `b1effa76…`, CONFERE 393/393). Título e versão da citação corrigidos para a
   campanha 2. A regra ficou na Seção 8 de `docs/EVIDENCIAS.md`: release só de tag de pacote.
 - As duas versões incompletas não podem ser apagadas por mim; ficam marcadas como substituídas.
+- Versões de pacote publicadas e conferidas sobre o zip baixado do Zenodo: campanha 1
+  10.5281/zenodo.24247614 (CONFERE 362/362, manifesto `5d24630b…`) e campanha 2 10.5281/zenodo.24247615
+  (CONFERE 393/393, manifesto `b1effa76…`). São os DOIs que a dissertação cita. As releases das tags finais
+  no GitHub ficaram marcadas como substituídas.
