@@ -7,6 +7,10 @@ implementar e que estão registrados em docs/PROTOCOLO.md:
      Integrando o desvio bruto, o ruído do estado estacionário se acumula a janela inteira e
      acaba estourando o Chaos Budget mesmo sem falha, principalmente em janelas longas.
   D2 (piso no denominador): ver deviation().
+  D3 (LIMIT condicionado ao ALERT, campanha 3): com `limit_gate: alert`, o desvio acumulado só cresce
+     enquanto o ALERT está ativo. Sem essa condição, um único sinal de latência acima da zona morta
+     integrava sozinho e gerava BLOCK sem ALERT (controle 070 e réplica 020_s3 da campanha 2). O
+     padrão `none` reproduz as campanhas 1 e 2.
 
 Deixei a classe sem nenhuma E/S para poder testar isoladamente e reaproveitar na análise offline.
 """
@@ -36,6 +40,7 @@ class AxiomParams:
     aggregation: str = "max"
     deadband: float = 0.3
     budget_B: float = 60.0
+    limit_gate: str = "none"       # "none" (campanhas 1 e 2) ou "alert" (D3, campanha 3)
 
     @classmethod
     def from_dict(cls, d: dict) -> "AxiomParams":
@@ -84,7 +89,13 @@ class AxiomEvaluator:
         # LIMIT: desvio acumulado, com zona morta, comparado ao Chaos Budget
         D_agr = self.aggregate(vals)
         self.last_D_agr = D_agr
-        self.I += max(0.0, D_agr - p.deadband) * dt
+        if p.limit_gate == "alert":
+            if self.alert:
+                self.I += max(0.0, D_agr - p.deadband) * dt
+        elif p.limit_gate == "none":
+            self.I += max(0.0, D_agr - p.deadband) * dt
+        else:
+            raise ValueError(f"limit_gate desconhecido: {p.limit_gate}")
         if not self.limit and self.I > p.budget_B:
             self.limit = True
             events.append("LIMIT")

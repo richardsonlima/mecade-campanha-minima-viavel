@@ -55,7 +55,7 @@ def test_calibracao_nao_coincide_com_o_plano_oficial():
     oficial = {r["run_id"] for r in build_plan(camp, camp["scenarios"], 10, 10)}
     cal_cfg = camp["calibracao"]
     n_ctrl, n_pares = cal_cfg["controles"], cal_cfg["pares_por_cenario"] * len(camp["scenarios"])
-    assert n_ctrl == 10  # campanha 2: 10 controles na calibração (docs/PROTOCOLO_C2.md)
+    assert n_ctrl == 30 and n_pares == 9  # campanha 3: 30 controles e 3 pares por cenário (docs/PROTOCOLO_C3.md)
     for rodada in (1, 2):
         cal = build_calibration_plan(camp, rodada)
         assert len(cal) == n_ctrl + 2 * n_pares

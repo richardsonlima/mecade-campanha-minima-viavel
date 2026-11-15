@@ -110,6 +110,7 @@ def run_one(*, run_id: str, scenario: dict, arm: str, campaign: dict, prom, kube
     rows: list[dict] = []
     chaos_active = False
     mitigated_at: float | None = None
+    clientes_pendentes: tuple[float, list[str]] | None = None
     phase = "baseline"
 
     def emit(t: float, name: str, **extra) -> None:
@@ -119,7 +120,7 @@ def run_one(*, run_id: str, scenario: dict, arm: str, campaign: dict, prom, kube
         log(f"[{run_id}] t={ev['t']:+.0f}s {name} {extra if extra else ''}")
 
     def mitigate(t: float, reason: str) -> None:
-        nonlocal mitigated_at
+        nonlocal mitigated_at, clientes_pendentes
         if mitigated_at is not None:
             return
         m = scenario.get("mitigacao", {}) or {}
@@ -130,11 +131,19 @@ def run_one(*, run_id: str, scenario: dict, arm: str, campaign: dict, prom, kube
             kube.scale(target, int(m["replicas"]))
         mitigated_at = t
         emit(t, "MITIGATION", action=action, reason=reason)
+        # campanha 3: depois de trocar o alvo, reinicio os clientes para descartar conexões presas ao pod antigo
+        if m.get("clientes"):
+            clientes_pendentes = (t + float(m.get("clientes_apos_s", 0)), list(m["clientes"]))
 
     t = t_base_start
     while t < t_end:
         clock.sleep_until(t)
         now = clock.now()
+        if clientes_pendentes is not None and now >= clientes_pendentes[0]:
+            for dep in clientes_pendentes[1]:
+                kube.restart(dep)
+            emit(now, "MITIGATION_CLIENTES", deployments=clientes_pendentes[1])
+            clientes_pendentes = None
 
         # transições de fase
         if phase == "baseline" and now >= t_inject:

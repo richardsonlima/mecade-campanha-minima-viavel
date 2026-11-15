@@ -58,7 +58,7 @@ class SimWorld:
     def restart(self, deployment: str) -> None:
         # Antes da injeção, o restart só renova as instâncias (a falha será injetada nas novas).
         # Durante a injeção, troca a instância afetada, que fica pronta uns 30 s depois.
-        if self.chaos_on:
+        if self.chaos_on and self.instance_replaced_at is None:
             self.instance_replaced_at = self.clock.now() + 30.0
 
     def wait_rollout(self, deployment: str, timeout: str = "300s") -> None:

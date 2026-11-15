@@ -62,3 +62,29 @@ def test_gray_failure_accumulates_and_blocks_once():
 def test_no_data():
     ev = AxiomEvaluator(P())
     assert ev.step({"a": None}, 5) == ["NO_DATA"]
+
+
+def test_limit_gate_alert_ignora_um_sinal_sozinho():
+    # D3: o mesmo caso do teste acima não esgota B quando o LIMIT depende do ALERT
+    ev = AxiomEvaluator(P(limit_gate="alert"))
+    events = []
+    for _ in range(100):
+        events += ev.step({"a": 0.9, "b": 0.2, "c": 0.2}, 5)
+    assert "BLOCK" not in events and ev.I == 0.0
+
+
+def test_limit_gate_alert_integra_a_partir_do_alert():
+    ev = AxiomEvaluator(P(limit_gate="alert"))
+    out = [ev.step({"a": 0.9, "b": 0.9, "c": 0.0}, 5) for _ in range(3)]
+    assert "ALERT" in out[2] and ev.I == (0.9 - 0.3) * 5  # o passo que confirma o ALERT já integra
+    events = []
+    for _ in range(30):
+        events += ev.step({"a": 0.9, "b": 0.9, "c": 0.0}, 5)
+    assert events.count("BLOCK") == 1
+    assert events.index("BLOCK") > 0
+
+
+def test_limit_gate_desconhecido():
+    import pytest
+    with pytest.raises(ValueError):
+        AxiomEvaluator(P(limit_gate="talvez")).step({"a": 0.1}, 5)

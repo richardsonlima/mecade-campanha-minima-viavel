@@ -75,3 +75,69 @@ def test_tau_sem_solucao_fica_no_valor_declarado():
     r = calibrate([(_m(), _df(D))], regra_B="margem_ruido", tau_sem_solucao=30)
     assert r["medido"]["alertas_espurios_por_tau"][30] >= 1
     assert r["tau_dwell"] == 30 and r["viavel"]
+
+
+# campanha 3: pisos da mediana de M_base, LIMIT condicionado ao ALERT e B dos pilotos do braço baseline
+def _bruto(p95, p99, err=0.0):
+    p95 = np.asarray(p95, dtype=float)
+    t = np.arange(len(p95)) * 5.0
+    return pd.DataFrame({"t": t, "p95": p95, "p99": np.broadcast_to(p99, p95.shape), "error_rate": err})
+
+
+def _m3(base, pair="", scenario="c0_controle", arm="mecade", run_id="x"):
+    return {"pair": pair, "scenario": scenario, "arm": arm, "timing": TIMING, "axioms": AX, "run_id": run_id,
+            "M_base": {"p95": base[0], "p99": base[1], "error_rate": 0.0},
+            "reactive": {"for": 300, "response_delay": 120}}
+
+
+def _c3_runs(pilot_p95=2.0, n_pilotos=2):
+    from analysis.calibrate import calibrate_c3  # noqa: F401
+    ctrl = [(_m3((b, 2 * b), run_id=f"c{i}"), _bruto(np.full(240, b), 2 * b)) for i, b in enumerate((0.1, 0.2, 0.3))]
+    pil = []
+    for i in range(n_pilotos):
+        p95 = np.r_[np.full(4, 0.2), np.full(236, pilot_p95 + i)]
+        pil.append((_m3((0.2, 0.4), f"s1#{i}", "s1_x", "baseline", f"p{i}"), _bruto(p95, p95 * 2)))
+    pil.append((_m3((0.2, 0.4), "s1#0", "s1_x", "mecade", "m0"), _bruto(np.full(240, 0.2), 0.4)))
+    return ctrl, pil
+
+
+def test_c3_pisos_e_zona_morta():
+    from analysis.calibrate import calibrate_c3
+    ctrl, pil = _c3_runs()
+    r = calibrate_c3(ctrl + pil, piso_erro=0.01)
+    assert r["pisos"] == {"p95": 0.2, "p99": 0.4, "error_rate": 0.01}  # mediana de M_base dos controles
+    assert r["deadband"] == r["d_off"] == 0.0 and r["d_on"] == 0.2      # controles sem desvio nenhum
+    assert r["limit_gate"] == "alert" and r["medido"]["I_max_controles"] == 0.0
+
+
+def test_c3_b_vem_do_piloto_mais_brando_30s_depois_do_alert():
+    from analysis.calibrate import calibrate_c3
+    ctrl, pil = _c3_runs(pilot_p95=2.0)
+    r = calibrate_c3(ctrl + pil, piso_erro=0.01)
+    p = {x["run_id"]: x for x in r["medido"]["pilotos"]}
+    assert set(p) == {"p0", "p1"}                 # o braço MECADE não entra na regra
+    assert p["p0"]["t_alert"] == 30.0              # desvio a partir de t = 20 s, 15 s de dwell em passos de 5 s
+    # D_agr = (4 - 0,4)/0,4 = 9 no piloto p0; 7 passos de 5 s integrados até t_alert + 30 s
+    assert abs(p["p0"]["I"] - 9 * 5 * 7) < 1e-6
+    assert r["budget_B"] == 310 and r["viavel"]    # arredondado para baixo na dezena
+
+
+def test_c3_inviavel_sem_margem_de_ruido():
+    from analysis.calibrate import calibrate_c3
+    ctrl, pil = _c3_runs()
+    # 8 passos (40 s) com p95 e p99 altos: raro demais para o P99, longo demais para o dwell de 30 s
+    ruido = _bruto(np.r_[np.full(232, 0.2), np.full(8, 6.0)], 0.4)
+    ruido["p99"] = np.r_[np.full(232, 0.4), np.full(8, 12.0)]
+    ctrl.append((_m3((0.2, 0.4), run_id="ruidoso"), ruido))
+    r = calibrate_c3(ctrl + pil, piso_erro=0.01, tau_sem_solucao=30)
+    assert r["tau_dwell"] == 30
+    assert r["medido"]["I_max_controles"] > 0
+    assert r["budget_B"] < 2 * r["medido"]["I_max_controles"] and not r["viavel"]
+
+
+def test_c3_inviavel_com_piloto_sem_alert():
+    from analysis.calibrate import calibrate_c3
+    ctrl, pil = _c3_runs()
+    pil.append((_m3((0.2, 0.4), "s2#0", "s2_x", "baseline", "calmo"), _bruto(np.full(240, 0.2), 0.4)))
+    r = calibrate_c3(ctrl + pil, piso_erro=0.01)
+    assert r["medido"]["pilotos_sem_alert"] == ["calmo"] and not r["viavel"]

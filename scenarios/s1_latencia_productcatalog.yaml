@@ -1,6 +1,6 @@
 # Registro de cenário no formato da Tabela 3.3 da dissertação
 id: s1_latencia_productcatalog
-version: 1
+version: 2                     # campanha 3: a mitigação reinicia também os clientes (docs/PROTOCOLO_C3.md, Seção 3)
 hipotese: >
   O estado estacionário (P95/P99 e TSR do cliente) persiste, ou é restaurado dentro do RTO,
   sob latência de rede induzida em uma instância do productcatalogservice.
@@ -15,7 +15,12 @@ metricas_observadas: [p95, p99, error_rate]
 rto_s: 180
 mitigacao:                     # igual nos dois braços; o que muda é quando ela é acionada
   acao: restart                # troca a instância degradada (a falha fica presa às instâncias originais)
-runbook: "Substituir instâncias degradadas: kubectl rollout restart deployment/productcatalogservice"
+  # Campanha 3: conexões dos clientes presas ao pod antigo seguraram o incidente na campanha 2. Os clientes
+  # são reiniciados depois do alvo. O atraso é provisório e a Fase 0 fixa o valor, ou tira os clientes, pela
+  # regra da Seção 3 do docs/PROTOCOLO_C3.md.
+  clientes: [frontend, checkoutservice, recommendationservice]
+  clientes_apos_s: 45
+runbook: "Substituir instâncias degradadas e renovar as conexões dos clientes: kubectl rollout restart deployment/productcatalogservice; depois deployment/frontend, deployment/checkoutservice e deployment/recommendationservice"
 replicas_alvo: 1
 chaos:
   apiVersion: chaos-mesh.org/v1alpha1

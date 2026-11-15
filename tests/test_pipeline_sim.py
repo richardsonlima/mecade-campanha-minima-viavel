@@ -41,3 +41,21 @@ def test_sim_campaign_end_to_end(tmp_path):
     assert mec["detected"].all()
     cmp = paired_comparison(m, "TTR_capped")
     assert set(cmp["scenario"]) == set(camp["scenarios"])
+
+
+def test_mitigacao_reinicia_clientes_depois_do_alvo(tmp_path):
+    camp = copy.deepcopy(load_campaign())
+    camp["axioms"].update(d_on=0.5, d_off=0.3, deadband=0.3, budget_B=60.0, tau_dwell=15)
+    sc = copy.deepcopy(load_scenario("s1_latencia_productcatalog"))
+    sc["mitigacao"] = {"acao": "restart", "clientes": ["frontend", "checkoutservice"], "clientes_apos_s": 30}
+    clock = VirtualClock(); world = SimWorld(clock, seed=7)
+    reiniciados = []
+    orig = world.restart
+    world.restart = lambda dep: (reiniciados.append((clock.now(), dep)), orig(dep))
+    meta = run_one(run_id="001_s1_mecade_r01", scenario=sc, arm="mecade", campaign=camp, prom=world, kube=world,
+                   clock=clock, out_root=tmp_path / "runs", sim_world=world, log=lambda *_: None)
+    ev = {e["event"]: e for e in meta["events"]}
+    assert "MITIGATION" in ev and "MITIGATION_CLIENTES" in ev
+    assert 30 <= ev["MITIGATION_CLIENTES"]["t"] - ev["MITIGATION"]["t"] < 35
+    deps = [d for _, d in reiniciados]
+    assert deps[-3:] == ["productcatalogservice", "frontend", "checkoutservice"]
