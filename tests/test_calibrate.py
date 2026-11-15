@@ -141,3 +141,15 @@ def test_c3_inviavel_com_piloto_sem_alert():
     pil.append((_m3((0.2, 0.4), "s2#0", "s2_x", "baseline", "calmo"), _bruto(np.full(240, 0.2), 0.4)))
     r = calibrate_c3(ctrl + pil, piso_erro=0.01)
     assert r["medido"]["pilotos_sem_alert"] == ["calmo"] and not r["viavel"]
+
+
+def test_c3_inviavel_abaixo_do_minimo_de_controles_ou_pilotos():
+    from analysis.calibrate import calibrate_c3
+    ctrl, pil = _c3_runs()  # 3 controles e 2 pilotos do braço baseline, viável sem mínimo
+    assert calibrate_c3(ctrl + pil, piso_erro=0.01)["viavel"]
+    ok = calibrate_c3(ctrl + pil, piso_erro=0.01, min_controles=3, min_pilotos=2)
+    assert ok["viavel"] and ok["medido"]["abaixo_do_minimo"] == []
+    r = calibrate_c3(ctrl + pil, piso_erro=0.01, min_controles=4, min_pilotos=2)
+    assert not r["viavel"] and r["medido"]["abaixo_do_minimo"] == ["3 controles, mínimo 4"]
+    r = calibrate_c3(ctrl + pil, piso_erro=0.01, min_controles=3, min_pilotos=3)
+    assert not r["viavel"] and r["medido"]["n_pilotos"] == 2  # o piloto do braço MECADE não conta

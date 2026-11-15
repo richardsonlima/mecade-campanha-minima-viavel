@@ -46,7 +46,8 @@ Qualquer mudança depois da tag é desvio (Seção 8.1).
 2. **Regra final nos controles oficiais.** R3 com pisos de p95 e p99 iguais à mediana de M_base da calibração
    da campanha 2 (p95 0,277 s, p99 0,725 s; zona morta 2,5): C2 oficiais com I > 0 em 0 de 10; C1 oficiais em
    3 de 10, com I máximo de 253,2. Os tempos de ALERT ficaram iguais aos dos pisos antigos: s1 perto de 20 s,
-   s2 perto de 80 s, s3 com mediana perto de 100 s e máximo de 165 s.
+   s2 perto de 80 s, s3 com mediana perto de 100 s e máximo de 165 s (braço baseline de C1 e C2, 20 réplicas;
+   o §6.1 usa um conjunto maior, de 30 réplicas).
 3. **Regra de B simulada.** B = menor I sob R3, 30 s depois do primeiro ALERT, nas séries de C1 e C2: mínimos
    de 1213 (s1), 1564 (s2) e 1814 (s3), logo B perto de 1210, contra 2 × 253 = 506 do maior ruído observado.
    `calibrate_c3` sobre a calibração da campanha 2 (1 piloto por cenário) deu B = 1680, viável. Escolhi a
@@ -127,12 +128,21 @@ Regras da Fase 0, fixadas agora:
 - A cascata fica se, em C1 e em C2, error_rate ≤ 0,01 e p95 ≤ 2 × M_base de p95 por 60 s seguidos começam até
   150 s depois do restart do alvo. Se não, `clientes` sai do cenário, s1 volta à mitigação da campanha 2 e
   registro como previsão que o TTR de s1 no braço MECADE será pior que no baseline.
-- H4 fica confirmada se A mostrar conexões ESTABLISHED para o IP do pod antigo, depois de ele sair dos
-  endpoints, com retransmissões crescentes, e B e C não mostrarem. Relato o resultado nos dois sentidos.
+- H4 fica confirmada se valerem as três condições, todas lidas no `ss -tni` do frontend e do checkoutservice:
+  (1) em A, há conexão ESTABLISHED para o IP do pod antigo depois de ele sair dos endpoints, com retransmissões
+  crescentes entre duas coletas seguidas; (2) em B, não há conexão para o IP do pod antigo depois de ele sair
+  dos endpoints; (3) em C1 e em C2, as conexões para o IP do pod antigo somem até 15 s depois de
+  MITIGATION_CLIENTES. Entre o restart do alvo e MITIGATION_CLIENTES, C pode mostrar conexões presas, como A,
+  e isso não conta contra a H4. Faltando qualquer condição, a H4 não é confirmada. Relato o resultado nos dois
+  sentidos.
 - D não decide nada. Relato o TTR de D ao lado dos TTR do baseline de s1 da campanha 2 (mediana 525 s), como
   indicação de o quanto a cascata muda o braço baseline. Com uma execução só, isso é indicação, não medida.
 
-Limitações declaradas: C1 e C2 testam a cascata com 45 s; se o valor final for outro, a campanha roda com um
+Limitações declaradas: com o restart em 40 s, a janela da regra da cascata ("até 150 s depois do restart")
+termina em 190 s da injeção, acima do RTO de 180 s. A cascata pode ficar sem que o s1 cumpra o RTO; isso é
+coerente, porque o critério que decide é o TTR, mas fica declarado. A Fase 0 só testa o restart em 15, 40, 120 e
+425 s: um BLOCK de s1 fora de cerca de 25 a 55 s na campanha 3 fica sem teste da cascata. C1 e C2 testam a
+cascata com 45 s; se o valor final for outro, a campanha roda com um
 atraso que a Fase 0 não testou, e não repito a Fase 0 por isso. O efeito da cascata no baseline fica medido só
 por D. Se a cascata piorar o baseline, a vantagem do MECADE em s1 fica inflada, e isso entra na discussão.
 
@@ -314,8 +324,8 @@ atraso), supondo que um não depende do outro, e o atraso não depende do instan
 | Cenário | ALERT (regra final) | Atraso até restaurar | P(rto_ok) por réplica | `rto_ok_ttr` esperado | Poder do McNemar (≥ 6/10) |
 |---|---|---|---|---|---|
 | s2 | 75 a 85 s (40 réplicas de C1 e C2) | 45 a 70 s em 9 de 10, uma com 230 s (campanha 2, mitigação em 65 a 70 s) | 0,89 a 0,90 | 9/10 | 0,99 ou mais |
-| s3 | mediana 100 s, 60 a 265 s (30 réplicas) | mediana 120 s, 55 a 255 s (campanha 2, mitigação em 50 a 55 s) | 0,09 a 0,19 | 1 a 2 de 10 | menor que 0,01 |
-| s3, sensibilidade | igual | campanhas 1 e 2 juntas, 30 a 255 s | 0,24 a 0,38 | 2 a 4 de 10 | 0,02 a 0,13 |
+| s3 | mediana 100 s, 60 a 265 s (30 réplicas: baseline de C1 e C2 e MECADE de C1, sem mitigação antes de 400 s) | mediana 120 s, 55 a 255 s (campanha 2, mitigação em 50 a 55 s) | 0,09 a 0,19 | 1 a 2 de 10 | menor que 0,01 |
+| s3, sensibilidade | igual | campanhas 1 e 2 juntas, 30 a 255 s | 0,24 a 0,38 | 2 a 4 de 10 | 0,02 a 0,14 |
 | s1 | perto de 20 s | depende da Fase 0 | desconhecida | desconhecido | desconhecido |
 
 Previsão registrada: em s3 o MECADE da campanha 3 não deve cumprir o RTO na maioria das réplicas, e o critério
@@ -325,8 +335,8 @@ mitigação de s3 sai depois do ALERT (perto de 100 s), e o atraso de restauraç
 ALERT, justamente pela integral sem k-de-n que a Seção 3.2 corrige.
 
 Poder conjunto da H2: pela regra D1, a H2 só sai ACEITA se todos os critérios (TTR, `rto_ok_ttr` e
-`RRIndex_run`) atenderem nos três cenários. Com o poder do McNemar de s3 abaixo de 0,13 nos dois modelos, a
-chance de H2 ACEITA fica abaixo de 0,13, antes de contar s1, TTR e convergência. H2 PARCIAL é o desfecho mais
+`RRIndex_run`) atenderem nos três cenários. Com o poder do McNemar de s3 de até 0,14 nos dois modelos, a
+chance de H2 ACEITA fica em até 0,14, antes de contar s1, TTR e convergência. H2 PARCIAL é o desfecho mais
 provável, e é um desfecho aceito: não mudo o desenho por causa disso. A troca está declarada: a campanha 3
 compra especificidade (BLOCK só com ALERT confirmado, Seção 3.2) ao preço de tempo de mitigação em s3.
 
@@ -343,7 +353,10 @@ compra especificidade (BLOCK só com ALERT confirmado, Seção 3.2) ao preço de
   ordem sorteada, houver menos de 27 controles ou menos de 9 pilotos do braço baseline com dados, completo uma
   vez as execuções que faltam, no fim da ordem e na mesma ordem relativa, sem sortear de novo (desvio
   registrado em `desvios_execucao.jsonl`). Cada execução completada tem também até 3 tentativas. Se ainda
-  faltar, a calibração é inviável (Seção 7.2).
+  faltar, a calibração é inviável (Seção 7.2). A conferência é mecânica: `calibrate_c3` recebe os mínimos de
+  `calibracao.controles_minimos` (27) e `calibracao.pilotos_minimos` (9) do config, conta os controles e os
+  pilotos do braço baseline com dados (`medido.n_controles`, `medido.n_pilotos`) e devolve inviável abaixo
+  deles (`medido.abaixo_do_minimo`).
 - **Plano oficial.** Regra das 3 falhas e limite de 10% do `docs/PROTOCOLO.md`. Uma réplica perdida pode ser
   refeita uma vez no fim da ordem (desvio registrado). Se o limite ainda passar depois disso, a campanha 3
   fecha como "incompleta" (Seção 7.2), em vez do "eu decido" do `docs/PROTOCOLO.md`.
@@ -358,7 +371,8 @@ A campanha 3 termina num destes desfechos, e só neles:
    Nenhuma execução oficial roda, nem com a regra trocada. A campanha 3 fecha como "calibração inviável" e é
    relatada assim, com os números da calibração e da Fase 0, no `docs/RESULTADOS_CAMPANHA_3.md`. Qualquer regra
    nova fica para uma campanha 4, com pré-registro próprio.
-3. **Incompleta.** Perdidas acima do limite depois da reexecução, ou prazo esgotado (Seção 7.3). Relato o que
+3. **Incompleta.** Perdidas acima do limite depois da reexecução, ou prazo esgotado pelas datas de corte da
+   Seção 7.3. Relato o que
    rodou, com o veredito calculado sobre os pares válidos e marcado como de campanha incompleta.
 
 ### 7.3 Desvios previstos
@@ -367,8 +381,13 @@ A campanha 3 termina num destes desfechos, e só neles:
 - s1: se a Fase 0 tirar a cascata, prevejo s1 pior que o baseline de novo (Seção 3.1).
 - Regime de base: se o p95 de base mudar de nível durante a campanha, relato a composição pelo limiar de 0,16 s
   e aplico o critério de quebra de trocabilidade da Seção 3.5. Mantenho a análise.
-- Prazo: se o plano oficial não começar até 17/11 às 8h, não reduzo n. A campanha segue e, se não fechar a
-  tempo da dissertação, entra como incompleta, com o que tiver rodado.
+- Prazo: se o plano oficial não começar até 17/11 às 8h, não reduzo n. Datas de corte (horário de Brasília):
+  (a) se a calibração não terminar até 18/11 às 23:59, nenhuma execução oficial começa e a campanha 3 fecha
+  como incompleta, com a Fase 0 e a calibração relatadas; (b) se o plano oficial não terminar até 20/11 às
+  23:59, paro a execução e a campanha fecha como incompleta, com o que tiver rodado. Por que essas datas: o
+  plano oficial leva umas 36 h, então começar logo depois de 18/11 23:59 (quarta, dentro da janela de push da
+  tag de calibração) termina por volta de 20/11 às 12h, e 21/11 fica para a análise e o texto da dissertação. A
+  margem de umas 12 h entre o fim previsto e o corte (b) cobre reexecuções e reaquecimento do cluster.
 
 ## 8. Ordem dos passos e custo
 
@@ -403,8 +422,19 @@ Entre `mvc-2026-11-c3-prereg` e `mvc-2026-11-c3-calibracao`, só isto, e tudo co
 8. no config e no cenário, só os valores fixados pelas regras: `clientes_apos_s` (ou a saída de `clientes`)
    pela Seção 3.1 e os valores calibrados pela Seção 4.
 
-A lógica de decisão e de análise não muda: `git diff mvc-2026-11-c3-prereg mvc-2026-11-c3-calibracao --
-mecade/axioms.py analysis/calibrate.py analysis/metrics.py analysis/veredito.py` tem de sair vazio. Entre a
+A lógica de decisão, o braço baseline, os cenários sem mudança e os planos não mudam:
+
+```
+git diff mvc-2026-11-c3-prereg mvc-2026-11-c3-calibracao -- \
+  mecade/axioms.py mecade/reactive.py analysis/calibrate.py analysis/metrics.py analysis/veredito.py \
+  scenarios/s2_gray_currency.yaml scenarios/s3_podkill_cart.yaml scenarios/c0_controle.yaml \
+  orchestrator/plan_campaign.py data/plan_mvc-2026-11-c3.csv data/calibracao/plan_r1.csv
+```
+
+tem de sair vazio. Em `mecade/runner.py`, `scenarios/s1_latencia_productcatalog.yaml` e `config/campaign.yaml`
+o diff só pode tocar os itens 2, 3, 5 e 8 acima, e cada trecho alterado (cada hunk do diff) fica citado no
+`CHANGELOG.md`, com o item da lista a que pertence. Em particular, `mitigate()` e a cascata do runner não
+mudam. Entre a
 tag de calibração e a final, o código não muda, salvo documentação e notebook. Qualquer outra mudança é desvio,
 registrado no `CHANGELOG.md` e no relatório.
 

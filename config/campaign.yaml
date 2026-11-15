@@ -96,6 +96,8 @@ axioms:
 calibracao:
   controles: 30                # campanha 3: 30 controles, no mínimo 27 válidos (limite 1/31 para um controle novo; PROTOCOLO_C3 Seção 7.1)
   pares_por_cenario: 3         # campanha 3: os 9 pilotos do braço baseline definem B; o braço MECADE só confere o pipeline
+  controles_minimos: 27        # campanha 3: calibração válida exige 27 controles com dados (PROTOCOLO_C3 Seção 7.1)
+  pilotos_minimos: 9           # campanha 3: e os 9 pilotos do braço baseline com dados
   regra_B: alerta_piloto       # campanha 3: pisos da mediana de M_base, LIMIT com ALERT, B dos pilotos (analysis/calibrate.py)
   tau_sem_solucao: 30          # se nenhum tau até 30 s zerar o ALERT espúrio, fica 30 s e a contagem é relatada
 

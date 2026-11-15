@@ -132,7 +132,8 @@ def _trilha(d, params: AxiomParams, step: float):
 
 
 def calibrate_c3(runs: list, piso_erro: float, tau_sem_solucao: float | None = None,
-                 limite_piloto_s: float | None = None) -> dict:
+                 limite_piloto_s: float | None = None, min_controles: int | None = None,
+                 min_pilotos: int | None = None) -> dict:
     """Regra da Fase 1 da campanha 3 (docs/PROTOCOLO_C3.md, Seção 4), fixada antes dos dados.
 
       pisos   p95 e p99: mediana de M_base nos controles; error_rate: o piso do config
@@ -141,6 +142,8 @@ def calibrate_c3(runs: list, piso_erro: float, tau_sem_solucao: float | None = N
       B     = menor I condicionado ao ALERT, 30 s depois do primeiro ALERT, entre os pilotos do braço
               baseline, arredondado para baixo na dezena
       viável se B >= 2 x maior I condicionado dos controles e todo piloto tem ALERT antes de limite_piloto_s
+      inviável também com menos de min_controles controles ou min_pilotos pilotos do braço baseline com dados
+      (Seção 7.1: 27 e 9); sem mínimo declarado, não confere
     """
     ctrl = [(m, df) for m, df in runs if not m.get("pair")]
     pil = [(m, df) for m, df in runs if m.get("pair") and m["arm"] == "baseline"]
@@ -185,11 +188,16 @@ def calibrate_c3(runs: list, piso_erro: float, tau_sem_solucao: float | None = N
         por_piloto.append({"run_id": m.get("run_id"), "scenario": m["scenario"], "t_alert": t_alert, "I": I_alvo})
     budget = _floor10(min(p["I"] for p in por_piloto)) if por_piloto else 0.0
 
-    viavel = (tau is not None and budget > 0 and not sem_alert and budget >= MARGEM_RUIDO * max(I_ctrl))
+    abaixo_do_minimo = [f"{n} {nome}, mínimo {mn}" for nome, n, mn in (("controles", len(ctrl), min_controles),
+                                                                       ("pilotos", len(pil), min_pilotos))
+                        if mn is not None and n < int(mn)]
+    viavel = (tau is not None and budget > 0 and not sem_alert and budget >= MARGEM_RUIDO * max(I_ctrl)
+              and not abaixo_do_minimo)
     return {"viavel": viavel, "regra_B": "alerta_piloto", "pisos": pisos, "d_off": d_off, "deadband": deadband,
             "d_on": d_on, "budget_B": budget, "tau_dwell": tau, "limit_gate": "alert",
             "medido": {"p50_D_agr": float(np.percentile(dagr, 50)), "p99_D_agr": p99, "max_D_agr": float(dagr.max()),
-                       "n_amostras": int(len(dagr)), "n_controles": len(ctrl), "I_controles": I_ctrl,
+                       "n_amostras": int(len(dagr)), "n_controles": len(ctrl), "n_pilotos": len(pil),
+                       "abaixo_do_minimo": abaixo_do_minimo, "I_controles": I_ctrl,
                        "I_max_controles": max(I_ctrl), "pilotos": por_piloto, "pilotos_sem_alert": sem_alert,
                        "limite_piloto_s": limite_piloto_s, "alertas_espurios_por_tau": espurios}}
 
@@ -200,13 +208,18 @@ def main() -> int:
     cal = camp.get("calibracao") or {}
     if cal.get("regra_B") == "alerta_piloto":
         r = calibrate_c3(load_runs(root, include_sim=True), piso_erro=float(camp["signals"]["error_rate"]["floor"]),
-                         tau_sem_solucao=cal.get("tau_sem_solucao"))
+                         tau_sem_solucao=cal.get("tau_sem_solucao"), min_controles=cal.get("controles_minimos"),
+                         min_pilotos=cal.get("pilotos_minimos"))
     else:
         r = calibrate(load_runs(root, include_sim=True), regra_B=cal.get("regra_B", "margem_ruido_e_piloto"),
                       tau_sem_solucao=cal.get("tau_sem_solucao"))
     print(json.dumps(r, indent=2, ensure_ascii=False))
     if not r["viavel"]:
-        print("A regra não tem solução com estes dados. Paro e registro os números e decido.")
+        if cal.get("regra_B") == "alerta_piloto":
+            print("Calibração inviável pela regra (docs/PROTOCOLO_C3.md, Seção 7.2): nenhuma execução oficial roda, "
+                  "a campanha 3 fecha como \"calibração inviável\" com estes números, e regra nova só numa campanha 4.")
+        else:
+            print("A regra não tem solução com estes dados. Paro e registro os números.")
         return 1
     return 0
 
