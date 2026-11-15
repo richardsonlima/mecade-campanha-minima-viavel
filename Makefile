@@ -73,6 +73,15 @@ run-calibracao: ## executa a rodada de calibração, fora de data/runs (RODADA=1
 calibrar: ## aplica a regra da Fase 1 aos dados de data/calibracao/runs
 	$(PY) -m analysis.calibrate
 
+congelar: ## copia a saída de calibrate_c3 para config/campaign.yaml e confere (CONFERIR=1 só confere)
+	$(PY) -m analysis.congelar $(if $(filter 1,$(CONFERIR)),--conferir,--gravar)
+
+fase0: ## Fase 0 da campanha 3: 5 execuções de s1 em data/diagnostico/ (EXEC=A,B,C1,C2,D para um subconjunto)
+	$(PY) -m orchestrator.fase0 executar $(if $(EXEC),--exec $(EXEC))
+
+fase0-analise: ## aplica as regras da Seção 3.1 aos dados da Fase 0 e imprime (não escreve no config)
+	$(PY) -m orchestrator.fase0 analisar
+
 pilot: ## executa 2 réplicas do plano de calibração, sem tocar no plano oficial
 	$(PY) -m orchestrator.run_campaign --calibracao --plan data/calibracao/plan_r$(or $(RODADA),1).csv --limit 2
 
@@ -106,4 +115,4 @@ clean-chaos: ## remove qualquer injeção ativa (uso em emergência)
 	kubectl -n $(NAMESPACE_TARGET) delete schedules.chaos-mesh.org,networkchaos.chaos-mesh.org,podchaos.chaos-mesh.org --all
 
 
-.PHONY: plan-calibracao run-calibracao calibrar analyze help venv test kind-up kind-down gke-create gke-up gke-down controller-vm port-forward-loop install port-forward smoke plan plan-contingency pilot run sim notebook verify-audit evidencias verificar-evidencias clean-chaos
+.PHONY: fase0 fase0-analise congelar plan-calibracao run-calibracao calibrar analyze help venv test kind-up kind-down gke-create gke-up gke-down controller-vm port-forward-loop install port-forward smoke plan plan-contingency pilot run sim notebook verify-audit evidencias verificar-evidencias clean-chaos
