@@ -1,8 +1,8 @@
 # Diário da campanha MECADE (2026)
 
-Fase atual: campanha 2 (`mvc-2026-11-c2`), pré-registro no branch `campanha-2` (`docs/PROTOCOLO_C2.md`). A campanha 1 está fechada na tag `mvc-2026-11-final`.
+Fase atual: campanha 2 (`mvc-2026-11-c2`) fechada na tag `mvc-2026-11-c2-final`, branch `campanha-2`. A campanha 1 está fechada na tag `mvc-2026-11-final`.
 Custo estimado: cerca de R$ 11 até 12/11 07:30 UTC, com taxa de R$ 1,5 a 2,2/h. O faturamento confirma com atraso.
-Próximo passo: tag `mvc-2026-11-c2-prereg` e push; depois a calibração da campanha 2 na VM, numa pasta separada da campanha 1. Depósito no Zenodo só por ordem minha.
+Próximo passo: release da tag `mvc-2026-11-c2-final` no GitHub para o depósito no Zenodo, que autorizei em 15/11.
 
 ## 05/11 - pré-voo e preparação
 
@@ -154,3 +154,11 @@ Rodada 1 da campanha 2 terminou às 02:19 UTC: 16 execuções concluídas (10 co
 - Alerta de orçamento: não consegui confirmar.
 - Execuções oficiais sem desvio de protocolo além do registro das 10 sem detecção do baseline em s2.
 - Com `envelope_delta` = 1,0 abaixo do P99 do ruído (2,67), todas as execuções saem pelo menos `degradado`, inclusive os controles, e o critério de classificação não separa os braços.
+
+## 15/11 - campanha 2 fechada
+
+- 70/70 execuções oficiais, de 14/11 02:39 UTC a 15/11 10:20 UTC. 11 censuradas, nenhuma `falha_execucao`.
+- Vereditos: H1 parcial, H2 parcial, H3 aceita (`docs/RESULTADOS_CAMPANHA_2.md`).
+- Tag `mvc-2026-11-c2-final` em `333dbf5`. `make evidencias ESTRITO=1`: 393 arquivos, 35/35 trilhas, SHA-256 do
+  manifesto `b1effa76c7e18201440cc06aa01b682a0b39571e4e39403c4484f313b2867967`. Três cópias conferem.
+- Nós do GKE em 0 desde 15/11 13:30 UTC. A VM do controlador segue ligada.

@@ -26,8 +26,12 @@ para `rto_ok_ttr`, Holm por família como análise secundária e "≤" nos limia
   (`data/campaign.log`).
 - Dados brutos no commit `9040444`. Manifesto `data/EVIDENCIAS_MANIFESTO.json` gerado com `make evidencias`
   sobre esse commit: 393 arquivos, trilhas íntegras 35/35, SHA-256
-  `6423eb84c851dfbb4ae95920530fbb908c4d507a50e9286ede8fd69698f7a2b2`. Único alerta: "HEAD sem tag". A tag
-  `mvc-2026-11-c2-final` e o manifesto em modo estrito ficam para o fechamento (Seção 5 do protocolo).
+  `6423eb84c851dfbb4ae95920530fbb908c4d507a50e9286ede8fd69698f7a2b2`. Único alerta: "HEAD sem tag".
+- Fechamento: tag `mvc-2026-11-c2-final` em `333dbf5`. `make evidencias ESTRITO=1`: 393 arquivos, trilhas
+  35/35, sem alertas, SHA-256 do manifesto final
+  `b1effa76c7e18201440cc06aa01b682a0b39571e4e39403c4484f313b2867967`. Este é o hash que cito na dissertação.
+  `git diff mvc-2026-11-c2-calibracao mvc-2026-11-c2-final -- config/ scenarios/ mecade/axioms.py data/plan_mvc-2026-11-c2.csv`
+  sai vazio.
 
 ## 2. Calibração (Cap. 4)
 
@@ -54,7 +58,14 @@ Valores congelados: `d_off` = `deadband` = 2,9; `d_on` = 3,1; `budget_B` = 47,0 
 - Dados copiados da VM do controlador para `data/runs/` (70 execuções, 280 arquivos), `data/audit/`
   (35 trilhas), `data/campaign.log` e `data/desvios_execucao.jsonl`: 317 arquivos de dados.
   `data/calibracao/` e o plano vieram junto e são idênticos aos já versionados.
-- Conferência das cópias, em 15/11:
+- Conferência das três cópias contra o manifesto final da tag, em 15/11 (`make verificar-evidencias`):
+  - VM do controlador (`~/mecade-c2`): `CONFERE: 393 arquivos no manifesto, 0 alterados, 0 faltando, 0 sobrando`;
+  - bucket, baixado para um diretório vazio: o plano oficial não estava lá, porque o backup periódico não o
+    copiava. Copiei o plano, o manifesto e `analysis/figures/` para `oficial-c2/` e conferi de novo:
+    `CONFERE: 393 arquivos no manifesto, 0 alterados, 0 faltando, 0 sobrando`;
+  - local: `CONFERE: 393 arquivos no manifesto, 0 alterados, 0 faltando, 0 sobrando`.
+  - `make verify-audit` na VM: 35 trilhas verificadas, 0 com falha.
+- Conferência preliminar das cópias, antes da tag, em 15/11:
   - VM do controlador: SHA-256 dos 395 arquivos de `data/runs`, `data/audit`, `data/calibracao`, plano,
     log e desvios, calculado na VM, igual ao da cópia local;
   - bucket (`oficial-c2/`): MD5 dos 317 arquivos de dados, lido dos metadados dos objetos, igual ao da cópia
