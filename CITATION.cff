@@ -1,9 +1,10 @@
 cff-version: 1.2.0
 message: "Se você usar este artefato, cite-o como abaixo."
-title: "Artefato da campanha MECADE mvc-2026-11"
+title: "Artefato da campanha MECADE mvc-2026-11-c2"
 type: software
 authors:
   - family-names: "Lima"
     given-names: "Richardson Edson de"
 license: MIT
 repository-code: "https://github.com/richardsonlima/mecade-campanha-minima-viavel"
+version: "mvc-2026-11-c2-pacote"
