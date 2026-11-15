@@ -3,6 +3,31 @@
 Qualquer mudança de versão, parâmetro ou cenário depois que as réplicas oficiais começarem vai
 anotada aqui. Réplicas rodadas antes e depois de uma mudança não são comparáveis entre si.
 
+## 15/11 - preparação da Fase 0 e da calibração da campanha 3
+
+Mudanças de código entre a tag `mvc-2026-11-c3-prereg` e a Fase 0, só as permitidas na Seção 8.1 do `docs/PROTOCOLO_C3.md`. Axiomas, controlador reativo, `mitigate()`, cascata do runner, métricas, veredito, cenários, planos e `config/campaign.yaml` ficam idênticos aos da tag (`git diff` vazio). Nenhum parâmetro mudou.
+
+Hunks de `mecade/runner.py` (arquivo protegido):
+
+- Item 2, importações de `Kubectl` e `ColetorK8s`: só para a coleta passiva.
+- Item 2, antes do laço principal: `ColetorK8s` grava pods, endpoints, restartCount e eventos em `<réplica>/k8s_*`, só no backend real. Nenhuma decisão lê esses arquivos.
+- Item 2, depois do laço: `coletor.parar()` faz a coleta final.
+- Item 5: `machine_types` no `meta.json`, contagem de nós por tipo de máquina.
+
+Hunks de `orchestrator/run_campaign.py`:
+
+- Item 3: ao fim do plano, ou em parada por regra de exceção (códigos 3 e 4), o runner escala o node pool a 0 com `infra/gke/scale.sh 0`. Não escala com `--limit`, interrupção do operador ou réplicas pendentes. Falha do `gcloud` é avisada e não muda o código de saída.
+- Item 6: trava que recusa `make run` do plano oficial se B ou um piso de latência ainda for o da campanha 2, ou se o config não conferir com a calibração.
+
+Arquivos novos:
+
+- Item 1: `orchestrator/fase0.py`, `make fase0` e `make fase0-analise`. Execuções A, B, C1, C2 e D do s1 com prefixo `diag_`, saída em `data/diagnostico/`, coleta a cada 15 s com `ss -tni` em frontend e checkoutservice. A análise aplica as regras fixas da Seção 3.1 e só imprime, sem escrever config.
+- Itens 1 e 2: `mecade/coleta_k8s.py`.
+- Item 4: `data/diagnostico` entra em `analysis/evidencias.py`.
+- Item 6: `analysis/congelar.py` e `make congelar`, que copia a saída de `calibrate_c3` para o config e confere os valores.
+- Testes novos: `tests/test_fase0.py`, `tests/test_coleta_k8s.py`, `tests/test_congelar.py`, `tests/test_tipo_de_maquina.py`, mais casos em `tests/test_orchestrator.py` e `tests/test_evidencias.py`.
+- `make test`: 163 passam.
+
 ## 15/11 - pré-registro da campanha 3 (`mvc-2026-11-c3`)
 
 Branch `campanha-3`, sem os dados da campanha 2 (`2b0d5fa`). Protocolo em `docs/PROTOCOLO_C3.md`. A campanha 2 fica publicada como saiu; a campanha 3 é um teste novo.
