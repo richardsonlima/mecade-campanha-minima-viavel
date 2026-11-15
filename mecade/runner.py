@@ -23,6 +23,8 @@ from pathlib import Path
 
 from .audit import AuditLog
 from .axioms import AxiomEvaluator, AxiomParams, deviation
+from .backends import Kubectl
+from .coleta_k8s import ColetorK8s
 from .config import ROOT, render_chaos
 from .reactive import ReactiveRule
 
@@ -135,6 +137,13 @@ def run_one(*, run_id: str, scenario: dict, arm: str, campaign: dict, prom, kube
         if m.get("clientes"):
             clientes_pendentes = (t + float(m.get("clientes_apos_s", 0)), list(m["clientes"]))
 
+    # campanha 3 (docs/PROTOCOLO_C3.md, 8.1 item 2): coleta passiva de pods, endpoints, restartCount e eventos,
+    # numa thread à parte. Só grava arquivos em <réplica>/k8s_*; nenhuma decisão lê esses dados. O prazo evita
+    # que a thread sobreviva a uma réplica que falhou no meio.
+    coletor = None
+    if isinstance(kube, Kubectl):
+        coletor = ColetorK8s(ns, target, out, ate=t_end + 120)
+        coletor.iniciar()
     t = t_base_start
     while t < t_end:
         clock.sleep_until(t)
@@ -200,6 +209,8 @@ def run_one(*, run_id: str, scenario: dict, arm: str, campaign: dict, prom, kube
     # limpeza e exportação
     if chaos_active:
         kube.delete(chaos_kind, chaos_name)
+    if coletor is not None:
+        coletor.parar()
     audit_info = audit.close()
     cpu_s = time.process_time() - cpu0
 
