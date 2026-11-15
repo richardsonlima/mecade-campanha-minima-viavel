@@ -4,7 +4,7 @@
   python -m analysis.evidencias verificar [--raiz DIR] [--manifesto ARQ]   (make verificar-evidencias)
 
 `gerar` grava data/EVIDENCIAS_MANIFESTO.json com o commit e as tags do HEAD, o SHA-256 do plano oficial e
-de cada arquivo de data/runs, data/audit e data/calibracao, as contagens, o resultado do verify-audit, as
+de cada arquivo de data/runs, data/audit, data/calibracao e data/diagnostico (Fase 0), as contagens, o resultado do verify-audit, as
 versões de versions.env e a data em UTC. Sai com código 1 se alguma trilha de auditoria falhar.
 Com `--estrito` (fechamento da Fase 4) sai com código 3 se houver arquivo de evidência fora do git, árvore
 suja, HEAD sem tag ou ausência de repositório git; sem a opção esses casos são só alertas.
@@ -30,7 +30,7 @@ from mecade.config import ROOT
 
 FORMATO = "mecade-evidencias/1"
 MANIFESTO = Path("data") / "EVIDENCIAS_MANIFESTO.json"
-DIRETORIOS = ("data/runs", "data/audit", "data/calibracao")
+DIRETORIOS = ("data/runs", "data/audit", "data/calibracao", "data/diagnostico")
 IGNORADOS = {".gitkeep"}
 
 
@@ -117,7 +117,7 @@ def _campaign_id(raiz: Path) -> str | None:
 
 
 def arquivos_de_evidencia(raiz: Path) -> list[str]:
-    """Caminhos relativos (posix) de tudo o que entra no manifesto: os três diretórios e os arquivos
+    """Caminhos relativos (posix) de tudo o que entra no manifesto: os quatro diretórios e os arquivos
     soltos de data/ que são evidência (planos, log de execução e desvios)."""
     rels = set()
     for d in DIRETORIOS:

@@ -217,3 +217,18 @@ def test_nomes_com_acento_e_espaco_saem_sem_escape(raiz):
     # renomeação staged: só o destino, sem a origem como entrada solta
     subprocess.run(git + ["mv", nome, "data/outro nome.txt"], check=True)
     assert ev.info_git(raiz)["modificados"] == ["data/outro nome.txt"]
+
+
+def test_diagnostico_da_fase_0_entra_no_manifesto_e_na_verificacao(raiz, tmp_path):
+    run = raiz / "data" / "diagnostico" / "diag_A"
+    run.mkdir(parents=True)
+    (run / "meta.json").write_text('{"run_id": "diag_A"}', encoding="utf-8")
+    (run / "k8s_coleta.jsonl").write_text('{"t_abs": 1}\n', encoding="utf-8")
+    m = ev.gerar(raiz)
+    assert m["contagem"]["data/diagnostico"] == {"existe": True, "arquivos": 2, "bytes": m["contagem"]["data/diagnostico"]["bytes"]}
+    rels = ev.arquivos_de_evidencia(raiz)
+    assert "data/diagnostico/diag_A/meta.json" in rels and "data/diagnostico/diag_A/k8s_coleta.jsonl" in rels
+    arquivos, _ = ev.hashes(raiz, rels)
+    (run / "k8s_coleta.jsonl").write_text('{"t_abs": 2}\n', encoding="utf-8")
+    r = ev.comparar(raiz, {"arquivos": arquivos})
+    assert not r["ok"] and r["alterados"] == ["data/diagnostico/diag_A/k8s_coleta.jsonl"]
