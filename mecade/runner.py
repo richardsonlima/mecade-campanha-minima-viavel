@@ -223,6 +223,7 @@ def run_one(*, run_id: str, scenario: dict, arm: str, campaign: dict, prom, kube
         "recovery": campaign["recovery"], "block": campaign["block"],
         "rto_s": scenario.get("rto_s"), "mitigation": scenario.get("mitigacao"),
         "git_commit": _git_commit(), "k8s_server": kube.server_version(),
+        "machine_types": kube.node_machine_types(),
         "campaign_id": campaign.get("campaign_id"), "git_dirty": _git_dirty(),
         "config_sha256": _config_sha256(), "plano": "sim" if is_sim else (plano or "oficial"),
     }

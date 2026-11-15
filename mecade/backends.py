@@ -82,6 +82,18 @@ class Kubectl:
     def wait_rollout(self, deployment: str, timeout: str = "300s") -> None:
         self._run("-n", self.ns, "rollout", "status", f"deployment/{deployment}", f"--timeout={timeout}")
 
+    def node_machine_types(self) -> dict:
+        """Tipo de máquina dos nós, pelo rótulo `node.kubernetes.io/instance-type`: {tipo: quantidade}."""
+        try:
+            itens = json.loads(self._run("get", "nodes", "-o", "json"))["items"]
+        except Exception:  # noqa: BLE001 (é só metadado)
+            return {}
+        tipos: dict[str, int] = {}
+        for i in itens:
+            t = (i["metadata"].get("labels") or {}).get("node.kubernetes.io/instance-type", "desconhecido")
+            tipos[t] = tipos.get(t, 0) + 1
+        return dict(sorted(tipos.items()))
+
     def server_version(self) -> str:
         try:
             return json.loads(self._run("version", "-o", "json"))["serverVersion"]["gitVersion"]

@@ -64,6 +64,9 @@ class SimWorld:
     def wait_rollout(self, deployment: str, timeout: str = "300s") -> None:
         pass
 
+    def node_machine_types(self) -> dict:
+        return {"sim": 3}
+
     def server_version(self) -> str:
         return "sim"
 
