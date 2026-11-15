@@ -3,6 +3,16 @@
 Qualquer mudança de versão, parâmetro ou cenário depois que as réplicas oficiais começarem vai
 anotada aqui. Réplicas rodadas antes e depois de uma mudança não são comparáveis entre si.
 
+## 15/11 - pré-registro da campanha 3 (`mvc-2026-11-c3`)
+
+Branch `campanha-3`, sem os dados da campanha 2 (`2b0d5fa`). Protocolo em `docs/PROTOCOLO_C3.md`. A campanha 2 fica publicada como saiu; a campanha 3 é um teste novo.
+
+- `campaign_id`: `mvc-2026-11-c2` → `mvc-2026-11-c3`; semente `20261113` → `20261115`.
+- Mudanças, cada uma com a evidência na Seção 3 do protocolo: a mitigação de s1 renova as conexões dos clientes; LIMIT só depois de ALERT; pisos de latência calibrados; regra nova de B; calibração maior; a classe "crítico" sai.
+- Planos: oficial `data/plan_mvc-2026-11-c3.csv` (80 execuções, SHA-256 `359cd792…`) e calibração `data/calibracao/plan_r1.csv` (48 execuções, SHA-256 `916663e9…`).
+- Previsão declarada antes da calibração (Seção 6.1): H2 deve sair PARCIAL em s3. Aceitei essa troca sem mudar o desenho.
+- `make test`: 122 passam.
+
 ## 15/11 - análise final da campanha 2
 
 Sem mudança de versão, parâmetro, cenário ou critério depois da tag `mvc-2026-11-c2-calibracao`.
