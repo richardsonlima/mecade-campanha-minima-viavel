@@ -81,7 +81,7 @@ axioms:
   decision_signals: [p95, p99, error_rate]   # n = 3
   k: 2                         # correlação multi-sinal: k de n
   # Valores da campanha 2 (tag mvc-2026-11-c2-calibracao). Na campanha 3 saem da Fase 1 (docs/PROTOCOLO_C3.md,
-  # Seção 4) e são congelados aqui, com os pisos de p95 e p99, antes da primeira execução oficial.
+  # Seção 4) e são congelados aqui antes da primeira execução oficial; os pisos de p95 e p99 vão em signals.*.floor.
   d_on: 3.1                    # mesmo papel de delta_alert / epsilon (limiar de ativação)
   d_off: 2.9                   # limiar de desativação (histerese)
   tau_dwell: 15                # janela de confirmação (s)
@@ -92,9 +92,9 @@ axioms:
   envelope: d_on_tau           # classificação: degradado se D_agr > d_on por tau_dwell seguidos (campanha 2)
   envelope_delta: 1.0          # só vale com envelope: delta (campanha 1)
 
-# Fase 1 da campanha 2 (docs/PROTOCOLO_C2.md, Seção 3). Regras fixadas antes dos dados.
+# Fase 1 da campanha 3 (docs/PROTOCOLO_C3.md, Seções 4 e 7). Regras fixadas antes dos dados.
 calibracao:
-  controles: 30                # campanha 3: 30 controles (limite de tolerância 1/31 para um controle novo)
+  controles: 30                # campanha 3: 30 controles, no mínimo 27 válidos (limite 1/31 para um controle novo; PROTOCOLO_C3 Seção 7.1)
   pares_por_cenario: 3         # campanha 3: os 9 pilotos do braço baseline definem B; o braço MECADE só confere o pipeline
   regra_B: alerta_piloto       # campanha 3: pisos da mediana de M_base, LIMIT com ALERT, B dos pilotos (analysis/calibrate.py)
   tau_sem_solucao: 30          # se nenhum tau até 30 s zerar o ALERT espúrio, fica 30 s e a contagem é relatada
