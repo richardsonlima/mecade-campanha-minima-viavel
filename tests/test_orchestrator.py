@@ -472,3 +472,40 @@ def test_arm_desconhecido_conta_como_mecade_e_avisa(tmp_path, monkeypatch):
     logs = []
     assert _executa(plan, out, logs.append) == EXIT_LIMITE
     assert any("AVISO" in x and "xpto" in x for x in logs)
+
+
+# ---- campanha 3, item 3 do 8.1: node pool a 0 no fim do plano (PROTOCOLO_C3)
+
+def _plano_e_saida(tmp_path, terminais):
+    plan = [{"run_id": f"r{i}"} for i in range(3)]
+    for i, r in enumerate(plan):
+        (tmp_path / r["run_id"]).mkdir()
+        if i < terminais:
+            (tmp_path / r["run_id"] / "meta.json").write_text('{"status": "complete"}')
+    return plan
+
+
+@pytest.mark.parametrize("codigo,terminais,escala", [
+    (0, 3, True),     # plano inteiro concluído
+    (0, 1, False),    # --limit: sobrou réplica pendente
+    (3, 1, True),     # parada pelo limite de 10%
+    (4, 1, True),     # parada por falhas seguidas
+    (130, 3, False),  # operador interrompeu
+])
+def test_escala_a_zero_so_ao_fim_do_plano_ou_em_parada_por_regra(tmp_path, codigo, terminais, escala):
+    from orchestrator.run_campaign import escalar_nos_a_zero
+    plan = _plano_e_saida(tmp_path, terminais)
+    chamadas = []
+    r = escalar_nos_a_zero(codigo=codigo, plan=plan, out_root=tmp_path, log=lambda *_: None,
+                           escalar=lambda: chamadas.append(1))
+    assert r is escala and len(chamadas) == int(escala)
+
+
+def test_falha_do_gcloud_no_scale_nao_derruba_o_runner(tmp_path):
+    from orchestrator.run_campaign import escalar_nos_a_zero
+    msgs = []
+
+    def quebra():
+        raise RuntimeError("gcloud fora")
+    r = escalar_nos_a_zero(codigo=3, plan=_plano_e_saida(tmp_path, 0), out_root=tmp_path, log=msgs.append, escalar=quebra)
+    assert r is False and any("não consegui" in m for m in msgs)

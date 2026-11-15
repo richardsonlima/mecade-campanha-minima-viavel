@@ -10,6 +10,10 @@ as injeções, espero o ambiente estabilizar e sigo; as réplicas que falharam v
 seguinte, fora da ordem sorteada, e isso fica registrado como desvio. Na terceira falha a réplica
 vira `falha_execucao`, rótulo diferente de `censurada` (sem detecção ou sem restauração).
 
+Campanha 3 (docs/PROTOCOLO_C3.md, 8.1 item 3): ao terminar o plano inteiro no cluster real, inclusive nas paradas
+por regra de exceção (códigos 3 e 4), o node pool vai a 0 com `infra/gke/scale.sh 0`. Com `--limit`, interrompido
+pelo operador (130) ou com réplica ainda pendente, os nós ficam como estão.
+
 Códigos de saída: 0 terminou; 3 passou do limite de 10% de réplicas perdidas; 4 falhas seguidas
 indicam ambiente instável; 130 interrompido pelo operador. Em 3 e 4 alguém precisa olhar.
 """
@@ -18,12 +22,14 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import subprocess
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
+from analysis.congelar import carregar_resultado, verificar_trava
 from analysis.metrics import load_runs, metrics_table
 from mecade.backends import Kubectl, PromClient, RealClock
 from mecade.config import ROOT, load_campaign, load_scenario
@@ -265,6 +271,29 @@ def _mark_execution_failure(row: dict, run_dir: Path, entries: list[dict], campa
     (run_dir / "meta.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+def plano_terminou(plan: list[dict], out_root: Path) -> bool:
+    return all(read_status(out_root / r["run_id"]) in TERMINAIS for r in plan)
+
+
+def escalar_nos_a_zero(*, codigo: int, plan: list[dict], out_root: Path, log: Callable[[str], None],
+                       escalar: Callable[[], None]) -> bool:
+    """Leva o node pool a 0 quando o plano acabou (todas as réplicas em estado final) ou parou por regra de
+    exceção (3 e 4). Não muda o código de saída: falha do gcloud só vai para o log e eu desligo na mão."""
+    if codigo == EXIT_INTERROMPIDA or not (codigo in (EXIT_LIMITE, EXIT_INSTAVEL) or plano_terminou(plan, out_root)):
+        return False
+    log("Fim do plano: node pool a 0 (infra/gke/scale.sh 0).")
+    try:
+        escalar()
+    except Exception as exc:  # noqa: BLE001
+        log(f"ATENÇÃO: não consegui levar o node pool a 0 ({exc}). Confira `gcloud compute instances list` e desligue.")
+        return False
+    return True
+
+
+def _scale_zero() -> None:
+    subprocess.run([str(ROOT / "infra" / "gke" / "scale.sh"), "0"], check=True)
+
+
 def check_plan_destination(plan: list[dict], calibracao: bool) -> None:
     """Plano de calibração só escreve em data/calibracao/, e plano oficial nunca escreve lá."""
     de_calibracao = [r["run_id"] for r in plan if r["run_id"].startswith("cal")]
@@ -285,6 +314,12 @@ def main() -> None:
                     help="não para em 10%% de réplicas perdidas; só com decisão minha registrada")
     ap.add_argument("--settle", type=float, default=ESPERA_APOS_FALHA_S, help="espera depois de uma falha (s)")
     a = ap.parse_args()
+
+    if a.backend == "k8s" and not a.calibracao:  # trava: plano oficial só com a calibração da campanha 3 congelada
+        motivos = verificar_trava(camp, carregar_resultado())
+        if motivos:
+            raise SystemExit("Plano oficial recusado (docs/PROTOCOLO_C3.md, Seção 8.1, item 6):\n  - "
+                             + "\n  - ".join(motivos) + "\nRode `make congelar` depois da calibração.")
 
     plan_path = a.plan or str(ROOT / "data" / f"plan_{camp['campaign_id']}.csv")
     with open(plan_path, encoding="utf-8") as fh:
@@ -336,9 +371,12 @@ def main() -> None:
         log("Limite de 10% de réplicas perdidas desligado por decisão minha.")
         _append_jsonl(out_root.parent / "desvios_execucao.jsonl",
                       {"quando": _agora(), "run_id": "", "tipo": "limite_de_perdidas_desligado"})
-    sys.exit(execute_plan(plan, out_root=out_root, execute=execute, clean=clean, log=log, limit=a.limit,
+    codigo = execute_plan(plan, out_root=out_root, execute=execute, clean=clean, log=log, limit=a.limit,
                           settle_s=0 if a.backend == "sim" else a.settle, check_lost=oficial and not a.sem_limite_perdidas,
-                          campaign_id=camp.get("campaign_id")))
+                          campaign_id=camp.get("campaign_id"))
+    if a.backend == "k8s":
+        escalar_nos_a_zero(codigo=codigo, plan=plan, out_root=out_root, log=log, escalar=_scale_zero)
+    sys.exit(codigo)
 
 
 if __name__ == "__main__":
