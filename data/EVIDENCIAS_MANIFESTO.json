@@ -1,11 +1,13 @@
 {
   "formato": "mecade-evidencias/1",
-  "gerado_em_utc": "2026-11-15T13:27:31Z",
+  "gerado_em_utc": "2026-11-15T13:44:22Z",
   "git": {
-    "commit": "9040444f2db89c8e9ed113a57de96c99c37356e9",
-    "tags": [],
-    "descricao": "mvc-2026-11-c2-calibracao-1-g9040444",
-    "data_commit": "2026-11-15T10:27:26-03:00",
+    "commit": "333dbf53a5776b045a7b4840c94d4552bd0393cb",
+    "tags": [
+      "mvc-2026-11-c2-final"
+    ],
+    "descricao": "mvc-2026-11-c2-final",
+    "data_commit": "2026-11-15T10:31:00-03:00",
     "arvore_limpa": true,
     "modificados": [],
     "dados_fora_do_git": 0
@@ -328,9 +330,7 @@
     "ultima_wall_start_utc": "2026-11-14T01:54:32.775147Z",
     "alertas": []
   },
-  "alertas": [
-    "HEAD sem tag"
-  ],
+  "alertas": [],
   "arquivos": {
     "data/audit/001_s2_gray_currency_mecade_r03.jsonl": {
       "sha256": "6d875659e6ba30d9186152d2b17df2850311eca2362196fde695821a56e22cbf",
