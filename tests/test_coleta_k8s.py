@@ -1,3 +1,4 @@
+import pytest
 """Coleta passiva de Kubernetes (PROTOCOLO_C3, 8.1 item 2), com um `kubectl` falso."""
 import json
 
@@ -19,6 +20,8 @@ class FalsoKubectl:
         self.eventos = [{"metadata": {"uid": "u1"}, "type": "Normal", "reason": "Killing", "message": "m", "count": 1,
                          "involvedObject": {"kind": "Pod", "name": "x"}, "lastTimestamp": "t1"}]
         self.falha_endpoints = False
+        self.estado_novo = {"running": {}}   # estado do contêiner efêmero recém-criado
+        self.exec_falha = False
         self.efemeros = {}   # pod -> (spec.ephemeralContainers, status.ephemeralContainerStatuses)
 
     def __call__(self, *args, **kw):
@@ -41,9 +44,11 @@ class FalsoKubectl:
             self.efemeros.setdefault(args[args.index("debug") + 1], ([], []))
             sp, st = self.efemeros[args[args.index("debug") + 1]]
             sp.append({"name": nome})
-            st.append({"name": nome, "state": {"running": {}}})
+            st.append({"name": nome, "state": self.estado_novo} if self.estado_novo else {"name": nome})
             return ""
         if "exec" in args:
+            if self.exec_falha:
+                raise RuntimeError("container nao esta pronto")
             return "State Recv-Q Send-Q Local:Port Peer:Port\nESTAB 0 0 10.0.0.1:1 10.0.0.9:3550\n"
         raise AssertionError(args)
 
@@ -91,7 +96,7 @@ def test_ss_so_nos_clientes_e_contêiner_efemero_uma_vez_por_pod(tmp_path):
 
 def test_coleta_traz_o_clusterip_e_a_porta_do_servico_do_alvo(tmp_path):
     c = ColetorK8s("boutique", "productcatalogservice", tmp_path, run=FalsoKubectl(), agora=lambda: 1.0)
-    assert c.coletar()["servico_alvo"] == {"cluster_ip": "10.8.0.50", "portas": [3550]}
+    assert c.coletar()["servico_alvo"] == {"cluster_ip": "10.8.0.50", "portas": [3550], "portas_pod": [3550]}
 
 
 def test_depurador_reaproveita_o_que_esta_rodando_e_cria_outro_se_terminou(tmp_path):
@@ -152,3 +157,36 @@ def test_thread_para_no_prazo_e_na_parada(tmp_path):
     time.sleep(0.05)
     assert len((tmp_path / "k8s_coleta.jsonl").read_text().splitlines()) == n
 
+
+
+@pytest.mark.parametrize("estado", [{"waiting": {"reason": "ContainerCreating"}}, None])
+def test_contêiner_em_waiting_ou_sem_status_nao_cria_outro_em_3_coletas(tmp_path, estado):
+    k = FalsoKubectl()
+    k.estado_novo, k.exec_falha = estado, True
+    c = ColetorK8s("boutique", "x", tmp_path, clientes=("frontend",), ss=True, run=k, agora=lambda: 1.0)
+    for _ in range(3):
+        c.coletar()
+    assert sum(1 for a in k.chamadas if "debug" in a) == 1
+
+
+def test_contêiner_terminado_depois_do_exec_falhar_leva_a_um_novo(tmp_path):
+    k = FalsoKubectl()
+    c = ColetorK8s("boutique", "x", tmp_path, clientes=("frontend",), ss=True, run=k, agora=lambda: 1.0)
+    c.coletar()
+    k.efemeros["frontend-1"][1][0]["state"] = {"terminated": {}}
+    k.exec_falha = True
+    c.coletar()          # exec falha, o estado é terminated: esquece o cache
+    k.exec_falha = False
+    c.coletar()          # cria mecade-dbg-2
+    debug = [a for a in k.chamadas if "debug" in a]
+    assert len(debug) == 2 and "--container=mecade-dbg-2" in debug[1]
+
+
+def test_amostragem_densa_de_ss_so_marca_leituras_densas(tmp_path):
+    k = FalsoKubectl()
+    t = {"v": 0.0}
+    c = ColetorK8s("boutique", "x", tmp_path, clientes=("frontend",), ss=True, run=k, agora=lambda: t["v"])
+    c._ss_denso()
+    linhas = [json.loads(x) for x in (tmp_path / "k8s_coleta.jsonl").read_text().splitlines()]
+    assert linhas[0]["denso"] is True and "frontend-1" in linhas[0]["ss"]
+    assert "endpoints_alvo" not in linhas[0]   # a leitura densa só traz pods e ss

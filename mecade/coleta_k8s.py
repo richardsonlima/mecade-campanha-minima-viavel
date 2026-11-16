@@ -56,7 +56,9 @@ def resumo_pods(pods_json: dict) -> list[dict]:
 def ip_do_servico(svc_json: dict) -> dict:
     """ClusterIP e portas do Service. Com kube-proxy em iptables, o `ss` dos clientes mostra este IP, não o do pod."""
     spec = svc_json.get("spec", {})
-    return {"cluster_ip": spec.get("clusterIP"), "portas": [p.get("port") for p in spec.get("ports") or []]}
+    portas = spec.get("ports") or []
+    alvo = [p["targetPort"] if isinstance(p.get("targetPort"), int) else p.get("port") for p in portas]
+    return {"cluster_ip": spec.get("clusterIP"), "portas": [p.get("port") for p in portas], "portas_pod": alvo}
 
 
 def ips_endpoints(ep_json: dict) -> dict:
@@ -80,6 +82,8 @@ class ColetorK8s:
         self.run, self.agora, self.imagem, self.ate = run, agora, imagem, ate
         self._vistos: set[tuple] = set()
         self._com_depurador: dict[str, str] = {}
+        self._trava = threading.Lock()   # coleta de 15 s e amostragem densa dividem o cache do depurador
+        self._densas: list[threading.Thread] = []
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
         self._watch_proc: subprocess.Popen | None = None
@@ -145,25 +149,41 @@ class ColetorK8s:
                 "count": ev.get("count"), "primeiro": ev.get("firstTimestamp"), "ultimo": ev.get("lastTimestamp"),
                 "uid": ev["metadata"].get("uid")})
 
-    def _depurador(self, pod: str) -> str:
-        """Nome do contêiner efêmero em execução no pod; cria um se não houver. Lê spec.ephemeralContainers e
-        status.ephemeralContainerStatuses antes de criar: reutiliza `mecade-dbg` se estiver rodando e, se tiver
-        terminado, cria outro com sufixo (não dá para remover nem recriar um contêiner efêmero com o mesmo nome)."""
-        if pod in self._com_depurador:
-            return self._com_depurador[pod]
+    def _estado_efemeros(self, pod: str) -> tuple[list[str], dict]:
         j = json.loads(self.run("-n", self.ns, "get", "pod", pod, "-o", "json"))
         nomes = [c["name"] for c in j.get("spec", {}).get("ephemeralContainers") or []
                  if c["name"].startswith(CONTEINER_DEPURACAO)]
         estados = {c["name"]: c.get("state") or {} for c in j.get("status", {}).get("ephemeralContainerStatuses") or []}
-        for n in nomes:
-            if "running" in estados.get(n, {}):
-                self._com_depurador[pod] = n
-                return n
+        return nomes, estados
+
+    def _depurador(self, pod: str) -> str:
+        """Nome do contêiner efêmero do pod. Lê spec.ephemeralContainers e status.ephemeralContainerStatuses antes
+        de criar. Reutiliza o que está `running`; um que está `waiting` ou ainda sem status é esperado (a próxima
+        coleta tenta de novo, sem criar outro). Só um `terminated` leva a um contêiner novo, com sufixo: não dá
+        para remover nem recriar um contêiner efêmero com o mesmo nome."""
+        if pod in self._com_depurador:
+            return self._com_depurador[pod]
+        nomes, estados = self._estado_efemeros(pod)
+        vivos = [n for n in nomes if "terminated" not in estados.get(n, {})]
+        if vivos:
+            self._com_depurador[pod] = next((n for n in vivos if "running" in estados.get(n, {})), vivos[0])
+            return self._com_depurador[pod]
         novo = CONTEINER_DEPURACAO if not nomes else f"{CONTEINER_DEPURACAO}-{len(nomes) + 1}"
         self.run("-n", self.ns, "debug", pod, "-q", f"--image={self.imagem}", f"--container={novo}",
                  "--", *COMANDO_DEPURACAO)
         self._com_depurador[pod] = novo
         return novo
+
+    def _depurador_terminou(self, pod: str) -> None:
+        """Depois de um exec que falhou: se o contêiner em cache terminou, esqueço o cache para a próxima coleta
+        criar outro. Em waiting ou sem status, o cache fica e a próxima coleta só tenta o exec de novo."""
+        nome = self._com_depurador.get(pod)
+        try:
+            _, estados = self._estado_efemeros(pod)
+        except Exception:  # noqa: BLE001
+            return
+        if nome and "terminated" in estados.get(nome, {}):
+            self._com_depurador.pop(pod, None)
 
     def _coletar_ss(self, pods: list[dict]) -> dict:
         """`ss -tni` dentro de cada pod dos clientes que ainda esteja em Running, inclusive o que está sendo
@@ -174,13 +194,38 @@ class ColetorK8s:
                 continue
             nome = p["nome"]
             try:
-                c = self._depurador(nome)
+                with self._trava:
+                    c = self._depurador(nome)
                 texto = self.run("-n", self.ns, "exec", nome, "-c", c, "--", "ss", "-tni")
                 out[nome] = {"app": p["app"], "ip": p["ip"], "removendo": p["removendo"], "texto": texto}
             except Exception as e:  # noqa: BLE001  (o contêiner pode ainda não estar de pé; tento na coleta seguinte)
-                self._com_depurador.pop(nome, None)
+                with self._trava:
+                    self._depurador_terminou(nome)
                 out[nome] = {"app": p["app"], "ip": p["ip"], "removendo": p["removendo"], "erro": str(e)}
         return out
+
+    # ---- amostragem densa de ss (condição 3 da H4): só densidade, a coleta de 15 s continua igual
+    def amostrar_ss_denso(self, duracao_s: float = 30.0, intervalo_s: float = 3.0) -> None:
+        """De agora até +duracao_s, lê o ss dos clientes (pods antigos e novos) a cada intervalo_s, numa thread."""
+        def laco() -> None:
+            fim = self.agora() + duracao_s
+            while not self._stop.is_set():
+                ini = time.monotonic()
+                self._ss_denso()
+                if self.agora() >= fim:
+                    break
+                self._stop.wait(max(0.0, intervalo_s - (time.monotonic() - ini)))
+        th = threading.Thread(target=laco, daemon=True)
+        th.start()
+        self._densas.append(th)
+
+    def _ss_denso(self) -> None:
+        t = self.agora()
+        try:
+            pods = resumo_pods(json.loads(self.run("-n", self.ns, "get", "pods", "-o", "json")))
+            self._append("k8s_coleta.jsonl", {"t_abs": t, "denso": True, "pods": pods, "ss": self._coletar_ss(pods)})
+        except Exception as e:  # noqa: BLE001
+            self._append("k8s_coleta.jsonl", {"t_abs": t, "denso": True, "erro": str(e)})
 
     # ---- thread
     def _loop(self) -> None:
@@ -209,6 +254,8 @@ class ColetorK8s:
         self._thread.start()
 
     def parar(self) -> None:
+        for th in self._densas:
+            th.join(timeout=40)
         self._stop.set()
         if self._thread:
             self._thread.join(timeout=60)
