@@ -33,16 +33,26 @@ RESULTADO_PADRAO = ROOT / "data" / "calibracao" / "resultado_r1.json"
 CONFIG_PADRAO = ROOT / "config" / "campaign.yaml"
 
 
+def _casa1(x: float) -> float:
+    """d_on, d_off, deadband e B saem de calibrate_c3 numa grade de 0,1 (`_ceil1`, `round(.., 1)`, dezena): gravo com
+    uma casa, sem ruído de ponto flutuante. Se o valor não estiver na grade, paro em vez de mudar a calibração."""
+    y = round(float(x), 1)
+    if abs(y - float(x)) > 1e-9:
+        raise ValueError(f"{x} não está na grade de 0,1 que calibrate_c3 usa; não arredondo em silêncio")
+    return y
+
+
 def valores_do_resultado(r: dict) -> dict[tuple, float | int | str]:
-    """Caminho no config -> valor, a partir da saída de calibrate_c3."""
+    """Caminho no config -> valor, a partir da saída de calibrate_c3. Os pisos de p95 e p99 são medianas de M_base
+    e vão como calibrate_c3 os usou para calcular D (arredondá-los mudaria d_off e B)."""
     return {
         ("signals", "p95", "floor"): r["pisos"]["p95"],
         ("signals", "p99", "floor"): r["pisos"]["p99"],
-        ("axioms", "d_on"): r["d_on"],
-        ("axioms", "d_off"): r["d_off"],
-        ("axioms", "deadband"): r["deadband"],
+        ("axioms", "d_on"): _casa1(r["d_on"]),
+        ("axioms", "d_off"): _casa1(r["d_off"]),
+        ("axioms", "deadband"): _casa1(r["deadband"]),
         ("axioms", "tau_dwell"): int(r["tau_dwell"]),
-        ("axioms", "budget_B"): float(r["budget_B"]),
+        ("axioms", "budget_B"): _casa1(r["budget_B"]),
         ("axioms", "limit_gate"): r["limit_gate"],
     }
 
@@ -82,12 +92,15 @@ def conferir(config: dict, resultado: dict) -> list[str]:
     return difs
 
 
-def verificar_trava(config: dict, resultado: dict | None = None) -> list[str]:
+def verificar_trava(config: dict, resultado: dict | None = None, exigir_resultado: bool = False) -> list[str]:
     """Motivos para recusar o plano oficial. Vazio = pode rodar.
 
     Recusa se B ou algum piso de latência ainda for o da campanha 2. Se houver resultado de calibração
-    (`data/calibracao/resultado_r1.json`), recusa também config que não confere com ele."""
+    (`data/calibracao/resultado_r1.json`), recusa também config que não confere com ele. Com
+    `exigir_resultado` (plano oficial no cluster real), a falta do arquivo também recusa."""
     motivos = []
+    if resultado is None and exigir_resultado:
+        motivos.append("falta data/calibracao/resultado_r1.json (saída de calibrate_c3 guardada por `make congelar`)")
     for caminho, v2 in C2.items():
         try:
             atual = _no_config(config, caminho)
@@ -195,9 +208,10 @@ def main(argv: list[str] | None = None) -> int:
         r = json.loads(Path(a.resultado).read_text(encoding="utf-8"))
     else:
         r = calcular(cfg, Path(a.runs))
-        RESULTADO_PADRAO.parent.mkdir(parents=True, exist_ok=True)
-        RESULTADO_PADRAO.write_text(json.dumps(r, indent=2, ensure_ascii=False), encoding="utf-8")
-        print(f"resultado de calibrate_c3 guardado em {RESULTADO_PADRAO}")
+        if a.gravar:   # --conferir só lê: não grava o resultado
+            RESULTADO_PADRAO.parent.mkdir(parents=True, exist_ok=True)
+            RESULTADO_PADRAO.write_text(json.dumps(r, indent=2, ensure_ascii=False), encoding="utf-8")
+            print(f"resultado de calibrate_c3 guardado em {RESULTADO_PADRAO}")
     if a.gravar:
         for ln in gravar(cfg_path, r):
             print("gravei", ln)

@@ -491,6 +491,9 @@ def _plano_e_saida(tmp_path, terminais):
     (3, 1, True),     # parada pelo limite de 10%
     (4, 1, True),     # parada por falhas seguidas
     (130, 3, False),  # operador interrompeu
+    (1, 1, True),     # exceção inesperada: ninguém olhando o custo
+    (129, 1, True),   # SIGHUP: terminal fechado
+    (143, 1, True),   # SIGTERM
 ])
 def test_escala_a_zero_so_ao_fim_do_plano_ou_em_parada_por_regra(tmp_path, codigo, terminais, escala):
     from orchestrator.run_campaign import escalar_nos_a_zero
@@ -509,3 +512,29 @@ def test_falha_do_gcloud_no_scale_nao_derruba_o_runner(tmp_path):
         raise RuntimeError("gcloud fora")
     r = escalar_nos_a_zero(codigo=3, plan=_plano_e_saida(tmp_path, 0), out_root=tmp_path, log=msgs.append, escalar=quebra)
     assert r is False and any("não consegui" in m for m in msgs)
+
+
+def test_main_escala_a_zero_num_finally_quando_o_plano_levanta_excecao_ou_recebe_sinal(monkeypatch, tmp_path):
+    from orchestrator import run_campaign as rc
+    from mecade.config import load_campaign
+    import signal
+    plano = str(rc.ROOT / "data" / "plan_mvc-2026-11-c3.csv")
+    monkeypatch.setattr(rc, "ROOT", tmp_path)          # runs e log não vão para o repositório
+    antigos = {sg: signal.getsignal(sg) for sg in (signal.SIGHUP, signal.SIGTERM)}
+    cenarios = []
+    for erro, esperado in ((RuntimeError("boom"), 1), (SystemExit(143), 143), (KeyboardInterrupt(), 130)):
+        chamadas = []
+
+        def plano_quebra(*a, _e=erro, **k):
+            raise _e
+        monkeypatch.setattr("sys.argv", ["run_campaign", "--plan", plano])
+        monkeypatch.setattr(rc, "verificar_trava", lambda *a, **k: [])
+        monkeypatch.setattr(rc, "execute_plan", plano_quebra)
+        monkeypatch.setattr(rc, "_scale_zero", lambda c=chamadas: c.append(1))
+        monkeypatch.setattr(rc, "escalar_nos_a_zero", lambda **kw: (chamadas.append(kw["codigo"]), True)[1])
+        with pytest.raises(BaseException):
+            rc.main()
+        cenarios.append((chamadas, esperado))
+    for sg, h in antigos.items():
+        signal.signal(sg, h)
+    assert cenarios[0][0] == [1] and cenarios[1][0] == [143] and cenarios[2][0] == [130]

@@ -93,7 +93,7 @@ def test_trava_libera_depois_do_congelamento_e_recusa_se_divergir(config, result
     assert cg.verificar_trava(cfg, resultado)            # B da campanha 2
     cfg["axioms"]["budget_B"] = resultado["budget_B"] + 10
     assert any("não confere" in m for m in cg.verificar_trava(cfg, resultado))
-    assert cg.verificar_trava(cfg) == []                 # sem resultado guardado, só a regra da campanha 2
+    assert cg.verificar_trava(cfg) == []                 # sem exigir, só a regra da campanha 2
 
 
 def test_cli_gravar_e_conferir_com_resultado_em_arquivo(config, resultado, tmp_path):
@@ -112,3 +112,43 @@ def test_run_campaign_recusa_o_plano_oficial_com_valores_da_campanha_2(monkeypat
     with pytest.raises(SystemExit) as e:
         rc.main()
     assert "recusado" in str(e.value) and "budget_B" in str(e.value)
+
+
+def test_trava_do_plano_oficial_exige_o_resultado_guardado(config, resultado):
+    cg.gravar(config, resultado)
+    cfg = yaml.safe_load(config.read_text(encoding="utf-8"))
+    assert cg.verificar_trava(cfg, None, exigir_resultado=True)               # config congelado, mas sem resultado_r1.json
+    assert any("resultado_r1.json" in m for m in cg.verificar_trava(cfg, None, exigir_resultado=True))
+    assert cg.verificar_trava(cfg, resultado, exigir_resultado=True) == []
+
+
+def test_run_campaign_recusa_config_sem_resultado_de_calibracao(monkeypatch, config, resultado):
+    from orchestrator import run_campaign as rc
+    cg.gravar(config, resultado)
+    cfg_congelado = yaml.safe_load(config.read_text(encoding="utf-8"))
+    monkeypatch.setattr("sys.argv", ["run_campaign"])
+    monkeypatch.setattr(rc, "load_campaign", lambda: cfg_congelado)
+    monkeypatch.setattr(rc, "carregar_resultado", lambda: None)
+    with pytest.raises(SystemExit) as e:
+        rc.main()
+    assert "resultado_r1.json" in str(e.value)
+
+
+def test_valores_gravados_ficam_com_uma_casa_e_fora_da_grade_o_congelamento_para(config, resultado):
+    r = dict(resultado, d_on=3.1000000000000005, budget_B=40.0)
+    v = cg.valores_do_resultado(r)
+    assert v[("axioms", "d_on")] == 3.1 and v[("axioms", "budget_B")] == 40.0
+    with pytest.raises(ValueError, match="grade"):
+        cg.valores_do_resultado(dict(resultado, d_off=2.83))
+    # os pisos de latência não são arredondados: calibrate_c3 calculou D com eles
+    assert v[("signals", "p95", "floor")] == resultado["pisos"]["p95"]
+
+
+def test_conferir_a_partir_dos_runs_nao_grava_resultado_r1(monkeypatch, config, resultado, tmp_path):
+    destino = tmp_path / "resultado_r1.json"
+    monkeypatch.setattr(cg, "RESULTADO_PADRAO", destino)
+    monkeypatch.setattr(cg, "calcular", lambda cfg, runs: resultado)
+    cg.main(["--conferir", "--config", str(config)])
+    assert not destino.exists()
+    cg.main(["--gravar", "--config", str(config)])
+    assert destino.exists()

@@ -12,7 +12,8 @@ vira `falha_execucao`, rótulo diferente de `censurada` (sem detecção ou sem r
 
 Campanha 3 (docs/PROTOCOLO_C3.md, 8.1 item 3): ao terminar o plano inteiro no cluster real, inclusive nas paradas
 por regra de exceção (códigos 3 e 4), o node pool vai a 0 com `infra/gke/scale.sh 0`. Com `--limit`, interrompido
-pelo operador (130) ou com réplica ainda pendente, os nós ficam como estão.
+pelo operador (130) ou com réplica ainda pendente, os nós ficam como estão. Exceção inesperada e SIGHUP/SIGTERM
+(terminal fechado, kill: ninguém olhando o custo) também escalam a 0, num `finally`.
 
 Códigos de saída: 0 terminou; 3 passou do limite de 10% de réplicas perdidas; 4 falhas seguidas
 indicam ambiente instável; 130 interrompido pelo operador. Em 3 e 4 alguém precisa olhar.
@@ -22,6 +23,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import signal
 import subprocess
 import sys
 import time
@@ -43,6 +45,7 @@ ESPERA_APOS_FALHA_S = 120
 TERMINAIS = {"complete", "falha_execucao"}
 
 EXIT_OK, EXIT_LIMITE, EXIT_INSTAVEL, EXIT_INTERROMPIDA = 0, 3, 4, 130
+EXIT_ERRO, EXIT_SIGHUP, EXIT_SIGTERM = 1, 129, 143   # exceção inesperada; terminal fechado; kill
 
 
 def _agora() -> str:
@@ -279,7 +282,9 @@ def escalar_nos_a_zero(*, codigo: int, plan: list[dict], out_root: Path, log: Ca
                        escalar: Callable[[], None]) -> bool:
     """Leva o node pool a 0 quando o plano acabou (todas as réplicas em estado final) ou parou por regra de
     exceção (3 e 4). Não muda o código de saída: falha do gcloud só vai para o log e eu desligo na mão."""
-    if codigo == EXIT_INTERROMPIDA or not (codigo in (EXIT_LIMITE, EXIT_INSTAVEL) or plano_terminou(plan, out_root)):
+    if codigo == EXIT_INTERROMPIDA:
+        return False
+    if not (codigo in (EXIT_LIMITE, EXIT_INSTAVEL, EXIT_ERRO, EXIT_SIGHUP, EXIT_SIGTERM) or plano_terminou(plan, out_root)):
         return False
     log("Fim do plano: node pool a 0 (infra/gke/scale.sh 0).")
     try:
@@ -316,7 +321,7 @@ def main() -> None:
     a = ap.parse_args()
 
     if a.backend == "k8s" and not a.calibracao:  # trava: plano oficial só com a calibração da campanha 3 congelada
-        motivos = verificar_trava(camp, carregar_resultado())
+        motivos = verificar_trava(camp, carregar_resultado(), exigir_resultado=True)
         if motivos:
             raise SystemExit("Plano oficial recusado (docs/PROTOCOLO_C3.md, Seção 8.1, item 6):\n  - "
                              + "\n  - ".join(motivos) + "\nRode `make congelar` depois da calibração.")
@@ -371,11 +376,24 @@ def main() -> None:
         log("Limite de 10% de réplicas perdidas desligado por decisão minha.")
         _append_jsonl(out_root.parent / "desvios_execucao.jsonl",
                       {"quando": _agora(), "run_id": "", "tipo": "limite_de_perdidas_desligado"})
-    codigo = execute_plan(plan, out_root=out_root, execute=execute, clean=clean, log=log, limit=a.limit,
-                          settle_s=0 if a.backend == "sim" else a.settle, check_lost=oficial and not a.sem_limite_perdidas,
-                          campaign_id=camp.get("campaign_id"))
-    if a.backend == "k8s":
-        escalar_nos_a_zero(codigo=codigo, plan=plan, out_root=out_root, log=log, escalar=_scale_zero)
+    def _sinal(signum, _frame):
+        raise SystemExit(128 + signum)
+    for sg in (signal.SIGHUP, signal.SIGTERM):
+        signal.signal(sg, _sinal)
+    codigo = EXIT_ERRO
+    try:
+        codigo = execute_plan(plan, out_root=out_root, execute=execute, clean=clean, log=log, limit=a.limit,
+                              settle_s=0 if a.backend == "sim" else a.settle,
+                              check_lost=oficial and not a.sem_limite_perdidas, campaign_id=camp.get("campaign_id"))
+    except SystemExit as e:   # sinal: o código é 128 + número
+        codigo = e.code if isinstance(e.code, int) else EXIT_ERRO
+        raise
+    except KeyboardInterrupt:
+        codigo = EXIT_INTERROMPIDA
+        raise
+    finally:
+        if a.backend == "k8s":
+            escalar_nos_a_zero(codigo=codigo, plan=plan, out_root=out_root, log=log, escalar=_scale_zero)
     sys.exit(codigo)
 
 
