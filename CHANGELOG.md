@@ -36,7 +36,12 @@ Desvios declarados antes de qualquer dado da Fase 0:
 - Rollout que estoura o timeout (300 s) entra como 300 s no `clientes_apos_s`, o que leva ao corte de 60 s, e fica marcado (`rollout_estourou`).
 - Reexecução da Fase 0: execução com `meta.json` completo é pulada e nunca sobrescrita; só contam as tentativas que terminaram em falha.
 - Testes novos: `tests/test_fase0.py`, `tests/test_coleta_k8s.py`, `tests/test_congelar.py`, `tests/test_tipo_de_maquina.py`, mais casos em `tests/test_orchestrator.py` e `tests/test_evidencias.py`.
-- `make test`: 188 passam.
+- Amostragem do `ss` na condição 3: nas execuções com restart de clientes (C1, C2 e D), o `ss` dos clientes (frontend e checkoutservice, pods antigos e novos) é lido a cada 3 s, de `MITIGATION_CLIENTES` até +30 s. A coleta de 15 s continua igual nos demais trechos. Isso muda só a densidade da amostragem: o limiar da condição 3 e a regra não mudam, e as leituras densas ficam marcadas (`denso`) em `k8s_coleta.jsonl`.
+- Datapath: o peer da conexão casa com o ClusterIP:porta do alvo ou com o IP:porta dos pods antigos do alvo, e o `meta.json` registra qual casou (`datapath_peer`: clusterip, pod_ip, ambos ou nenhum). O cluster não tem datapathProvider (iptables legado); o segundo casamento é só proteção.
+- Contêiner de depuração do `ss`: só crio `mecade-dbg-N` se o anterior está `terminated`. Em `waiting` ou sem status, a próxima coleta tenta de novo sem criar outro.
+- Rollout: `rollout_estourou` vale só para timeout. Erro de API vira `rollout_erro`; os dois entram como 300 s no `clientes_apos_s` e ficam marcados.
+- Desligamento: `make fase0` trata SIGHUP e SIGTERM como a campanha. Escalar a 0 vem antes de qualquer log (o log grava no arquivo primeiro e o `print` tolera OSError). Em SIGTERM no meio de uma réplica, a limpeza do chaos roda antes de escalar, com prazo de 20 s. `make fase0` escala a 0 por padrão.
+- `make test`: 199 passam.
 
 ## 15/11 - pré-registro da campanha 3 (`mvc-2026-11-c3`)
 
