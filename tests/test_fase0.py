@@ -67,7 +67,7 @@ def test_a_e_b_nao_reiniciam_clientes_e_c_d_reiniciam_depois_de_clientes_apos_s(
         assert not [x for x in c.log if x[1] == "restart" and x[2] == "frontend"]
     meta, c, sc = _roda("C1", tmp_path / "C1")
     apos = sc["mitigacao"]["clientes_apos_s"]
-    assert apos == 45
+    assert 20 <= apos <= 60 and apos % 5 == 0   # intervalo e passo da Seção 3.1 do PROTOCOLO_C3
     # o atraso conta do início da mitigação (como em mitigate() do runner), não do fim do rollout
     assert meta["clientes_t"] - meta["restart_alvo_t"] == pytest.approx(apos, abs=5)
     reinicios = [x[2] for x in c.log if x[1] == "restart"]

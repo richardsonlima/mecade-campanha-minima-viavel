@@ -1,0 +1,78 @@
+{
+  "run_id": "diag_B",
+  "execucao": "B",
+  "alvo": "productcatalogservice",
+  "scenario": "s1_latencia_productcatalog",
+  "scenario_version": 2,
+  "arm": "diagnostico",
+  "backend": "k8s",
+  "status": "complete",
+  "plano": "diagnostico",
+  "etapa": "diagnostico",
+  "campaign_id": "mvc-2026-11-c3",
+  "wall_start": 1794790851.8896036,
+  "t_inject_abs": 1794791151.8896036,
+  "M_base": {
+    "p95": 0.26343749999999994,
+    "p99": 0.715000000000001,
+    "error_rate": 0.0
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "event": "INJECT",
+      "baseline": {
+        "p95": 0.26343749999999994,
+        "p99": 0.715000000000001,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "t": 120.001,
+      "event": "MITIGATION",
+      "action": "restart",
+      "reason": "fase0"
+    },
+    {
+      "t": 123.04,
+      "event": "ROLLOUT_FIM",
+      "deployment": "productcatalogservice",
+      "rollout_s": 3.039
+    },
+    {
+      "t": 600.0,
+      "event": "FAULT_END"
+    }
+  ],
+  "desenho": {
+    "restart_alvo_s": 120,
+    "clientes": [],
+    "clientes_apos_s": null
+  },
+  "restart_alvo_t": 120.001,
+  "restart_alvo_abs": 1794791271.8906035,
+  "clientes_t": null,
+  "rollout_s": 3.039,
+  "rollout_ok": true,
+  "rollout_estourou": false,
+  "rollout_erro": false,
+  "erro_rollout": null,
+  "timing": {
+    "warmup": 120,
+    "baseline": 300,
+    "fault": 600,
+    "recovery": 600,
+    "step": 5
+  },
+  "git_commit": "c99aa08829b5ca5471a5d053528635bd26db7077",
+  "git_dirty": false,
+  "config_sha256": "91d685b2a57e9962315aa0685adb2e87664f5b2df3f554714c2ca0360ba111b8",
+  "k8s_server": "v1.36.4-gke.2377000",
+  "machine_types": {
+    "e2-standard-2": 3
+  },
+  "datapath_peer": {
+    "casou": "nenhum",
+    "conexoes": {}
+  }
+}

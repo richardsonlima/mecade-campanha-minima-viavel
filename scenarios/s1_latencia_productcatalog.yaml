@@ -19,7 +19,7 @@ mitigacao:                     # igual nos dois braços; o que muda é quando el
   # são reiniciados depois do alvo. O atraso é provisório e a Fase 0 fixa o valor, ou tira os clientes, pela
   # regra da Seção 3 do docs/PROTOCOLO_C3.md.
   clientes: [frontend, checkoutservice, recommendationservice]
-  clientes_apos_s: 45
+  clientes_apos_s: 20           # fixado pela Fase 0 (data/diagnostico/analise_fase0.json)
 runbook: "Substituir instâncias degradadas e renovar as conexões dos clientes: kubectl rollout restart deployment/productcatalogservice; depois deployment/frontend, deployment/checkoutservice e deployment/recommendationservice"
 replicas_alvo: 1
 chaos:

@@ -2,7 +2,7 @@
 
 Fase atual: campanha 3 (`mvc-2026-11-c3`) pré-registrada na tag `mvc-2026-11-c3-prereg`, branch `campanha-3`. A campanha 2 está fechada na tag `mvc-2026-11-c2-final` e a campanha 1 na tag `mvc-2026-11-final`.
 Custo estimado: cerca de R$ 11 até 12/11 07:30 UTC, com taxa de R$ 1,5 a 2,2/h. O faturamento confirma com atraso.
-Próximo passo: calibração da campanha 3. Depósitos: campanha 1 10.5281/zenodo.24247614, campanha 2 10.5281/zenodo.24247615.
+Próximo passo: calibração da campanha 3 (rodada 1, 48 execuções), iniciada em 16/11. Fase 0 concluída em 15/11 (CHANGELOG, 16/11). Depósitos: campanha 1 10.5281/zenodo.24247614, campanha 2 10.5281/zenodo.24247615.
 
 ## 05/11 - pré-voo e preparação
 

@@ -1,0 +1,93 @@
+{
+  "run_id": "diag_C1",
+  "execucao": "C1",
+  "alvo": "productcatalogservice",
+  "scenario": "s1_latencia_productcatalog",
+  "scenario_version": 2,
+  "arm": "diagnostico",
+  "backend": "k8s",
+  "status": "complete",
+  "plano": "diagnostico",
+  "etapa": "diagnostico",
+  "campaign_id": "mvc-2026-11-c3",
+  "wall_start": 1794792472.7409465,
+  "t_inject_abs": 1794792772.7409465,
+  "M_base": {
+    "p95": 0.24529800853485062,
+    "p99": 0.7589999999999995,
+    "error_rate": 0.0
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "event": "INJECT",
+      "baseline": {
+        "p95": 0.24529800853485062,
+        "p99": 0.7589999999999995,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "t": 40.001,
+      "event": "MITIGATION",
+      "action": "restart",
+      "reason": "fase0"
+    },
+    {
+      "t": 43.799,
+      "event": "ROLLOUT_FIM",
+      "deployment": "productcatalogservice",
+      "rollout_s": 3.798
+    },
+    {
+      "t": 90.677,
+      "event": "MITIGATION_CLIENTES",
+      "deployments": [
+        "frontend",
+        "checkoutservice",
+        "recommendationservice"
+      ]
+    },
+    {
+      "t": 600.0,
+      "event": "FAULT_END"
+    }
+  ],
+  "desenho": {
+    "restart_alvo_s": 40,
+    "clientes": [
+      "frontend",
+      "checkoutservice",
+      "recommendationservice"
+    ],
+    "clientes_apos_s": 45.0
+  },
+  "restart_alvo_t": 40.001,
+  "restart_alvo_abs": 1794792812.7419465,
+  "clientes_t": 90.677,
+  "rollout_s": 3.798,
+  "rollout_ok": true,
+  "rollout_estourou": false,
+  "rollout_erro": false,
+  "erro_rollout": null,
+  "timing": {
+    "warmup": 120,
+    "baseline": 300,
+    "fault": 600,
+    "recovery": 600,
+    "step": 5
+  },
+  "git_commit": "c99aa08829b5ca5471a5d053528635bd26db7077",
+  "git_dirty": false,
+  "config_sha256": "91d685b2a57e9962315aa0685adb2e87664f5b2df3f554714c2ca0360ba111b8",
+  "k8s_server": "v1.36.4-gke.2377000",
+  "machine_types": {
+    "e2-standard-2": 3
+  },
+  "datapath_peer": {
+    "casou": "clusterip",
+    "conexoes": {
+      "clusterip": 2
+    }
+  }
+}

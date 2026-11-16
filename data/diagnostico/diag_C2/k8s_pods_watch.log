@@ -1,0 +1,73 @@
+1794794094.959 NAME                                     READY   STATUS    RESTARTS      AGE    IP            NODE                                        NOMINATED NODE   READINESS GATES
+1794794094.959 adservice-d9657db5c-mzdwx                1/1     Running   0             12h    10.100.1.13   gke-mecade-mvc-default-pool-b7c5c9d2-p3s1   <none>           <none>
+1794794094.959 cartservice-6ccc456bdd-mmntd             1/1     Running   0             12h    10.100.1.15   gke-mecade-mvc-default-pool-b7c5c9d2-p3s1   <none>           <none>
+1794794094.959 checkoutservice-5c4cb656fb-pdqt4         1/1     Running   0             20m    10.100.2.12   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794094.959 currencyservice-69d8d45c48-gmmbs         1/1     Running   0             12h    10.100.1.9    gke-mecade-mvc-default-pool-b7c5c9d2-p3s1   <none>           <none>
+1794794094.959 emailservice-55fdf9bbb9-ch5q7            1/1     Running   2 (89m ago)   12h    10.100.0.7    gke-mecade-mvc-default-pool-b7c5c9d2-vvmv   <none>           <none>
+1794794094.959 frontend-db5774767-fxxl7                 1/1     Running   0             20m    10.100.2.11   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794094.959 mecade-loadgen-78ddf8d455-gfl26          1/1     Running   0             12h    10.100.0.9    gke-mecade-mvc-default-pool-b7c5c9d2-vvmv   <none>           <none>
+1794794094.959 paymentservice-b4cbf695c-q6qph           1/1     Running   0             12h    10.100.1.4    gke-mecade-mvc-default-pool-b7c5c9d2-p3s1   <none>           <none>
+1794794094.959 productcatalogservice-76b7bc6544-l7mck   1/1     Running   0             2m4s   10.100.2.14   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794094.959 recommendationservice-86567944bd-lr528   1/1     Running   2 (19m ago)   20m    10.100.2.13   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794094.959 redis-cart-788fbddc7-99pj5               1/1     Running   0             12h    10.100.0.3    gke-mecade-mvc-default-pool-b7c5c9d2-vvmv   <none>           <none>
+1794794094.959 shippingservice-595f778b5c-ffnfc         1/1     Running   0             12h    10.100.1.24   gke-mecade-mvc-default-pool-b7c5c9d2-p3s1   <none>           <none>
+1794794413.558 recommendationservice-86567944bd-lr528   0/1     Running   2 (25m ago)   25m    10.100.2.13   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794420.533 recommendationservice-86567944bd-lr528   0/1     Running   3 (0s ago)    25m    10.100.2.13   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794422.823 productcatalogservice-76b7bc6544-l7mck   0/1     Running   1 (0s ago)    7m32s   10.100.2.14   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794434.212 productcatalogservice-7cf98ff976-47nfp   0/1     Pending   0             0s      <none>        <none>                                      <none>           <none>
+1794794434.254 productcatalogservice-7cf98ff976-47nfp   0/1     Pending   0             0s      <none>        gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794434.312 productcatalogservice-7cf98ff976-47nfp   0/1     ContainerCreating   0             0s      <none>        gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794435.173 productcatalogservice-7cf98ff976-47nfp   0/1     ContainerCreating   0             1s      <none>        gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794435.332 productcatalogservice-7cf98ff976-47nfp   0/1     Running             0             1s      10.100.2.15   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794436.334 productcatalogservice-7cf98ff976-47nfp   1/1     Running             0             2s      10.100.2.15   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794436.448 productcatalogservice-76b7bc6544-l7mck   0/1     Terminating         1 (14s ago)   7m46s   10.100.2.14   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794436.542 productcatalogservice-76b7bc6544-l7mck   0/1     Terminating         1 (14s ago)   7m46s   10.100.2.14   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794436.585 recommendationservice-86567944bd-lr528   1/1     Running             3 (16s ago)   26m     10.100.2.13   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794436.932 productcatalogservice-76b7bc6544-l7mck   0/1     Error               1 (14s ago)   7m46s   10.100.2.14   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794437.377 productcatalogservice-7cf98ff976-47nfp   1/1     Running             0             3s      10.100.2.15   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794437.521 productcatalogservice-76b7bc6544-l7mck   0/1     Error               1 (15s ago)   7m47s   10.100.2.14   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794437.580 productcatalogservice-76b7bc6544-l7mck   0/1     Error               1 (15s ago)   7m47s   10.100.2.14   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794479.193 frontend-79f868c578-jhzzd                0/1     Pending             0             0s      <none>        <none>                                      <none>           <none>
+1794794479.246 frontend-79f868c578-jhzzd                0/1     Pending             0             0s      <none>        gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794479.317 frontend-79f868c578-jhzzd                0/1     ContainerCreating   0             0s      <none>        gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794479.420 checkoutservice-6f6f848f5b-8xf4t         0/1     Pending             0             0s      <none>        <none>                                      <none>           <none>
+1794794479.503 checkoutservice-6f6f848f5b-8xf4t         0/1     Pending             0             0s      <none>        gke-mecade-mvc-default-pool-b7c5c9d2-vvmv   <none>           <none>
+1794794479.608 checkoutservice-6f6f848f5b-8xf4t         0/1     ContainerCreating   0             0s      <none>        gke-mecade-mvc-default-pool-b7c5c9d2-vvmv   <none>           <none>
+1794794479.743 recommendationservice-58b7d5bcb8-cvzm2   0/1     Pending             0             0s      <none>        <none>                                      <none>           <none>
+1794794479.800 recommendationservice-58b7d5bcb8-cvzm2   0/1     Pending             0             0s      <none>        gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794479.876 recommendationservice-58b7d5bcb8-cvzm2   0/1     ContainerCreating   0             0s      <none>        gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794480.201 frontend-79f868c578-jhzzd                0/1     ContainerCreating   0             1s      <none>        gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794480.520 checkoutservice-6f6f848f5b-8xf4t         0/1     ContainerCreating   0             1s      <none>        gke-mecade-mvc-default-pool-b7c5c9d2-vvmv   <none>           <none>
+1794794480.542 frontend-79f868c578-jhzzd                0/1     Running             0             1s      10.100.2.16   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794480.732 checkoutservice-6f6f848f5b-8xf4t         0/1     Running             0             1s      10.100.0.11   gke-mecade-mvc-default-pool-b7c5c9d2-vvmv   <none>           <none>
+1794794480.962 recommendationservice-58b7d5bcb8-cvzm2   0/1     ContainerCreating   0             1s      <none>        gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794481.155 recommendationservice-58b7d5bcb8-cvzm2   0/1     Running             0             2s      10.100.2.17   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794481.740 checkoutservice-6f6f848f5b-8xf4t         1/1     Running             0             2s      10.100.0.11   gke-mecade-mvc-default-pool-b7c5c9d2-vvmv   <none>           <none>
+1794794482.111 checkoutservice-5c4cb656fb-pdqt4         1/1     Terminating         0             26m     10.100.2.12   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794482.493 checkoutservice-5c4cb656fb-pdqt4         1/1     Terminating         0             26m     10.100.2.12   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794483.174 checkoutservice-6f6f848f5b-8xf4t         1/1     Running             0             4s      10.100.0.11   gke-mecade-mvc-default-pool-b7c5c9d2-vvmv   <none>           <none>
+1794794483.669 checkoutservice-6f6f848f5b-8xf4t         1/1     Running             0             4s      10.100.0.11   gke-mecade-mvc-default-pool-b7c5c9d2-vvmv   <none>           <none>
+1794794483.732 frontend-79f868c578-jhzzd                0/1     Running             0             4s      10.100.2.16   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794483.788 frontend-79f868c578-jhzzd                0/1     Running             0             4s      10.100.2.16   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794484.040 frontend-79f868c578-jhzzd                0/1     Running             0             5s      10.100.2.16   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794484.677 checkoutservice-6f6f848f5b-8xf4t         1/1     Running             0             5s      10.100.0.11   gke-mecade-mvc-default-pool-b7c5c9d2-vvmv   <none>           <none>
+1794794484.906 checkoutservice-6f6f848f5b-8xf4t         1/1     Running             0             5s      10.100.0.11   gke-mecade-mvc-default-pool-b7c5c9d2-vvmv   <none>           <none>
+1794794494.039 frontend-79f868c578-jhzzd                1/1     Running             0             15s     10.100.2.16   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794494.154 frontend-db5774767-fxxl7                 1/1     Terminating         0             27m     10.100.2.11   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794494.228 frontend-db5774767-fxxl7                 1/1     Terminating         0             27m     10.100.2.11   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794497.214 recommendationservice-58b7d5bcb8-cvzm2   1/1     Running             0             18s     10.100.2.17   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794497.425 recommendationservice-58b7d5bcb8-cvzm2   1/1     Running             0             18s     10.100.2.17   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794497.492 recommendationservice-86567944bd-lr528   1/1     Terminating         3 (77s ago)   27m     10.100.2.13   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794497.605 recommendationservice-86567944bd-lr528   1/1     Terminating         3 (77s ago)   27m     10.100.2.13   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794502.909 recommendationservice-86567944bd-lr528   0/1     Error               3 (82s ago)   27m     10.100.2.13   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794503.599 recommendationservice-86567944bd-lr528   0/1     Error               3 (83s ago)   27m     10.100.2.13   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794503.642 recommendationservice-86567944bd-lr528   0/1     Error               3 (83s ago)   27m     10.100.2.13   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794503.664 recommendationservice-86567944bd-lr528   0/1     Error               3 (83s ago)   27m     10.100.2.13   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794506.868 checkoutservice-5c4cb656fb-pdqt4         0/1     Terminating         0             27m     10.100.2.12   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794512.634 checkoutservice-5c4cb656fb-pdqt4         0/1     Error               0             27m     10.100.2.12   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794512.971 checkoutservice-5c4cb656fb-pdqt4         0/1     Error               0             27m     10.100.2.12   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794513.000 checkoutservice-5c4cb656fb-pdqt4         0/1     Error               0             27m     10.100.2.12   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794517.968 frontend-db5774767-fxxl7                 0/1     Terminating         0             27m     10.100.2.11   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794524.705 frontend-db5774767-fxxl7                 0/1     Error               0             27m     10.100.2.11   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794525.039 frontend-db5774767-fxxl7                 0/1     Error               0             27m     10.100.2.11   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>
+1794794525.067 frontend-db5774767-fxxl7                 0/1     Error               0             27m     10.100.2.11   gke-mecade-mvc-default-pool-b7c5c9d2-3k43   <none>           <none>

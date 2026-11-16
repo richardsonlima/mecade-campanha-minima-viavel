@@ -1,0 +1,100 @@
+{
+  "execucoes_com_dado": [
+    "A",
+    "B",
+    "C1",
+    "C2",
+    "D"
+  ],
+  "rollout_s": {
+    "A": 3.305,
+    "B": 3.039,
+    "C1": 3.798,
+    "C2": 2.697,
+    "D": 2.781
+  },
+  "clientes_apos_s": {
+    "valor": 20,
+    "maior_rollout_s": 3.798,
+    "arredondado": 15,
+    "cortado": true,
+    "estouraram_o_timeout": [],
+    "com_erro_de_api": []
+  },
+  "cascata": {
+    "fica": true,
+    "C1": {
+      "ok": true,
+      "inicio_t": 145.0,
+      "depois_do_restart_s": 104.999
+    },
+    "C2": {
+      "ok": true,
+      "inicio_t": 140.0,
+      "depois_do_restart_s": 99.999
+    },
+    "nota": null
+  },
+  "H4": {
+    "resultado": "não confirmada",
+    "motivos": [
+      "condição 2 sem dado (B)",
+      "condição 3 não satisfeita (C1)",
+      "condição 3 não satisfeita (C2)"
+    ],
+    "condicao_1_A": {
+      "ok": true,
+      "conexao": [
+        "checkoutservice-d7658cddf-tdkmw",
+        "10.100.0.4:60402",
+        "34.118.233.124:3550"
+      ],
+      "retrans": [
+        8,
+        9
+      ],
+      "bytes_retrans": [
+        532,
+        622
+      ]
+    },
+    "condicao_2_B": {
+      "ok": null,
+      "motivo": "nenhuma conexão ao ClusterIP do alvo na última leitura antes do restart (ou sem ClusterIP)"
+    },
+    "condicao_3_C": {
+      "C1": {
+        "ok": false,
+        "por_cliente": {
+          "frontend": {
+            "ok": false,
+            "leituras_depois_de_15s": 7
+          },
+          "checkoutservice": {
+            "ok": false,
+            "leituras_depois_de_15s": 7
+          }
+        },
+        "nota": "os clientes são reiniciados: tende a ser verdadeira por construção"
+      },
+      "C2": {
+        "ok": false,
+        "por_cliente": {
+          "frontend": {
+            "ok": null,
+            "motivo": "sem tupla anterior ao restart neste cliente"
+          },
+          "checkoutservice": {
+            "ok": false,
+            "leituras_depois_de_15s": 7
+          }
+        },
+        "nota": "os clientes são reiniciados: tende a ser verdadeira por construção"
+      }
+    }
+  },
+  "D": {
+    "TTR_nota": "relato só; comparar o TTR de D com a mediana de 525 s do baseline de s1 da campanha 2",
+    "dado": true
+  }
+}

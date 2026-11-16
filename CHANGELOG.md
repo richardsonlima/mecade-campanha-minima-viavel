@@ -3,6 +3,17 @@
 Qualquer mudança de versão, parâmetro ou cenário depois que as réplicas oficiais começarem vai
 anotada aqui. Réplicas rodadas antes e depois de uma mudança não são comparáveis entre si.
 
+## 16/11 - resultado da Fase 0 da campanha 3
+
+As 5 execuções (A, B, C1, C2, D) têm dado e terminaram em 15/11 por volta de 23:50 (Brasília), com o node pool escalado a 0. Dados em `data/diagnostico/`; a saída de `make fase0-analise`, sem edição, em `data/diagnostico/analise_fase0.json`. Apliquei as regras da Seção 3.1 do `docs/PROTOCOLO_C3.md` como foram fixadas, sem reanálise.
+
+- `clientes_apos_s`: 45 → 20. O maior rollout medido foi 3,798 s (C1; A 3,305, B 3,039, C2 2,697, D 2,781). Mais 10 s e arredondado para cima em 5 s dá 15 s, e o piso do intervalo [20, 60] leva a 20 s. A cascata foi testada com 45 s em C1 e C2; a campanha roda com 20 s, um atraso que a Fase 0 não testou, como a Seção 3.1 já declara. Não repito a Fase 0.
+- Cascata: fica. C1 e C2 voltaram ao normal 105 s e 100 s depois do restart do alvo, dentro de 150 s.
+- H4: não confirmada. Condição 1 vale em A (retransmissões de 8 para 9, bytes retransmitidos de 532 para 622, numa conexão ao ClusterIP:3550). Condição 2 sem dado em B (nenhuma conexão ao ClusterIP do alvo na última leitura antes do restart). Condição 3 não satisfeita em C1 e C2: 7 leituras por cliente ainda mostram conexão ao ClusterIP:3550 mais de 15 s depois de MITIGATION_CLIENTES. A leitura é por tupla ao ClusterIP, e um cliente novo também abre conexão ao mesmo ClusterIP:3550; isso pode explicar a condição 3, mas não verifiquei, e o resultado fica como saiu.
+- D: só relato. O TTR de D entra no relatório ao lado da mediana de 525 s do baseline de s1 da campanha 2.
+
+Única mudança de cenário: `clientes_apos_s` em `scenarios/s1_latencia_productcatalog.yaml`, prevista na Seção 3.1. O teste `tests/test_fase0.py` deixou de fixar o valor provisório de 45 s e passou a conferir o intervalo e o passo da Seção 3.1. Nenhuma outra mudança de código ou parâmetro antes da calibração.
+
 ## 15/11 - preparação da Fase 0 e da calibração da campanha 3
 
 Mudanças de código entre a tag `mvc-2026-11-c3-prereg` e a Fase 0, só as permitidas na Seção 8.1 do `docs/PROTOCOLO_C3.md`. Axiomas, controlador reativo, `mitigate()`, cascata do runner, métricas, veredito, cenários, planos e `config/campaign.yaml` ficam idênticos aos da tag (`git diff` vazio). Nenhum parâmetro mudou.
