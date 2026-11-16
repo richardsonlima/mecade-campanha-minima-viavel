@@ -5,8 +5,9 @@ depois do fato (docs/PROTOCOLO_C3.md, Seções 3.1 e 8.1, itens 1 e 2). Cada col
 `erro` no arquivo e a coleta segue; um problema de observação nunca derruba a réplica.
 
 Arquivos gravados em `pasta`:
-  k8s_coleta.jsonl   um registro por coleta: pods (IP, fase, prontidão, restartCount), endpoints do alvo e, se
-                     `ss` estiver ligado, o texto cru de `ss -tni` de cada pod dos clientes
+  k8s_coleta.jsonl   um registro por coleta: pods (IP, fase, prontidão, restartCount), endpoints do alvo, ClusterIP
+                     e porta do Service do alvo e, se `ss` estiver ligado, o texto cru de `ss -tni` de cada pod
+                     dos clientes (inclusive os que estão terminando)
   k8s_eventos.jsonl  cada evento do namespace, uma vez por (uid, count)
   k8s_pods_watch.log saída de `kubectl get pods -w`, com a hora de cada linha (só se `watch` estiver ligado)
 """
@@ -22,6 +23,8 @@ from typing import Callable
 INTERVALO_S = 15.0
 IMAGEM_DEPURACAO = "nicolaka/netshoot:v0.13"   # tem `ss`; contêiner efêmero só para ler os sockets do pod
 CONTEINER_DEPURACAO = "mecade-dbg"
+# fica vivo enquanto o pod viver; se terminar, `_depurador` cria outro com sufixo
+COMANDO_DEPURACAO = ("sh", "-c", "while true; do sleep 3600; done")
 
 
 def _kubectl(*args: str, timeout: float = 30.0) -> str:
@@ -50,6 +53,12 @@ def resumo_pods(pods_json: dict) -> list[dict]:
     return sorted(out, key=lambda p: p["nome"])
 
 
+def ip_do_servico(svc_json: dict) -> dict:
+    """ClusterIP e portas do Service. Com kube-proxy em iptables, o `ss` dos clientes mostra este IP, não o do pod."""
+    spec = svc_json.get("spec", {})
+    return {"cluster_ip": spec.get("clusterIP"), "portas": [p.get("port") for p in spec.get("ports") or []]}
+
+
 def ips_endpoints(ep_json: dict) -> dict:
     """IPs prontos e não prontos de um objeto Endpoints."""
     prontos, nao = [], []
@@ -70,7 +79,7 @@ class ColetorK8s:
         self.clientes, self.ss, self.watch, self.intervalo = tuple(clientes), ss, watch, intervalo
         self.run, self.agora, self.imagem, self.ate = run, agora, imagem, ate
         self._vistos: set[tuple] = set()
-        self._com_depurador: set[str] = set()
+        self._com_depurador: dict[str, str] = {}
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
         self._watch_proc: subprocess.Popen | None = None
@@ -109,6 +118,10 @@ class ColetorK8s:
                 self.run("-n", self.ns, "get", "endpoints", self.alvo, "-o", "json")))
         except Exception as e:  # noqa: BLE001
             reg["erro_endpoints"] = str(e)
+        try:
+            reg["servico_alvo"] = ip_do_servico(json.loads(self.run("-n", self.ns, "get", "service", self.alvo, "-o", "json")))
+        except Exception as e:  # noqa: BLE001
+            reg["erro_servico"] = str(e)
         if self.ss:
             reg["ss"] = self._coletar_ss(pods)
         self._append("k8s_coleta.jsonl", reg)
@@ -132,23 +145,41 @@ class ColetorK8s:
                 "count": ev.get("count"), "primeiro": ev.get("firstTimestamp"), "ultimo": ev.get("lastTimestamp"),
                 "uid": ev["metadata"].get("uid")})
 
+    def _depurador(self, pod: str) -> str:
+        """Nome do contêiner efêmero em execução no pod; cria um se não houver. Lê spec.ephemeralContainers e
+        status.ephemeralContainerStatuses antes de criar: reutiliza `mecade-dbg` se estiver rodando e, se tiver
+        terminado, cria outro com sufixo (não dá para remover nem recriar um contêiner efêmero com o mesmo nome)."""
+        if pod in self._com_depurador:
+            return self._com_depurador[pod]
+        j = json.loads(self.run("-n", self.ns, "get", "pod", pod, "-o", "json"))
+        nomes = [c["name"] for c in j.get("spec", {}).get("ephemeralContainers") or []
+                 if c["name"].startswith(CONTEINER_DEPURACAO)]
+        estados = {c["name"]: c.get("state") or {} for c in j.get("status", {}).get("ephemeralContainerStatuses") or []}
+        for n in nomes:
+            if "running" in estados.get(n, {}):
+                self._com_depurador[pod] = n
+                return n
+        novo = CONTEINER_DEPURACAO if not nomes else f"{CONTEINER_DEPURACAO}-{len(nomes) + 1}"
+        self.run("-n", self.ns, "debug", pod, "-q", f"--image={self.imagem}", f"--container={novo}",
+                 "--", *COMANDO_DEPURACAO)
+        self._com_depurador[pod] = novo
+        return novo
+
     def _coletar_ss(self, pods: list[dict]) -> dict:
-        """`ss -tni` dentro de cada pod pronto dos clientes. O contêiner efêmero é criado uma vez por pod
-        (não dá para removê-lo depois) e usado por `kubectl exec`."""
+        """`ss -tni` dentro de cada pod dos clientes que ainda esteja em Running, inclusive o que está sendo
+        removido (a leitura dos pods antigos enquanto terminam é a evidência da condição 3 da H4)."""
         out: dict = {}
         for p in pods:
-            if p["app"] not in self.clientes or p["removendo"] or p["fase"] != "Running":
+            if p["app"] not in self.clientes or p["fase"] != "Running":
                 continue
             nome = p["nome"]
             try:
-                if nome not in self._com_depurador:
-                    self.run("-n", self.ns, "debug", nome, "-q", f"--image={self.imagem}",
-                             f"--container={CONTEINER_DEPURACAO}", "--", "sleep", "7200")
-                    self._com_depurador.add(nome)
-                texto = self.run("-n", self.ns, "exec", nome, "-c", CONTEINER_DEPURACAO, "--", "ss", "-tni")
-                out[nome] = {"app": p["app"], "ip": p["ip"], "texto": texto}
+                c = self._depurador(nome)
+                texto = self.run("-n", self.ns, "exec", nome, "-c", c, "--", "ss", "-tni")
+                out[nome] = {"app": p["app"], "ip": p["ip"], "removendo": p["removendo"], "texto": texto}
             except Exception as e:  # noqa: BLE001  (o contêiner pode ainda não estar de pé; tento na coleta seguinte)
-                out[nome] = {"app": p["app"], "ip": p["ip"], "erro": str(e)}
+                self._com_depurador.pop(nome, None)
+                out[nome] = {"app": p["app"], "ip": p["ip"], "removendo": p["removendo"], "erro": str(e)}
         return out
 
     # ---- thread
