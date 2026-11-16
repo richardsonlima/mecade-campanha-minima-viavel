@@ -11,22 +11,32 @@ Hunks de `mecade/runner.py` (arquivo protegido):
 
 - Item 2, importações de `Kubectl` e `ColetorK8s`: só para a coleta passiva.
 - Item 2, antes do laço principal: `ColetorK8s` grava pods, endpoints, restartCount e eventos em `<réplica>/k8s_*`, só no backend real. Nenhuma decisão lê esses arquivos.
-- Item 2, depois do laço: `coletor.parar()` faz a coleta final.
+- Item 2, criação e `iniciar()` do coletor num `try/except` (em falha, a réplica segue sem coleta e o log avisa) e laço principal dentro de `try/finally`, para `coletor.parar()` (coleta final) rodar também quando o laço levanta exceção. A mudança de recuo do laço não altera nenhuma instrução dele.
 - Item 5: `machine_types` no `meta.json`, contagem de nós por tipo de máquina.
 
 Hunks de `orchestrator/run_campaign.py`:
 
-- Item 3: ao fim do plano, ou em parada por regra de exceção (códigos 3 e 4), o runner escala o node pool a 0 com `infra/gke/scale.sh 0`. Não escala com `--limit`, interrupção do operador ou réplicas pendentes. Falha do `gcloud` é avisada e não muda o código de saída.
-- Item 6: trava que recusa `make run` do plano oficial se B ou um piso de latência ainda for o da campanha 2, ou se o config não conferir com a calibração.
+- Item 3, `try/finally` em volta de `execute_plan`, com tratamento de SIGHUP e SIGTERM, para o node pool ir a 0 também em exceção inesperada (código 1), terminal fechado (129) e kill (143). O código 130 (operador) e o `--limit` continuam sem escalar. Ao fim do plano, ou em parada por regra de exceção (códigos 3 e 4), o runner escala o node pool a 0 com `infra/gke/scale.sh 0`. Não escala com `--limit`, interrupção do operador ou réplicas pendentes. Falha do `gcloud` é avisada e não muda o código de saída.
+- Item 6: trava que recusa `make run` do plano oficial se B ou um piso de latência ainda for o da campanha 2, se faltar `data/calibracao/resultado_r1.json` ou se o config não conferir com ele.
 
 Arquivos novos:
 
 - Item 1: `orchestrator/fase0.py`, `make fase0` e `make fase0-analise`. Execuções A, B, C1, C2 e D do s1 com prefixo `diag_`, saída em `data/diagnostico/`, coleta a cada 15 s com `ss -tni` em frontend e checkoutservice. A análise aplica as regras fixas da Seção 3.1 e só imprime, sem escrever config.
-- Itens 1 e 2: `mecade/coleta_k8s.py`.
+- Itens 1 e 2: `mecade/coleta_k8s.py`. Coleta também o ClusterIP e a porta do Service do alvo e lê o `ss` dos pods clientes que estão terminando. O contêiner efêmero de depuração é reaproveitado se estiver rodando (lê `spec.ephemeralContainers` e `status.ephemeralContainerStatuses`) e recriado com sufixo se tiver terminado; roda um laço de `sleep`, sem o limite de 2 h.
+- `mecade/backends.py`: timeout em `Kubectl._run` (60 s; no `rollout status`, o timeout do rollout mais 30 s) e em `node_machine_types` e `server_version` (20 s).
+- `make fase0` leva o node pool a 0 ao fim, também em erro (`NAO_ESCALAR=1` desliga).
 - Item 4: `data/diagnostico` entra em `analysis/evidencias.py`.
-- Item 6: `analysis/congelar.py` e `make congelar`, que copia a saída de `calibrate_c3` para o config e confere os valores.
+- Item 6: `analysis/congelar.py` e `make congelar`, que copia a saída de `calibrate_c3` para o config e confere os valores. d_on, d_off, deadband e B são gravados com uma casa (a grade de 0,1 que `calibrate_c3` já usa; fora da grade o congelamento para). Os pisos de p95 e p99 são medianas e não são arredondados, porque `calibrate_c3` calculou D com eles. `--conferir` não grava `resultado_r1.json`.
+
+Desvios declarados antes de qualquer dado da Fase 0:
+
+- H4 (Seção 3.1) operacionalizada para este cluster. O mecade-mvc não usa Dataplane V2 (kube-proxy em iptables), então o `ss -tni` dos clientes mostra o ClusterIP:porta do productcatalogservice, nunca o IP do pod. Com `replicas_alvo = 1`, "conexão para o IP do pod antigo" passa a ser "conexão ao ClusterIP:porta do alvo cuja tupla (local ip:porta, peer) já existia na última leitura antes do restart do alvo". Condição 1, em A: essa tupla segue ESTABLISHED depois de o pod antigo sair dos endpoints, com retransmissões crescentes entre duas coletas seguidas. Condição 2, em B: nenhuma tupla anterior ao restart segue depois de o pod antigo sair dos endpoints. Condição 3, em C1 e C2: as tuplas anteriores ao restart somem até 15 s depois de `MITIGATION_CLIENTES`. O limiar das três condições e o resto da regra não mudam.
+- Condição 3 com o restart dos clientes: o pod antigo morre, então a condição tende a ser verdadeira por construção. Leio o `ss` dos pods antigos enquanto terminam; se o pod antigo sumir antes de qualquer leitura a partir de `MITIGATION_CLIENTES`, a condição sai sem dado, e não verdadeira. O resultado é relatado com essa ressalva.
+- H4 com condição sem dado: segue a Seção 3.1 ("faltando qualquer condição, a H4 não é confirmada"). A análise imprime "não confirmada" e o motivo, por exemplo "condição 3 sem dado (C2)". A leitura anterior, de "não testada", saiu.
+- Rollout que estoura o timeout (300 s) entra como 300 s no `clientes_apos_s`, o que leva ao corte de 60 s, e fica marcado (`rollout_estourou`).
+- Reexecução da Fase 0: execução com `meta.json` completo é pulada e nunca sobrescrita; só contam as tentativas que terminaram em falha.
 - Testes novos: `tests/test_fase0.py`, `tests/test_coleta_k8s.py`, `tests/test_congelar.py`, `tests/test_tipo_de_maquina.py`, mais casos em `tests/test_orchestrator.py` e `tests/test_evidencias.py`.
-- `make test`: 163 passam.
+- `make test`: 188 passam.
 
 ## 15/11 - pré-registro da campanha 3 (`mvc-2026-11-c3`)
 
