@@ -52,8 +52,8 @@ class Kubectl:
     def __init__(self, namespace: str):
         self.ns = namespace
 
-    def _run(self, *args: str, input_text: str | None = None) -> str:
-        p = subprocess.run(["kubectl", *args], input=input_text, capture_output=True, text=True)
+    def _run(self, *args: str, input_text: str | None = None, timeout: float = 60.0) -> str:
+        p = subprocess.run(["kubectl", *args], input=input_text, capture_output=True, text=True, timeout=timeout)
         if p.returncode != 0:
             raise RuntimeError(f"kubectl {' '.join(args)} falhou: {p.stderr.strip()}")
         return p.stdout
@@ -80,12 +80,13 @@ class Kubectl:
         self._run("-n", self.ns, "rollout", "restart", f"deployment/{deployment}")
 
     def wait_rollout(self, deployment: str, timeout: str = "300s") -> None:
-        self._run("-n", self.ns, "rollout", "status", f"deployment/{deployment}", f"--timeout={timeout}")
+        self._run("-n", self.ns, "rollout", "status", f"deployment/{deployment}", f"--timeout={timeout}",
+                  timeout=float(str(timeout).rstrip("s")) + 30.0)
 
     def node_machine_types(self) -> dict:
         """Tipo de máquina dos nós, pelo rótulo `node.kubernetes.io/instance-type`: {tipo: quantidade}."""
         try:
-            itens = json.loads(self._run("get", "nodes", "-o", "json"))["items"]
+            itens = json.loads(self._run("get", "nodes", "-o", "json", timeout=20.0))["items"]
         except Exception:  # noqa: BLE001 (é só metadado)
             return {}
         tipos: dict[str, int] = {}
@@ -96,6 +97,6 @@ class Kubectl:
 
     def server_version(self) -> str:
         try:
-            return json.loads(self._run("version", "-o", "json"))["serverVersion"]["gitVersion"]
+            return json.loads(self._run("version", "-o", "json", timeout=20.0))["serverVersion"]["gitVersion"]
         except Exception:  # noqa: BLE001 (é só metadado)
             return "unknown"

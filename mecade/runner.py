@@ -142,75 +142,81 @@ def run_one(*, run_id: str, scenario: dict, arm: str, campaign: dict, prom, kube
     # que a thread sobreviva a uma réplica que falhou no meio.
     coletor = None
     if isinstance(kube, Kubectl):
-        coletor = ColetorK8s(ns, target, out, ate=t_end + 120)
-        coletor.iniciar()
+        try:
+            coletor = ColetorK8s(ns, target, out, ate=t_end + 120)
+            coletor.iniciar()
+        except Exception as exc:  # noqa: BLE001  (observação nunca derruba a réplica)
+            log(f"coleta do Kubernetes desligada nesta réplica: {exc}")
+            coletor = None
     t = t_base_start
-    while t < t_end:
-        clock.sleep_until(t)
-        now = clock.now()
-        if clientes_pendentes is not None and now >= clientes_pendentes[0]:
-            for dep in clientes_pendentes[1]:
-                kube.restart(dep)
-            emit(now, "MITIGATION_CLIENTES", deployments=clientes_pendentes[1])
-            clientes_pendentes = None
+    try:
+        while t < t_end:
+            clock.sleep_until(t)
+            now = clock.now()
+            if clientes_pendentes is not None and now >= clientes_pendentes[0]:
+                for dep in clientes_pendentes[1]:
+                    kube.restart(dep)
+                emit(now, "MITIGATION_CLIENTES", deployments=clientes_pendentes[1])
+                clientes_pendentes = None
 
-        # transições de fase
-        if phase == "baseline" and now >= t_inject:
-            M_base = {s: (statistics.median(v) if v else None) for s, v in base_samples.items()}
-            reactive.baseline = dict(M_base)
-            phase = "fault"
-            manifest = render_chaos(scenario.get("chaos"), name=chaos_name, ns=ns,
-                                    pods=kube.pods(target), fault_s=int(tm["fault"]))
-            if manifest is not None:
-                kube.apply(manifest)
-                chaos_active = True
-            emit(now, "INJECT" if manifest is not None else "CONTROL_START", baseline=M_base)
-        if phase == "fault" and now >= t_fault_end:
-            phase = "recovery"
-            if chaos_active:
-                kube.delete(chaos_kind, chaos_name)
-                chaos_active = False
-            emit(now, "FAULT_END")
+            # transições de fase
+            if phase == "baseline" and now >= t_inject:
+                M_base = {s: (statistics.median(v) if v else None) for s, v in base_samples.items()}
+                reactive.baseline = dict(M_base)
+                phase = "fault"
+                manifest = render_chaos(scenario.get("chaos"), name=chaos_name, ns=ns,
+                                        pods=kube.pods(target), fault_s=int(tm["fault"]))
+                if manifest is not None:
+                    kube.apply(manifest)
+                    chaos_active = True
+                emit(now, "INJECT" if manifest is not None else "CONTROL_START", baseline=M_base)
+            if phase == "fault" and now >= t_fault_end:
+                phase = "recovery"
+                if chaos_active:
+                    kube.delete(chaos_kind, chaos_name)
+                    chaos_active = False
+                emit(now, "FAULT_END")
 
-        # coleta
-        values = {s: q(s, cfg["query"]) for s, cfg in signals.items()}
-        aux_values = {s: q(s, query) for s, query in aux.items()}
-        row = {"t": round(now - t_inject, 3), "phase": phase, **values, **{f"aux_{k}": v for k, v in aux_values.items()}}
+            # coleta
+            values = {s: q(s, cfg["query"]) for s, cfg in signals.items()}
+            aux_values = {s: q(s, query) for s, query in aux.items()}
+            row = {"t": round(now - t_inject, 3), "phase": phase, **values, **{f"aux_{k}": v for k, v in aux_values.items()}}
 
-        if phase == "baseline":
-            for s, v in values.items():
-                if v is not None:
-                    base_samples[s].append(v)
-        else:
-            D = {s: deviation(values[s], M_base.get(s), float(signals[s]["floor"])) for s in signals}
-            row.update({f"D_{s}": d for s, d in D.items()})
-            # o avaliador roda nos dois braços (no baseline, só em sombra) para a análise offline;
-            # apenas no braço mecade ele dispara ações
-            ev_ax = axioms.step(D, step)
-            row.update({"D_agr": axioms.last_D_agr, "I": round(axioms.I, 4), "alert": int(axioms.alert)})
-            if arm == "mecade":
-                for e in ev_ax:
-                    if e != "NO_DATA":
-                        emit(now, e, I=round(axioms.I, 3))
-                if "BLOCK" in ev_ax:
-                    mitigate(now, "BLOCK")
-                    if campaign["block"]["stop_injection"] and chaos_active:
-                        kube.delete(chaos_kind, chaos_name)
-                        chaos_active = False
-                        emit(now, "INJECTION_STOPPED")
-            elif arm == "baseline":
-                for e in reactive.step(now, values, step):
-                    emit(now, e)
-                if reactive.mitigation_due(now):
-                    mitigate(now, "RUNBOOK")
-        rows.append(row)
-        t += step
+            if phase == "baseline":
+                for s, v in values.items():
+                    if v is not None:
+                        base_samples[s].append(v)
+            else:
+                D = {s: deviation(values[s], M_base.get(s), float(signals[s]["floor"])) for s in signals}
+                row.update({f"D_{s}": d for s, d in D.items()})
+                # o avaliador roda nos dois braços (no baseline, só em sombra) para a análise offline;
+                # apenas no braço mecade ele dispara ações
+                ev_ax = axioms.step(D, step)
+                row.update({"D_agr": axioms.last_D_agr, "I": round(axioms.I, 4), "alert": int(axioms.alert)})
+                if arm == "mecade":
+                    for e in ev_ax:
+                        if e != "NO_DATA":
+                            emit(now, e, I=round(axioms.I, 3))
+                    if "BLOCK" in ev_ax:
+                        mitigate(now, "BLOCK")
+                        if campaign["block"]["stop_injection"] and chaos_active:
+                            kube.delete(chaos_kind, chaos_name)
+                            chaos_active = False
+                            emit(now, "INJECTION_STOPPED")
+                elif arm == "baseline":
+                    for e in reactive.step(now, values, step):
+                        emit(now, e)
+                    if reactive.mitigation_due(now):
+                        mitigate(now, "RUNBOOK")
+            rows.append(row)
+            t += step
+    finally:
+        if coletor is not None:
+            coletor.parar()
 
     # limpeza e exportação
     if chaos_active:
         kube.delete(chaos_kind, chaos_name)
-    if coletor is not None:
-        coletor.parar()
     audit_info = audit.close()
     cpu_s = time.process_time() - cpu0
 
