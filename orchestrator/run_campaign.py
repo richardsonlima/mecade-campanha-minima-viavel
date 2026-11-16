@@ -286,13 +286,40 @@ def escalar_nos_a_zero(*, codigo: int, plan: list[dict], out_root: Path, log: Ca
         return False
     if not (codigo in (EXIT_LIMITE, EXIT_INSTAVEL, EXIT_ERRO, EXIT_SIGHUP, EXIT_SIGTERM) or plano_terminou(plan, out_root)):
         return False
-    log("Fim do plano: node pool a 0 (infra/gke/scale.sh 0).")
-    try:
+    try:   # primeiro escalo, depois registro: o terminal pode já ter sumido (SIGHUP) e o log não pode atrasar o desligamento
         escalar()
     except Exception as exc:  # noqa: BLE001
         log(f"ATENÇÃO: não consegui levar o node pool a 0 ({exc}). Confira `gcloud compute instances list` e desligue.")
         return False
+    log("Fim do plano: node pool a 0 (infra/gke/scale.sh 0).")
     return True
+
+
+def limpar_com_timeout(clean: Callable[[], None], segundos: float = 20.0) -> bool:
+    """Roda a limpeza do chaos com prazo curto (SIGTERM no meio de uma réplica deixa o chaos ativo). Não bloqueia
+    o desligamento: se estourar, segue sem esperar."""
+    import threading
+    th = threading.Thread(target=lambda: _tenta(clean), daemon=True)
+    th.start()
+    th.join(timeout=segundos)
+    return not th.is_alive()
+
+
+def _tenta(fn: Callable[[], None]) -> None:
+    try:
+        fn()
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def gravar_log(path: Path, line: str) -> None:
+    """Arquivo primeiro; o print vai depois e um OSError (terminal fechado) não derruba o desligamento."""
+    with Path(path).open("a", encoding="utf-8") as fh:
+        fh.write(line + "\n")
+    try:
+        print(line, flush=True)
+    except OSError:
+        pass
 
 
 def _scale_zero() -> None:
@@ -341,10 +368,7 @@ def main() -> None:
     log_path = out_root.parent / "campaign.log"
 
     def log(msg: str) -> None:
-        line = f"{_agora()} {msg}"
-        print(line, flush=True)
-        with log_path.open("a", encoding="utf-8") as fh:
-            fh.write(line + "\n")
+        gravar_log(log_path, f"{_agora()} {msg}")
 
     kube_atual: dict = {}
 
@@ -393,6 +417,8 @@ def main() -> None:
         raise
     finally:
         if a.backend == "k8s":
+            if codigo in (EXIT_SIGHUP, EXIT_SIGTERM):   # chaos ativo no meio da réplica: limpa antes, com prazo curto
+                limpar_com_timeout(clean)
             escalar_nos_a_zero(codigo=codigo, plan=plan, out_root=out_root, log=log, escalar=_scale_zero)
     sys.exit(codigo)
 

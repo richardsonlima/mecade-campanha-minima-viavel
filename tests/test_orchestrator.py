@@ -538,3 +538,55 @@ def test_main_escala_a_zero_num_finally_quando_o_plano_levanta_excecao_ou_recebe
     for sg, h in antigos.items():
         signal.signal(sg, h)
     assert cenarios[0][0] == [1] and cenarios[1][0] == [143] and cenarios[2][0] == [130]
+
+
+def test_fase0_main_trata_sigterm_limpa_o_chaos_e_escala_a_zero(monkeypatch, tmp_path):
+    import signal
+    from orchestrator import fase0 as f0
+    ordem = []
+    antigos = {sg: signal.getsignal(sg) for sg in (signal.SIGHUP, signal.SIGTERM)}
+
+    class K:
+        def __init__(self, *a): pass
+        def delete_all_chaos(self): ordem.append("clean")
+
+    def mata(*a, **k):
+        signal.getsignal(signal.SIGTERM)(signal.SIGTERM, None)   # o handler instalado pelo main levanta SystemExit(143)
+    monkeypatch.setattr(f0, "Kubectl", K)
+    monkeypatch.setattr(f0, "executar_com_tentativas", mata)
+    monkeypatch.setattr(f0, "escalar_ao_fim", lambda ligado, log, escalar=None: ordem.append("escala"))
+    try:
+        with pytest.raises(SystemExit) as e:
+            f0.main(["executar", "--exec", "A", "--saida", str(tmp_path)])
+        assert e.value.code == 143
+        assert signal.getsignal(signal.SIGHUP) is signal.getsignal(signal.SIGTERM)   # os dois handlers foram instalados
+    finally:
+        for sg, h in antigos.items():
+            signal.signal(sg, h)
+    assert ordem == ["clean", "escala"]            # limpa o chaos antes de escalar
+
+
+def test_escalar_vem_antes_do_log_e_print_com_oserror_nao_derruba(tmp_path, monkeypatch):
+    from orchestrator import run_campaign as rc
+    ordem = []
+    rc.escalar_nos_a_zero(codigo=3, plan=_plano_e_saida(tmp_path, 0), out_root=tmp_path,
+                          log=lambda m: ordem.append("log"), escalar=lambda: ordem.append("escala"))
+    assert ordem[0] == "escala"
+
+    def quebra(*a, **k):
+        raise OSError("terminal fechado")
+    monkeypatch.setattr("builtins.print", quebra)
+    arq = tmp_path / "x.log"
+    rc.gravar_log(arq, "linha")
+    assert arq.read_text() == "linha\n"           # o arquivo recebe primeiro; o print falha em silêncio
+
+
+def test_limpar_com_timeout_nao_bloqueia_o_desligamento():
+    import threading, time
+    from orchestrator.run_campaign import limpar_com_timeout
+    solto = threading.Event()
+    t0 = time.monotonic()
+    assert limpar_com_timeout(lambda: solto.wait(5), segundos=0.2) is False
+    assert time.monotonic() - t0 < 2
+    solto.set()
+    assert limpar_com_timeout(lambda: 1 / 0, segundos=1) is True   # erro na limpeza não impede o resto

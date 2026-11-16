@@ -32,7 +32,9 @@ import json
 import math
 import re
 import shutil
+import signal
 import statistics
+import subprocess
 import sys
 import threading
 import time
@@ -42,6 +44,8 @@ from pathlib import Path
 from mecade.backends import Kubectl, PromClient, RealClock
 from mecade.coleta_k8s import ColetorK8s
 from mecade.config import ROOT, load_campaign, load_scenario, render_chaos
+from orchestrator.run_campaign import (EXIT_ERRO, EXIT_INTERROMPIDA, EXIT_OK, EXIT_SIGHUP, EXIT_SIGTERM, _scale_zero,
+                                       gravar_log, limpar_com_timeout)
 from mecade.runner import CLEAN_TARGETS, _config_sha256, _git_commit, _git_dirty
 
 CENARIO = "s1_latencia_productcatalog"
@@ -64,7 +68,13 @@ CLIENTES_MIN_S, CLIENTES_MAX_S, CLIENTES_FOLGA_S, CLIENTES_ARRED_S = 20, 60, 10,
 CASCATA_JANELA_S, CASCATA_INICIO_MAX_S = 60, 150
 CASCATA_ERRO_MAX, CASCATA_P95_FATOR = 0.01, 2.0
 H4_SUMIR_S = 15
+SS_DENSO_S, SS_DENSO_INTERVALO_S = 30.0, 3.0
 ROLLOUT_TIMEOUT_S = 300.0   # `wait_rollout` usa --timeout=300s; rollout que estoura entra como 300 s (o corte leva a 60)
+
+
+def _foi_timeout(e: Exception) -> bool:
+    """`rollout_estourou` vale só para timeout (o do `rollout status` ou o do subprocesso). Erro de API é `rollout_erro`."""
+    return isinstance(e, subprocess.TimeoutExpired) or "timed out" in str(e).lower()
 
 
 def _agora() -> str:
@@ -128,7 +138,8 @@ def executar(exec_id: str, *, scenario: dict, campaign: dict, prom, kube, clock,
         coletor.iniciar()
 
     events: list[dict] = []
-    medidas: dict = {"rollout_s": None, "rollout_ok": None, "rollout_estourou": False, "erro_rollout": None}
+    medidas: dict = {"rollout_s": None, "rollout_ok": None, "rollout_estourou": False, "rollout_erro": False,
+                     "erro_rollout": None}
     base_samples: dict[str, list[float]] = {s: [] for s in signals}
     M_base: dict[str, float | None] | None = None
     rows: list[dict] = []
@@ -152,14 +163,18 @@ def executar(exec_id: str, *, scenario: dict, campaign: dict, prom, kube, clock,
             fim = clock.now()
             medidas.update(rollout_s=round(fim - ini, 3), rollout_ok=True)
             emit(fim, "ROLLOUT_FIM", deployment=target, rollout_s=medidas["rollout_s"])
-        except Exception as e:  # noqa: BLE001  (rollout que estoura o timeout entra como 300 s, marcado)
-            medidas.update(rollout_s=ROLLOUT_TIMEOUT_S, rollout_ok=False, rollout_estourou=True, erro_rollout=str(e))
+        except Exception as e:  # noqa: BLE001  (estourou o timeout ou erro de API: entra como 300 s, marcado)
+            estourou = _foi_timeout(e)
+            medidas.update(rollout_s=ROLLOUT_TIMEOUT_S, rollout_ok=False, rollout_estourou=estourou,
+                           rollout_erro=not estourou, erro_rollout=str(e))
             emit(clock.now(), "ROLLOUT_FALHOU", deployment=target, rollout_s=ROLLOUT_TIMEOUT_S, erro=str(e))
 
     def acao_clientes() -> None:
         for dep in clientes:
             kube.restart(dep)
         emit(clock.now(), "MITIGATION_CLIENTES", deployments=clientes)
+        if coletor is not None:   # condição 3 da H4: ss a cada 3 s até +30 s (só densidade de amostragem)
+            coletor.amostrar_ss_denso(SS_DENSO_S, SS_DENSO_INTERVALO_S)
 
     def disparar(fn) -> None:
         if sincrono:
@@ -230,6 +245,8 @@ def executar(exec_id: str, *, scenario: dict, campaign: dict, prom, kube, clock,
         "k8s_server": kube.server_version(),
         "machine_types": (tipos_de_no() if tipos_de_no else {}),
     }
+    meta["datapath_peer"] = datapath_casado({"meta": meta, "steps": [], "coleta": [
+        r for r in _le_jsonl(out / "k8s_coleta.jsonl") if "pods" in r]})
     (out / "meta.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
     log(f"[{run_id}] concluída: {len(rows)} amostras, rollout_s={medidas['rollout_s']}")
     return meta
@@ -418,32 +435,76 @@ def _saiu_dos_endpoints(d: dict, antigos: set[str]) -> float | None:
     return None
 
 
-def _cluster_ip(d: dict) -> str | None:
+def _servico(d: dict) -> dict:
     for c in d["coleta"]:
-        ip = (c.get("servico_alvo") or {}).get("cluster_ip")
-        if ip:
-            return ip
+        sv = c.get("servico_alvo") or {}
+        if sv.get("cluster_ip"):
+            return sv
+    return {}
+
+
+def _cluster_ip(d: dict) -> str | None:
+    return _servico(d).get("cluster_ip")
+
+
+def _porta(peer: str) -> int | None:
+    try:
+        return int(peer.rsplit(":", 1)[1])
+    except (IndexError, ValueError):
+        return None
+
+
+def _casa_peer(conn: dict, cip: str | None, portas: list, portas_pod: list, antigos: set[str]) -> str | None:
+    """"clusterip" se o peer é ClusterIP:porta do alvo; "pod_ip" se é IP:porta de um pod antigo do alvo (datapath
+    que dá DNAT antes do socket, só como proteção); None se não é do alvo. Sem portas coletadas, vale só o IP."""
+    porta = _porta(conn["peer"])
+    if cip and conn["peer_ip"] == cip and (not portas or porta in portas):
+        return "clusterip"
+    if conn["peer_ip"] in antigos and (not portas_pod or porta in portas_pod):
+        return "pod_ip"
     return None
 
 
 # H4, operacionalização para este cluster: o GKE do mecade-mvc não usa Dataplane V2 (kube-proxy em iptables), então o
 # `ss` dos clientes mostra o ClusterIP:porta do alvo e nunca o IP do pod. Com replicas_alvo = 1, "conexão para o IP do
 # pod antigo" (Seção 3.1) vira "conexão ao ClusterIP:porta do alvo cuja tupla (local ip:porta, peer) já existia na
-# última leitura antes do restart do alvo". Desvio declarado no CHANGELOG antes de qualquer dado da Fase 0.
-def _tuplas_anteriores(d: dict) -> dict[tuple, str]:
-    """{(pod, local, peer): app} das conexões ESTABLISHED ao ClusterIP do alvo na última leitura de cada pod
-    cliente antes do restart do alvo."""
-    t_r, cip = d["meta"].get("restart_alvo_abs"), _cluster_ip(d)
-    if t_r is None or cip is None:
-        return {}
-    ultima: dict[str, tuple[str, list[dict]]] = {}
+# última leitura antes do restart do alvo". Por proteção, o peer também casa com IP:porta dos pods antigos do alvo, e
+# o meta registra qual dos dois casou. Desvio declarado no CHANGELOG antes de qualquer dado da Fase 0.
+def _tuplas_e_tipos(d: dict) -> tuple[dict[tuple, str], dict[str, int]]:
+    t_r = d["meta"].get("restart_alvo_abs")
+    sv = _servico(d)
+    cip, portas, portas_pod = sv.get("cluster_ip"), sv.get("portas") or [], sv.get("portas_pod") or []
+    antigos = _ips_antigos(d)
+    if t_r is None or (cip is None and not antigos):
+        return {}, {}
+    ultima: dict[str, tuple[str, list[tuple[dict, str]]]] = {}
     for c in d["coleta"]:
         if c["t_abs"] >= t_r:
             break
         for pod, v in (c.get("ss") or {}).items():
             if "texto" in v:
-                ultima[pod] = (v["app"], [x for x in parse_ss(v["texto"]) if x["peer_ip"] == cip and x["estado"] == "ESTAB"])
-    return {(pod, x["local"], x["peer"]): app for pod, (app, conns) in ultima.items() for x in conns}
+                achados = [(x, k) for x in parse_ss(v["texto"]) if x["estado"] == "ESTAB"
+                           for k in [_casa_peer(x, cip, portas, portas_pod, antigos)] if k]
+                ultima[pod] = (v["app"], achados)
+    tuplas = {(pod, x["local"], x["peer"]): app for pod, (app, achados) in ultima.items() for x, _ in achados}
+    tipos: dict[str, int] = {}
+    for _, achados in ultima.values():
+        for _, k in achados:
+            tipos[k] = tipos.get(k, 0) + 1
+    return tuplas, tipos
+
+
+def _tuplas_anteriores(d: dict) -> dict[tuple, str]:
+    """{(pod, local, peer): app} das conexões ESTABLISHED ao alvo na última leitura de cada pod cliente antes do
+    restart do alvo."""
+    return _tuplas_e_tipos(d)[0]
+
+
+def datapath_casado(d: dict) -> dict:
+    """Qual peer casou nas conexões anteriores ao restart: ClusterIP:porta, IP:porta de pod antigo, os dois ou nenhum."""
+    _, tipos = _tuplas_e_tipos(d)
+    casou = "nenhum" if not tipos else ("ambos" if len(tipos) > 1 else next(iter(tipos)))
+    return {"casou": casou, "conexoes": tipos}
 
 
 def _leituras(d: dict, desde: float, pods: set[str]):
@@ -558,8 +619,10 @@ def analisar(raiz: Path = DIR_PADRAO, prefixo: str = "diag_") -> dict:
     d = {e: carregar(raiz, e, prefixo) for e in EXECUCOES}
     rollouts = [d[e]["meta"]["rollout_s"] for e in EXECUCOES if d[e] is not None and d[e]["meta"].get("rollout_s") is not None]
     estouraram = [e for e in EXECUCOES if d[e] is not None and d[e]["meta"].get("rollout_estourou")]
+    com_erro = [e for e in EXECUCOES if d[e] is not None and d[e]["meta"].get("rollout_erro")]
     apos = clientes_apos_s(rollouts)
     apos["estouraram_o_timeout"] = estouraram
+    apos["com_erro_de_api"] = com_erro
     c1, c2 = cascata_ok(d["C1"]), cascata_ok(d["C2"])
     cascata_fica = bool(c1["ok"] and c2["ok"]) and apos["valor"] is not None
     k1, k2 = h4_condicao_1(d["A"]), h4_condicao_2(d["B"])
@@ -593,13 +656,13 @@ def escalar_ao_fim(ligado: bool, log, escalar=None) -> bool:
         log("--nao-escalar: node pool fica como está.")
         return False
     if escalar is None:
-        from orchestrator.run_campaign import _scale_zero as escalar
-    log("Fim da Fase 0: node pool a 0 (infra/gke/scale.sh 0).")
-    try:
+        escalar = _scale_zero
+    try:   # primeiro escalo, depois registro
         escalar()
     except Exception as exc:  # noqa: BLE001
         log(f"ATENÇÃO: não consegui levar o node pool a 0 ({exc}). Confira `gcloud compute instances list`.")
         return False
+    log("Fim da Fase 0: node pool a 0 (infra/gke/scale.sh 0).")
     return True
 
 
@@ -631,10 +694,7 @@ def main(argv: list[str] | None = None) -> int:
     log_path = out_root / "fase0.log"
 
     def log(msg: str) -> None:
-        line = f"{_agora()} {msg}"
-        print(line, flush=True)
-        with log_path.open("a", encoding="utf-8") as fh:
-            fh.write(line + "\n")
+        gravar_log(log_path, f"{_agora()} {msg}")
 
     kube = Kubectl(camp["namespace"])
 
@@ -647,13 +707,26 @@ def main(argv: list[str] | None = None) -> int:
                                            ss=True, watch=True))
         return f
 
-    falhas = 0
+    def _sinal(signum, _frame):
+        raise SystemExit(128 + signum)
+    for sg in (signal.SIGHUP, signal.SIGTERM):
+        signal.signal(sg, _sinal)
+    falhas, codigo = 0, EXIT_ERRO
     try:
         for e in ids:
             meta = executar_com_tentativas(e, fabrica=fabrica_de(e), out_root=out_root, prefixo=a.prefixo,
                                            settle_s=a.settle, log=log)
             falhas += meta.get("status") != "complete"
+        codigo = EXIT_OK
+    except SystemExit as e:   # sinal: 128 + número
+        codigo = e.code if isinstance(e.code, int) else EXIT_ERRO
+        raise
+    except KeyboardInterrupt:
+        codigo = EXIT_INTERROMPIDA
+        raise
     finally:
+        if codigo in (EXIT_SIGHUP, EXIT_SIGTERM):   # chaos ativo no meio da execução: limpa antes, com prazo curto
+            limpar_com_timeout(kube.delete_all_chaos)
         escalar_ao_fim(not a.nao_escalar, log)
     log(f"Fase 0 encerrada: {len(ids) - falhas} de {len(ids)} execuções com dado. `make fase0-analise` aplica as regras.")
     return 0 if falhas == 0 else 1

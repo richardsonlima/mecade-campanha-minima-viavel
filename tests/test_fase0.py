@@ -16,6 +16,7 @@ class FalsoCluster:
         self.clock, self.rollout_s, self.falha_apos_injecao = clock, rollout_s, falha_rollout
         self.falha = False   # o rollout do reset funciona; o da mitigação (depois do apply) pode travar
         self.log = []
+        self.erro_rollout = "error: timed out waiting for the condition (rollout travado)"
 
     def _reg(self, *a):
         self.log.append((self.clock.now(), *a))
@@ -33,7 +34,7 @@ class FalsoCluster:
     def wait_rollout(self, d, timeout="300s"):
         self._reg("espera", d)
         if self.falha:
-            raise RuntimeError("rollout travado")
+            raise RuntimeError(self.erro_rollout)
         self.clock.t += self.rollout_s
 
     def instant(self, query):
@@ -79,7 +80,16 @@ def test_rollout_que_estoura_entra_como_300s_marcado_e_a_execucao_segue(tmp_path
     # estourou o timeout: entra como 300 s (o corte leva a 60) e fica marcado
     assert meta["rollout_s"] == 300.0 and meta["rollout_ok"] is False and meta["rollout_estourou"] is True
     assert "travado" in meta["erro_rollout"]
+    assert meta["rollout_erro"] is False
     assert any(e["event"] == "ROLLOUT_FALHOU" for e in meta["events"])
+
+
+def test_erro_de_api_no_rollout_e_rollout_erro_e_nao_estouro(tmp_path, monkeypatch):
+    monkeypatch.setattr(FalsoCluster, "wait_rollout", lambda self, d, timeout="300s": (_ for _ in ()).throw(
+        RuntimeError("Unable to connect to the server")) if self.falha else setattr(self.clock, "t", self.clock.t + 17.0))
+    meta, _, _ = _roda("A", tmp_path, falha_rollout=True)
+    assert meta["rollout_s"] == 300.0 and meta["rollout_ok"] is False
+    assert meta["rollout_erro"] is True and meta["rollout_estourou"] is False
 
 
 def test_tres_tentativas_e_depois_falha_execucao(tmp_path):
@@ -179,7 +189,7 @@ def ss_txt(*conns):
 def col(t, ss=None, ep=("10.0.0.9",), pods=None, cip=CIP):
     """ss: {pod: (app, texto, removendo)}"""
     c = {"t_abs": t, "pods": pods or [{"nome": "pc-1", "app": "productcatalogservice", "ip": "10.0.0.9", "removendo": False}],
-         "endpoints_alvo": {"prontos": list(ep), "nao_prontos": []}, "servico_alvo": {"cluster_ip": cip, "portas": [3550]}}
+         "endpoints_alvo": {"prontos": list(ep), "nao_prontos": []}, "servico_alvo": {"cluster_ip": cip, "portas": [3550], "portas_pod": [3550]}}
     if ss:
         c["ss"] = {pod: {"app": a, "ip": "x", "removendo": rem, "texto": txt} for pod, (a, txt, rem) in ss.items()}
     return c
@@ -415,3 +425,45 @@ def test_make_fase0_escala_a_zero_por_padrao_e_nao_escala_com_a_flag():
     assert f0.escalar_ao_fim(True, logs.append, escalar=quebra) is False and any("não consegui" in m for m in logs)
     mk = (f0.ROOT / "Makefile").read_text()
     assert "NAO_ESCALAR" in mk and "--nao-escalar" in mk
+
+
+# ------------------------------------------------------------------ peer: ClusterIP ou IP do pod antigo, e meta
+
+
+def test_peer_casa_com_ip_do_pod_antigo_e_o_meta_registra_qual_casou():
+    pod_peer = "State Recv-Q Send-Q Local Address:Port Peer Address:Port\nESTAB 0 0 10.0.0.1:41000 10.0.0.9:3550\n\t cubic retrans:0/0 bytes_retrans:0\n"
+    d_pod = dado([col(1030.0, {"frontend-1": ("frontend", pod_peer, False)})])
+    assert f0._tuplas_anteriores(d_pod) == {("frontend-1", "10.0.0.1:41000", "10.0.0.9:3550"): "frontend"}
+    assert f0.datapath_casado(d_pod) == {"casou": "pod_ip", "conexoes": {"pod_ip": 1}}
+    d_cip = dado([col(1030.0, F_ANTES)])
+    assert f0.datapath_casado(d_cip) == {"casou": "clusterip", "conexoes": {"clusterip": 1}}
+    d_dois = dado([col(1030.0, {"frontend-1": ("frontend", pod_peer + F_ANTES["frontend-1"][1].split("\n", 1)[1], False)})])
+    assert f0.datapath_casado(d_dois)["casou"] == "ambos"
+    assert f0.datapath_casado(dado([col(1030.0)]))["casou"] == "nenhum"
+    # porta errada no pod antigo não casa
+    outra = pod_peer.replace("10.0.0.9:3550", "10.0.0.9:9999")
+    assert f0._tuplas_anteriores(dado([col(1030.0, {"frontend-1": ("frontend", outra, False)})])) == {}
+
+
+def test_leitura_densa_sem_endpoints_nao_quebra_a_analise():
+    densa = {"t_abs": 1100.0, "denso": True, "pods": [], "ss": {"frontend-1": {"app": "frontend", "ip": "x", "removendo": True, "texto": ss_txt()}}}
+    d = dado([col(1030.0, ANTES2), col(1090.0, {"frontend-1": ("frontend", LIMPO, True), "checkout-1": ("checkoutservice", LIMPO, True)}), densa],
+             clientes_t=85.0)
+    assert f0.h4_condicao_1(d)["ok"] is None and f0.h4_condicao_2(d)["ok"] in (True, None)
+    assert f0.h4_condicao_3(d)["ok"] is not False
+
+
+def test_c1_c2_d_pedem_amostragem_densa_na_mitigacao_dos_clientes(tmp_path):
+    chamadas = []
+
+    class Col:
+        def iniciar(self): pass
+        def amostrar_ss_denso(self, dur, inter): chamadas.append((dur, inter))
+        def parar(self): pass
+    for e in ("A", "C1"):
+        camp, sc = load_campaign(), load_scenario(f0.CENARIO)
+        clock = VirtualClock()
+        c = FalsoCluster(clock)
+        f0.executar(e, scenario=sc, campaign=camp, prom=c, kube=c, clock=clock, out_root=tmp_path / e, sincrono=True,
+                    tipos_de_no=lambda: {"e2-standard-2": 3}, log=lambda *_: None, coletor=Col())
+        assert chamadas == ([] if e == "A" else [(30.0, 3.0)])
