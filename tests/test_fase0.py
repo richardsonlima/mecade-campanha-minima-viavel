@@ -74,9 +74,11 @@ def test_a_e_b_nao_reiniciam_clientes_e_c_d_reiniciam_depois_de_clientes_apos_s(
     assert reinicios.index("productcatalogservice") < reinicios.index("frontend")
 
 
-def test_rollout_travado_fica_sem_tempo_e_a_execucao_segue(tmp_path):
+def test_rollout_que_estoura_entra_como_300s_marcado_e_a_execucao_segue(tmp_path):
     meta, _, _ = _roda("A", tmp_path, falha_rollout=True)
-    assert meta["rollout_s"] is None and meta["rollout_ok"] is False and "travado" in meta["erro_rollout"]
+    # estourou o timeout: entra como 300 s (o corte leva a 60) e fica marcado
+    assert meta["rollout_s"] == 300.0 and meta["rollout_ok"] is False and meta["rollout_estourou"] is True
+    assert "travado" in meta["erro_rollout"]
     assert any(e["event"] == "ROLLOUT_FALHOU" for e in meta["events"])
 
 
@@ -121,6 +123,7 @@ def test_clientes_apos_s_arredonda_e_corta():
     assert f0.clientes_apos_s([17.0, 22.4]) == {"valor": 35, "maior_rollout_s": 22.4, "arredondado": 35, "cortado": False}
     assert f0.clientes_apos_s([25.0])["valor"] == 35            # 35 exato não sobe
     assert f0.clientes_apos_s([25.1])["valor"] == 40            # 35,1 sobe para 40
+    assert f0.clientes_apos_s([300.0])["valor"] == 60            # rollout estourado (300 s) leva ao corte
     assert f0.clientes_apos_s([3.0])["valor"] == 20 and f0.clientes_apos_s([3.0])["cortado"]
     assert f0.clientes_apos_s([80.0])["valor"] == 60
     assert f0.clientes_apos_s([])["valor"] is None
@@ -161,73 +164,111 @@ def test_cascata_limites_exatos_de_erro_e_p95():
     assert not f0.cascata_ok(acima)["ok"]
 
 
-SS_PRESO = """State Recv-Q Send-Q Local Address:Port Peer Address:Port
-ESTAB 0 0 10.0.0.1:41000 10.0.0.9:3550
-\t cubic wscale:7,7 rto:204 retrans:0/{r} bytes_retrans:{b}
-ESTAB 0 0 10.0.0.1:41002 10.0.0.77:3550
-\t cubic retrans:0/1
-"""
-SS_LIMPO = "State Recv-Q Send-Q Local Address:Port Peer Address:Port\nESTAB 0 0 10.0.0.1:41002 10.0.0.77:3550\n"
+CIP = "10.8.0.50"
+T_R = 1040.0
 
 
-def _pods(alvo_ip, removendo=False):
-    return [{"nome": "p", "app": "productcatalogservice", "ip": alvo_ip, "removendo": removendo}]
+def ss_txt(*conns):
+    """conns: (local, estado, retrans_total, bytes_retrans). O peer é sempre o ClusterIP:3550."""
+    out = "State Recv-Q Send-Q Local Address:Port Peer Address:Port\n"
+    for local, estado, r, b in conns:
+        out += f"{estado} 0 0 {local} {CIP}:3550\n\t cubic wscale:7,7 retrans:0/{r} bytes_retrans:{b}\n"
+    return out
 
 
-def _col(t, ss_texto=None, ep=("10.0.0.9",), app="frontend", pods=None):
-    c = {"t_abs": t, "pods": pods if pods is not None else _pods("10.0.0.9"),
-         "endpoints_alvo": {"prontos": list(ep), "nao_prontos": []}}
-    if ss_texto is not None:
-        c["ss"] = {f"{app}-1": {"app": app, "ip": "10.0.0.1", "texto": ss_texto}}
+def col(t, ss=None, ep=("10.0.0.9",), pods=None, cip=CIP):
+    """ss: {pod: (app, texto, removendo)}"""
+    c = {"t_abs": t, "pods": pods or [{"nome": "pc-1", "app": "productcatalogservice", "ip": "10.0.0.9", "removendo": False}],
+         "endpoints_alvo": {"prontos": list(ep), "nao_prontos": []}, "servico_alvo": {"cluster_ip": cip, "portas": [3550]}}
+    if ss:
+        c["ss"] = {pod: {"app": a, "ip": "x", "removendo": rem, "texto": txt} for pod, (a, txt, rem) in ss.items()}
     return c
 
 
+def dado(coleta, clientes_t=None, **meta):
+    m = {"scenario": "s1_latencia_productcatalog", "alvo": "productcatalogservice", "M_base": {"p95": 0.1},
+         "t_inject_abs": 1000.0, "restart_alvo_t": 40.0, "restart_alvo_abs": T_R, "clientes_t": clientes_t, **meta}
+    return {"meta": m, "steps": [], "coleta": coleta}
+
+
+F_ANTES = {"frontend-1": ("frontend", ss_txt(("10.0.0.1:41000", "ESTAB", 0, 0)), False)}
+
+
 def test_parse_ss_le_estado_peer_e_retransmissoes():
-    cs = f0.parse_ss(SS_PRESO.format(r=7, b=1448))
-    assert [c["peer_ip"] for c in cs] == ["10.0.0.9", "10.0.0.77"]
-    assert cs[0]["retrans_total"] == 7 and cs[0]["bytes_retrans"] == 1448 and cs[1]["retrans_total"] == 1
+    cs = f0.parse_ss(ss_txt(("10.0.0.1:41000", "ESTAB", 7, 1448), ("10.0.0.1:41002", "ESTAB", 1, 0)))
+    assert [c["peer_ip"] for c in cs] == [CIP, CIP] and cs[0]["local"] == "10.0.0.1:41000"
+    assert cs[0]["retrans_total"] == 7 and cs[0]["bytes_retrans"] == 1448
     assert f0.parse_ss("") == []
 
 
-def test_h4_condicao_1_exige_retransmissao_crescente_depois_de_sair_dos_endpoints():
-    base = [_col(1030.0)]
-    preso = base + [_col(1050.0, SS_PRESO.format(r=1, b=100), ep=("10.0.0.5",)),
-                    _col(1065.0, SS_PRESO.format(r=2, b=200), ep=("10.0.0.5",))]
-    assert f0.h4_condicao_1(_dado({}, [], preso))["ok"] is True
-    parado = base + [_col(1050.0, SS_PRESO.format(r=1, b=100), ep=("10.0.0.5",)),
-                     _col(1065.0, SS_PRESO.format(r=1, b=100), ep=("10.0.0.5",))]
-    assert f0.h4_condicao_1(_dado({}, [], parado))["ok"] is False
-    # ainda nos endpoints: a leitura não vale
-    assert f0.h4_condicao_1(_dado({}, [], base + [_col(1050.0, SS_PRESO.format(r=1, b=1))]))["ok"] is None
+def test_tuplas_anteriores_so_do_clusterip_e_da_ultima_leitura_antes_do_restart():
+    d = dado([col(1020.0, F_ANTES), col(1030.0, {"frontend-1": ("frontend", ss_txt(("10.0.0.1:41001", "ESTAB", 0, 0)), False)}),
+              col(1050.0, F_ANTES)])
+    assert f0._tuplas_anteriores(d) == {("frontend-1", "10.0.0.1:41001", f"{CIP}:3550"): "frontend"}
+    assert f0._tuplas_anteriores(dado([col(1030.0, F_ANTES, cip=None)])) == {}   # sem ClusterIP coletado
+
+
+def test_h4_condicao_1_tupla_segue_com_retransmissao_crescente_depois_de_sair_dos_endpoints():
+    ep = ("10.0.0.5",)
+    preso = [col(1030.0, F_ANTES),
+             col(1050.0, {"frontend-1": ("frontend", ss_txt(("10.0.0.1:41000", "ESTAB", 1, 100)), False)}, ep),
+             col(1065.0, {"frontend-1": ("frontend", ss_txt(("10.0.0.1:41000", "ESTAB", 2, 200)), False)}, ep)]
+    assert f0.h4_condicao_1(dado(preso))["ok"] is True
+    parado = [preso[0], preso[1], col(1065.0, preso[1]["ss"] and {"frontend-1": ("frontend", ss_txt(("10.0.0.1:41000", "ESTAB", 1, 100)), False)}, ep)]
+    assert f0.h4_condicao_1(dado(parado))["ok"] is False
+    sumiu = [preso[0], col(1050.0, {"frontend-1": ("frontend", ss_txt(("10.0.0.1:41999", "ESTAB", 0, 0)), False)}, ep)]
+    assert f0.h4_condicao_1(dado(sumiu))["ok"] is False
+    uma = [preso[0], preso[1]]
+    assert f0.h4_condicao_1(dado(uma))["ok"] is None                       # só uma leitura da tupla
+    ainda = [preso[0], col(1050.0, F_ANTES)]                               # pod antigo ainda nos endpoints
+    assert f0.h4_condicao_1(dado(ainda))["ok"] is None
+    assert f0.h4_condicao_1(dado([col(1030.0)]))["ok"] is None             # sem conexão anterior ao restart
     assert f0.h4_condicao_1(None)["ok"] is None
 
 
-def test_h4_condicao_2_nenhuma_conexao_para_o_ip_antigo():
-    base = [_col(1030.0)]
-    limpo = base + [_col(1050.0, SS_LIMPO, ep=("10.0.0.5",)), _col(1065.0, SS_LIMPO, ep=("10.0.0.5",))]
-    assert f0.h4_condicao_2(_dado({}, [], limpo))["ok"] is True
-    preso = base + [_col(1050.0, SS_PRESO.format(r=1, b=1), ep=("10.0.0.5",))]
-    assert f0.h4_condicao_2(_dado({}, [], preso))["ok"] is False
+def test_h4_condicao_2_nenhuma_tupla_anterior_segue():
+    ep = ("10.0.0.5",)
+    limpo = [col(1030.0, F_ANTES), col(1050.0, {"frontend-1": ("frontend", ss_txt(("10.0.0.1:41777", "ESTAB", 0, 0)), False)}, ep)]
+    assert f0.h4_condicao_2(dado(limpo))["ok"] is True                      # conexão nova (outra porta local) não conta
+    segue = [col(1030.0, F_ANTES), col(1050.0, F_ANTES, ep)]
+    r = f0.h4_condicao_2(dado(segue))
+    assert r["ok"] is False and r["tuplas_que_seguem"][0][0] == "frontend-1"
+    tw = [col(1030.0, F_ANTES), col(1050.0, {"frontend-1": ("frontend", ss_txt(("10.0.0.1:41000", "TIME-WAIT", 0, 0)), False)}, ep)]
+    assert f0.h4_condicao_2(dado(tw))["ok"] is True
+    sem_leitura = [col(1030.0, F_ANTES), col(1050.0, None, ep)]
+    assert f0.h4_condicao_2(dado(sem_leitura))["ok"] is None
 
 
-def test_h4_condicao_3_conexoes_somem_ate_15s_depois_do_mitigation_clientes():
-    extra = {"clientes_t": 85.0}                              # absoluto 1085
-    pods = [_pods("10.0.0.9"), ]
-    antes = [_col(1030.0)]
-    # entre o restart e MITIGATION_CLIENTES a conexão presa pode existir (não conta contra); a partir de 1100 não
-    ok = antes + [_col(1060.0, SS_PRESO.format(r=1, b=1), ep=("10.0.0.5",)),
-                  _col(1100.0, SS_LIMPO, ep=("10.0.0.5",), app="frontend"),
-                  _col(1100.0, SS_LIMPO, ep=("10.0.0.5",), app="checkoutservice")]
-    ok[2]["ss"].update(ok[3]["ss"]); ok.pop(3)
-    assert f0.h4_condicao_3(_dado(extra, [], ok))["ok"] is True
-    # leitura de 1100 ainda com a conexão: falha
-    ruim = antes + [_col(1100.0, SS_PRESO.format(r=1, b=1), ep=("10.0.0.5",))]
-    ruim[1]["ss"]["checkoutservice-1"] = ruim[1]["ss"]["frontend-1"] | {"app": "checkoutservice"}
-    assert f0.h4_condicao_3(_dado(extra, [], ruim))["ok"] is False
-    # sem leitura em um dos clientes: não testada
-    so_front = antes + [_col(1100.0, SS_LIMPO, ep=("10.0.0.5",))]
-    assert f0.h4_condicao_3(_dado(extra, [], so_front))["ok"] is None
-    assert f0.h4_condicao_3(_dado({}, [], ok))["ok"] is None
+def _c(t, pod, app, txt, rem=False):
+    return {pod: (app, txt, rem)}
+
+
+TUP = ss_txt(("10.0.0.1:41000", "ESTAB", 0, 0))
+LIMPO = ss_txt()
+ANTES2 = {"frontend-1": ("frontend", TUP, False), "checkout-1": ("checkoutservice", ss_txt(("10.0.0.2:42000", "ESTAB", 0, 0)), False)}
+T_CLI = 1085.0   # t_inject 1000 + clientes_t 85
+
+
+def test_h4_condicao_3_le_o_pod_antigo_enquanto_termina():
+    ok = [col(1030.0, ANTES2),
+          col(1090.0, {"frontend-1": ("frontend", LIMPO, True), "checkout-1": ("checkoutservice", LIMPO, True)}),
+          col(1105.0, {"frontend-1": ("frontend", LIMPO, True), "checkout-1": ("checkoutservice", LIMPO, True)})]
+    r = f0.h4_condicao_3(dado(ok, clientes_t=85.0))
+    assert r["ok"] is True and "por construção" in r["nota"]
+    preso = ok[:2] + [col(1105.0, {"frontend-1": ("frontend", TUP, True), "checkout-1": ("checkoutservice", LIMPO, True)})]
+    assert f0.h4_condicao_3(dado(preso, clientes_t=85.0))["ok"] is False
+
+
+def test_h4_condicao_3_pod_antigo_que_some_antes_de_qualquer_leitura_e_sem_dado():
+    so_novos = [col(1030.0, ANTES2), col(1110.0, {"frontend-2": ("frontend", LIMPO, False), "checkout-2": ("checkoutservice", LIMPO, False)})]
+    r = f0.h4_condicao_3(dado(so_novos, clientes_t=85.0))
+    assert r["ok"] is None and "sumiu antes de qualquer leitura" in r["motivo"]
+    metade = [col(1030.0, ANTES2), col(1090.0, {"frontend-1": ("frontend", LIMPO, True)})]       # checkout sem leitura
+    assert f0.h4_condicao_3(dado(metade, clientes_t=85.0))["ok"] is None
+    # a tupla ainda presente na última leitura e sem leitura depois de 15 s: não dá para afirmar
+    presa = [col(1030.0, ANTES2), col(1090.0, {"frontend-1": ("frontend", TUP, True), "checkout-1": ("checkoutservice", LIMPO, True)})]
+    assert f0.h4_condicao_3(dado(presa, clientes_t=85.0))["ok"] is None
+    assert f0.h4_condicao_3(dado(so_novos))["ok"] is None                                    # sem MITIGATION_CLIENTES
 
 
 # ------------------------------------------------------------------------------------------ analisar (de ponta a ponta)
@@ -244,36 +285,65 @@ def _grava(raiz, exec_id, d):
     (p / "k8s_coleta.jsonl").write_text("".join(json.dumps(c) + "\n" for c in d["coleta"]))
 
 
-def test_analisar_sem_dados_nao_decide_nada(tmp_path):
+def test_analisar_sem_dados_nao_confirma_a_h4_e_diz_o_motivo(tmp_path):
     r = f0.analisar(tmp_path)
-    assert r["clientes_apos_s"]["valor"] is None and not r["cascata"]["fica"] and r["H4"]["resultado"] == "não testada"
+    assert r["clientes_apos_s"]["valor"] is None and not r["cascata"]["fica"]
+    assert r["H4"]["resultado"] == "não confirmada" and "condição 1 sem dado (A)" in r["H4"]["motivos"]
+
+
+def _cenario(tmp_path, preso_em_a=True, c2_sem_dado=False):
+    ep = ("10.0.0.5",)
+    cA = [col(1005.0, F_ANTES)] if False else None
+    A = dado([col(1005.0, F_ANTES), col(1030.0, {"frontend-1": ("frontend", ss_txt(("10.0.0.1:41000", "ESTAB", 1, 100)), False)}, ep),
+              col(1045.0, {"frontend-1": ("frontend", ss_txt(("10.0.0.1:41000", "ESTAB", 2 if preso_em_a else 1, 200 if preso_em_a else 100)), False)}, ep)],
+             rollout_s=22.0, rollout_ok=True, restart_alvo_t=15.0, restart_alvo_abs=1015.0)
+    A["steps"] = _steps(0, 300, 5.0, 0.9)
+    B = dado([col(1110.0, F_ANTES), col(1140.0, {"frontend-1": ("frontend", LIMPO, False)}, ep)], rollout_s=18.0, rollout_ok=True,
+             restart_alvo_t=120.0, restart_alvo_abs=1120.0)
+    B["steps"] = _steps(0, 300, 0.02, 0.95)
+
+    def C(rollout, sem_dado=False):
+        novos = {"frontend-2": ("frontend", LIMPO, False), "checkout-2": ("checkoutservice", LIMPO, False)}
+        velhos = {"frontend-1": ("frontend", LIMPO, True), "checkout-1": ("checkoutservice", LIMPO, True)}
+        cols = [col(1030.0, ANTES2), col(1090.0, novos if sem_dado else velhos), col(1105.0, novos if sem_dado else velhos)]
+        d = dado(cols, clientes_t=85.0, rollout_s=rollout, rollout_ok=True)
+        d["steps"] = _steps(0, 400, lambda t: 5.0 if t < 140 else 0.15, lambda t: 0.9 if t < 140 else 0.0)
+        return d
+    D = dado([], rollout_s=30.0, rollout_ok=True, restart_alvo_t=425.0, restart_alvo_abs=1425.0)
+    D["steps"] = _steps(0, 900, 0.15)
+    for e, d in (("A", A), ("B", B), ("C1", C(25.0)), ("C2", C(20.0, c2_sem_dado)), ("D", D)):
+        _grava(tmp_path, e, d)
 
 
 def test_analisar_com_cenario_completo_confirma_h4_e_mantem_a_cascata(tmp_path):
-    ss_preso = lambda r: SS_PRESO.format(r=r, b=r * 100)
-    saida = dict(ep=("10.0.0.5",))
-    A = _dado({"rollout_s": 22.0, "rollout_ok": True, "restart_alvo_t": 15.0, "restart_alvo_abs": 1015.0},
-              _steps(0, 300, 5.0, 0.9),
-              [_col(1005.0), _col(1030.0, ss_preso(1), **saida), _col(1045.0, ss_preso(2), **saida)])
-    B = _dado({"rollout_s": 18.0, "rollout_ok": True, "restart_alvo_t": 120.0, "restart_alvo_abs": 1120.0},
-              _steps(0, 300, 0.02, 0.95),
-              [_col(1110.0), _col(1140.0, SS_LIMPO, **saida), _col(1155.0, SS_LIMPO, **saida)])
-
-    def cdado(rollout):
-        cols = [_col(1030.0), _col(1060.0, ss_preso(1), **saida)]
-        for app in ("frontend", "checkoutservice"):
-            cols.append(_col(1100.0, SS_LIMPO, app=app, **saida))
-        cols[2]["ss"].update(cols[3]["ss"]); cols.pop(3)
-        return _dado({"rollout_s": rollout, "rollout_ok": True, "clientes_t": 85.0},
-                     _steps(0, 400, lambda t: 5.0 if t < 140 else 0.15, lambda t: 0.9 if t < 140 else 0.0), cols)
-    D = _dado({"rollout_s": 30.0, "rollout_ok": True, "restart_alvo_t": 425.0, "restart_alvo_abs": 1425.0}, _steps(0, 900, 0.15), [])
-    for e, d in (("A", A), ("B", B), ("C1", cdado(25.0)), ("C2", cdado(20.0)), ("D", D)):
-        _grava(tmp_path, e, d)
+    _cenario(tmp_path)
     r = f0.analisar(tmp_path)
     assert r["clientes_apos_s"]["valor"] == 40               # 30 + 10 = 40
     assert r["cascata"]["fica"] is True
-    assert r["H4"]["resultado"] == "confirmada", r["H4"]
+    assert r["H4"]["resultado"] == "confirmada" and r["H4"]["motivos"] == [], r["H4"]
     assert r["rollout_s"] == {"A": 22.0, "B": 18.0, "C1": 25.0, "C2": 20.0, "D": 30.0}
+
+
+def test_analisar_condicao_sem_dado_deixa_a_h4_nao_confirmada(tmp_path):
+    _cenario(tmp_path, c2_sem_dado=True)
+    h4 = f0.analisar(tmp_path)["H4"]
+    assert h4["resultado"] == "não confirmada" and h4["motivos"] == ["condição 3 sem dado (C2)"]
+
+
+def test_analisar_condicao_nao_satisfeita_tambem_nao_confirma(tmp_path):
+    _cenario(tmp_path, preso_em_a=False)
+    h4 = f0.analisar(tmp_path)["H4"]
+    assert h4["resultado"] == "não confirmada" and h4["motivos"] == ["condição 1 não satisfeita (A)"]
+
+
+def test_rollout_estourado_entra_na_regra_do_clientes_apos_s_e_fica_marcado(tmp_path):
+    _cenario(tmp_path)
+    m = json.loads((tmp_path / "diag_B" / "meta.json").read_text())
+    m.update(rollout_s=300.0, rollout_ok=False, rollout_estourou=True)
+    (tmp_path / "diag_B" / "meta.json").write_text(json.dumps(m))
+    r = f0.analisar(tmp_path)
+    assert r["clientes_apos_s"]["valor"] == 60 and r["clientes_apos_s"]["cortado"]
+    assert r["clientes_apos_s"]["estouraram_o_timeout"] == ["B"]
 
 
 def test_analisar_ignora_execucao_sem_dado_e_nao_escreve_no_config(tmp_path):
@@ -286,3 +356,62 @@ def test_analisar_ignora_execucao_sem_dado_e_nao_escreve_no_config(tmp_path):
     assert r["execucoes_com_dado"] == [] and not r["cascata"]["fica"]
     assert (f0.ROOT / "config" / "campaign.yaml").read_bytes() == antes
     assert (f0.ROOT / "scenarios" / "s1_latencia_productcatalog.yaml").read_bytes() == antes_sc
+
+
+# ------------------------------------------------------------------------------------------ reexecução e escala
+
+
+def _fab_ok(tmp_path):
+    camp, sc = load_campaign(), load_scenario(f0.CENARIO)
+
+    def fabrica():
+        clock = VirtualClock()
+        c = FalsoCluster(clock)
+        return dict(scenario=sc, campaign=camp, prom=c, kube=c, clock=clock, sincrono=True)
+    return fabrica
+
+
+def test_reexecucao_pula_execucao_completa_e_nao_sobrescreve_meta(tmp_path):
+    f0.executar_com_tentativas("A", fabrica=_fab_ok(tmp_path), out_root=tmp_path, settle_s=0, sleep=lambda s: None, log=lambda *_: None)
+    antes = (tmp_path / "diag_A" / "meta.json").read_bytes()
+    chamou = []
+    meta = f0.executar_com_tentativas("A", fabrica=lambda: chamou.append(1) or {}, out_root=tmp_path, settle_s=0,
+                                      sleep=lambda s: None, log=lambda *_: None)
+    assert meta["status"] == "complete" and not chamou and (tmp_path / "diag_A" / "meta.json").read_bytes() == antes
+
+
+def test_so_contam_tentativas_que_terminaram_em_falha(tmp_path):
+    pasta = tmp_path / "diag_A"
+    pasta.mkdir()
+    (pasta / "tentativas.jsonl").write_text("\n".join(json.dumps(x) for x in (
+        {"tentativa": 1, "evento": "inicio"}, {"tentativa": 1, "evento": "falhou"},
+        {"tentativa": 2, "evento": "inicio"})) + "\n")     # a 2 foi interrompida: não conta
+    n = {"v": 0}
+
+    def fab():
+        n["v"] += 1
+        raise RuntimeError("x")
+    f0.executar_com_tentativas("A", fabrica=fab, out_root=tmp_path, settle_s=0, sleep=lambda s: None, log=lambda *_: None)
+    assert n["v"] == 2        # 1 falha anterior + 2 novas = 3
+
+
+def test_arquivo_de_tentativa_anterior_nao_e_sobrescrito_no_arquivamento(tmp_path):
+    pasta = tmp_path / "diag_A"
+    (pasta / "tentativas" / "t1").mkdir(parents=True)
+    (pasta / "tentativas" / "t1" / "meta.json").write_text("velho")
+    (pasta / "k8s_coleta.jsonl").write_text("novo")
+    f0._arquivar_tentativa(pasta)
+    assert (pasta / "tentativas" / "t1" / "meta.json").read_text() == "velho"
+    assert (pasta / "tentativas" / "t2" / "k8s_coleta.jsonl").read_text() == "novo"
+
+
+def test_make_fase0_escala_a_zero_por_padrao_e_nao_escala_com_a_flag():
+    chamadas, logs = [], []
+    assert f0.escalar_ao_fim(True, logs.append, escalar=lambda: chamadas.append(1)) is True and chamadas == [1]
+    assert f0.escalar_ao_fim(False, logs.append, escalar=lambda: chamadas.append(2)) is False and chamadas == [1]
+
+    def quebra():
+        raise RuntimeError("gcloud fora")
+    assert f0.escalar_ao_fim(True, logs.append, escalar=quebra) is False and any("não consegui" in m for m in logs)
+    mk = (f0.ROOT / "Makefile").read_text()
+    assert "NAO_ESCALAR" in mk and "--nao-escalar" in mk

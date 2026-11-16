@@ -76,8 +76,8 @@ calibrar: ## aplica a regra da Fase 1 aos dados de data/calibracao/runs
 congelar: ## copia a saída de calibrate_c3 para config/campaign.yaml e confere (CONFERIR=1 só confere)
 	$(PY) -m analysis.congelar $(if $(filter 1,$(CONFERIR)),--conferir,--gravar)
 
-fase0: ## Fase 0 da campanha 3: 5 execuções de s1 em data/diagnostico/ (EXEC=A,B,C1,C2,D para um subconjunto)
-	$(PY) -m orchestrator.fase0 executar $(if $(EXEC),--exec $(EXEC))
+fase0: ## Fase 0 da campanha 3: 5 execuções de s1 em data/diagnostico/ (EXEC=A,B,C1,C2,D para um subconjunto; NAO_ESCALAR=1 deixa os nós ligados)
+	$(PY) -m orchestrator.fase0 executar $(if $(EXEC),--exec $(EXEC)) $(if $(filter 1,$(NAO_ESCALAR)),--nao-escalar)
 
 fase0-analise: ## aplica as regras da Seção 3.1 aos dados da Fase 0 e imprime (não escreve no config)
 	$(PY) -m orchestrator.fase0 analisar
