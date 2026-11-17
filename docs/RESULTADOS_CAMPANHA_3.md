@@ -29,7 +29,16 @@ execução oficial, comparação pareada nem veredito. Cada número traz a orige
 - Ordem no tempo (UTC): node pool a 3 em 16/11 10:27:34 (`data/calibracao/campaign.log`); primeira execução
   `cal1_001` com reset em 16/11 10:35:33; última `cal1_048` concluída em 17/11 08:14:22; node pool a 0 em
   17/11 08:17:38.
-- Hash do manifesto final: pendente.
+- Fechamento: tag `mvc-2026-11-c3-final` em `b670f6b`. `make evidencias ESTRITO=1`: 347 arquivos
+  (`data/calibracao` 314, `data/diagnostico` 32 e o plano oficial), trilhas da calibração íntegras 24/24, sem
+  alertas, SHA-256 do manifesto final `1d2c4b4f338bcca7dc846ed763fd5406f303f6e1ab549c56fb142711170af06d`.
+  Este é o hash que cito na dissertação.
+- Conferência das três cópias contra o manifesto final, em 17/11 (`make verificar-evidencias`), todas com
+  `CONFERE: 347 arquivos no manifesto, 0 alterados, 0 faltando, 0 sobrando`: VM do controlador (`~/mecade-c3`),
+  bucket (`calibracao-c3/`, `diagnostico-c3/` e o plano em `oficial-c3/`, baixados para um diretório vazio) e
+  cópia limpa por `git archive mvc-2026-11-c3-final`. Na VM e no bucket, a saída de terminal `calib_r1.out`
+  fica fora da conferência, porque não é versionada (D2). O bucket recebeu também o manifesto e este documento
+  em `oficial-c3/`.
 
 ## 2. Fase 0
 

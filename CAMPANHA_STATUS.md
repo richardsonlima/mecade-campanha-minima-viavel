@@ -2,7 +2,7 @@
 
 Fase atual: campanha 3 (`mvc-2026-11-c3`) fechada como "calibração inviável" (desfecho 2 da Seção 7.2 do `docs/PROTOCOLO_C3.md`), sem execução oficial; resultado em `docs/RESULTADOS_CAMPANHA_3.md`. A campanha 2 está fechada na tag `mvc-2026-11-c2-final` e a campanha 1 na tag `mvc-2026-11-final`.
 Custo estimado: cerca de R$ 11 até 12/11 07:30 UTC, com taxa de R$ 1,5 a 2,2/h. O faturamento confirma com atraso.
-Próximo passo: fechamento da campanha 3 pela ordem das regras (tag `mvc-2026-11-c3-final`, `make evidencias ESTRITO=1`, hash do manifesto final no `RESULTADOS_CAMPANHA_3.md`, três cópias conferidas, com `calibracao-c3/` e `diagnostico-c3/` no bucket, tag de pacote e release). Nenhuma campanha 4 antes da entrega. Depósitos: campanha 1 10.5281/zenodo.24247614, campanha 2 10.5281/zenodo.24247615.
+Próximo passo: release da tag de pacote `mvc-2026-11-c3-pacote` no GitHub para o depósito da campanha 3 no Zenodo. Nenhuma campanha 4 antes da entrega. Depósitos: campanha 1 10.5281/zenodo.24247614, campanha 2 10.5281/zenodo.24247615.
 
 ## 05/11 - pré-voo e preparação
 
@@ -191,3 +191,6 @@ Rodada 1 da campanha 2 terminou às 02:19 UTC: 16 execuções concluídas (10 co
   nova só numa campanha 4 com pré-registro próprio. O config não foi congelado com valores calibrados.
 - Dados da calibração versionados em `data/calibracao/` (execuções, trilhas e `campaign.log`). A saída de terminal
   `calib_r1.out` ficou fora do repositório porque traz o ID do projeto (D2).
+- Tag `mvc-2026-11-c3-final` em `b670f6b`. `make evidencias ESTRITO=1`: 347 arquivos, trilhas da calibração 24/24,
+  SHA-256 do manifesto final `1d2c4b4f338bcca7dc846ed763fd5406f303f6e1ab549c56fb142711170af06d`. Três cópias conferem.
+- Nós do GKE em 0 desde 17/11 08:17 UTC. A VM do controlador segue ligada.
