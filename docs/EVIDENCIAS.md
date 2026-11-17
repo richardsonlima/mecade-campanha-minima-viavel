@@ -175,6 +175,12 @@ Depósitos em 15/11 (conceito 10.5281/zenodo.24247519). As versões das tags fin
 (campanha 1, sem o manifesto) e 10.5281/zenodo.24247523 (campanha 2, com o manifesto preliminar), ficaram
 incompletas e foram substituídas pelas versões das tags de pacote. A dissertação cita só as de pacote.
 
+Campanha 3 (`mvc-2026-11-c3`): a calibração saiu inviável pela Seção 7.2 do `docs/PROTOCOLO_C3.md` e não
+houve réplica oficial nem tag de calibração. A cadeia é `mvc-2026-11-c3-prereg` (pré-registro, enviada antes
+da Fase 0), `mvc-2026-11-c3-final` (dados da Fase 0 e da calibração) e `mvc-2026-11-c3-pacote` (manifesto
+final e `RESULTADOS_CAMPANHA_3.md`). O manifesto em modo estrito cobre `data/calibracao`, `data/diagnostico` e
+o plano, e o depósito no Zenodo sai da tag de pacote, como nas campanhas 1 e 2.
+
 ## 9. Checklist da análise final
 
 **Antes das réplicas oficiais**

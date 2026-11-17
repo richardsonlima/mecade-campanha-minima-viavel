@@ -39,6 +39,14 @@ Hunks de `orchestrator/run_campaign.py`:
 - Item 3, `try/finally` em volta de `execute_plan`, com tratamento de SIGHUP e SIGTERM, para o node pool ir a 0 também em exceção inesperada (código 1), terminal fechado (129) e kill (143). O código 130 (operador) e o `--limit` continuam sem escalar. Ao fim do plano, ou em parada por regra de exceção (códigos 3 e 4), o runner escala o node pool a 0 com `infra/gke/scale.sh 0`. Não escala com `--limit`, interrupção do operador ou réplicas pendentes. Falha do `gcloud` é avisada e não muda o código de saída.
 - Item 6: trava que recusa `make run` do plano oficial se B ou um piso de latência ainda for o da campanha 2, se faltar `data/calibracao/resultado_r1.json` ou se o config não conferir com ele.
 
+Correção em 17/11: a frase "só as permitidas na Seção 8.1" não é exata. O commit `dffadc7` também pôs
+timeout nas chamadas do `kubectl` em `mecade/backends.py` (60 s por padrão, prazo do rollout mais 30 s em
+`wait_rollout`, 20 s nos metadados), o que a Seção 8.1 não lista. A mudança não toca nenhuma decisão do
+controlador nem parâmetro; numa chamada que travasse, a réplica falharia em vez de ficar parada. Nenhum
+timeout disparou nas execuções da Fase 0 e da calibração (busca por `TimeoutExpired` em `data/calibracao` e
+`data/diagnostico` sem resultado). O stub `node_machine_types` em `mecade/sim.py` faz parte do item 5. Registro
+isto como desvio declarado.
+
 Arquivos novos:
 
 - Item 1: `orchestrator/fase0.py`, `make fase0` e `make fase0-analise`. Execuções A, B, C1, C2 e D do s1 com prefixo `diag_`, saída em `data/diagnostico/`, coleta a cada 15 s com `ss -tni` em frontend e checkoutservice. A análise aplica as regras fixas da Seção 3.1 e só imprime, sem escrever config.

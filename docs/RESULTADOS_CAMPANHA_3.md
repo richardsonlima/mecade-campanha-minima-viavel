@@ -187,6 +187,9 @@ de calibração e não se aplica, porque não há controle oficial.
 - TTR de D da Fase 0 não calculado (Seção 2). A Seção 3.1 e o `CHANGELOG.md` de 16/11 previam relatá-lo. D
   não decidia nada, e o desfecho não muda.
 - `calib_r1.out` fora do repositório (Seção 5). O manifesto de evidências cobre `data/calibracao/` sem ele.
+- Timeout nas chamadas do `kubectl` (`dffadc7`, `mecade/backends.py`), fora da lista da Seção 8.1 do
+  protocolo. Não toca decisão nem parâmetro e não disparou em nenhuma execução; declarado em 17/11 no
+  `CHANGELOG.md`.
 - Nenhum outro desvio. O `config/campaign.yaml` e os arquivos protegidos ficaram como na tag de pré-registro,
   salvo a mudança de `clientes_apos_s` prevista na Seção 3.1 (Seção 1).
 - Prazo: a calibração terminou em 17/11 às 05:17 (Brasília), dentro da data de corte (a) da Seção 7.3
