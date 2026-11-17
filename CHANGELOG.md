@@ -3,6 +3,15 @@
 Qualquer mudança de versão, parâmetro ou cenário depois que as réplicas oficiais começarem vai
 anotada aqui. Réplicas rodadas antes e depois de uma mudança não são comparáveis entre si.
 
+## 17/11 - calibração da campanha 3 inviável e fechamento
+
+A rodada 1 da calibração terminou com 48 de 48 execuções em 17/11 às 05:17 (Brasília). `make calibrar` (`calibrate_c3`) saiu inviável: 2 dos 3 pilotos do braço baseline de s3 (`cal1_011_s3_podkill_cart_baseline_r03` e `cal1_020_s3_podkill_cart_baseline_r01`) não tiveram ALERT antes de 415 s, uma das condições da Seção 3.4 do `docs/PROTOCOLO_C3.md`. As outras cumprem: 30 controles e 9 pilotos com dados, B = 680 ≥ 2 × 42,16, pisos de p95 0,3755 s e p99 0,8594 s, d_off = deadband 3,7, d_on 3,9, tau 30 s sem solução (1 ALERT espúrio).
+
+- A campanha 3 fecha como "calibração inviável" (Seção 7.2, item 2). Nenhuma execução oficial roda, e nenhum parâmetro, regra ou cenário mudou depois dos dados. O `config/campaign.yaml` fica como na tag de pré-registro: os valores calibrados não foram congelados.
+- Versionei os dados da calibração (`data/calibracao/runs/`, `data/calibracao/audit/`, `data/calibracao/campaign.log`) e escrevi `docs/RESULTADOS_CAMPANHA_3.md`. A saída de terminal `calib_r1.out` não entra, porque traz o ID do projeto da nuvem (D2).
+- Desvio: o TTR de D da Fase 0, previsto no registro de 16/11, não foi calculado. O `steps.csv` da Fase 0 não grava D. D não decidia nada.
+- Qualquer regra nova fica para uma campanha 4, com pré-registro próprio.
+
 ## 16/11 - resultado da Fase 0 da campanha 3
 
 As 5 execuções (A, B, C1, C2, D) têm dado e terminaram em 15/11 por volta de 23:50 (Brasília), com o node pool escalado a 0. Dados em `data/diagnostico/`; a saída de `make fase0-analise`, sem edição, em `data/diagnostico/analise_fase0.json`. Apliquei as regras da Seção 3.1 do `docs/PROTOCOLO_C3.md` como foram fixadas, sem reanálise.

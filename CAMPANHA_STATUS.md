@@ -1,8 +1,8 @@
 # Diário da campanha MECADE (2026)
 
-Fase atual: campanha 3 (`mvc-2026-11-c3`) pré-registrada na tag `mvc-2026-11-c3-prereg`, branch `campanha-3`. A campanha 2 está fechada na tag `mvc-2026-11-c2-final` e a campanha 1 na tag `mvc-2026-11-final`.
+Fase atual: campanha 3 (`mvc-2026-11-c3`) fechada como "calibração inviável" (desfecho 2 da Seção 7.2 do `docs/PROTOCOLO_C3.md`), sem execução oficial; resultado em `docs/RESULTADOS_CAMPANHA_3.md`. A campanha 2 está fechada na tag `mvc-2026-11-c2-final` e a campanha 1 na tag `mvc-2026-11-final`.
 Custo estimado: cerca de R$ 11 até 12/11 07:30 UTC, com taxa de R$ 1,5 a 2,2/h. O faturamento confirma com atraso.
-Próximo passo: calibração da campanha 3 (rodada 1, 48 execuções), iniciada em 16/11. Fase 0 concluída em 15/11 (CHANGELOG, 16/11). Depósitos: campanha 1 10.5281/zenodo.24247614, campanha 2 10.5281/zenodo.24247615.
+Próximo passo: fechamento da campanha 3 pela ordem das regras (tag `mvc-2026-11-c3-final`, `make evidencias ESTRITO=1`, hash do manifesto final no `RESULTADOS_CAMPANHA_3.md`, três cópias conferidas, com `calibracao-c3/` e `diagnostico-c3/` no bucket, tag de pacote e release). Nenhuma campanha 4 antes da entrega. Depósitos: campanha 1 10.5281/zenodo.24247614, campanha 2 10.5281/zenodo.24247615.
 
 ## 05/11 - pré-voo e preparação
 
@@ -179,3 +179,15 @@ Rodada 1 da campanha 2 terminou às 02:19 UTC: 16 execuções concluídas (10 co
   10.5281/zenodo.24247614 (CONFERE 362/362, manifesto `5d24630b…`) e campanha 2 10.5281/zenodo.24247615
   (CONFERE 393/393, manifesto `b1effa76…`). São os DOIs que a dissertação cita. As releases das tags finais
   no GitHub ficaram marcadas como substituídas.
+
+## 17/11 - campanha 3 fechada como calibração inviável
+
+- Calibração rodada 1: 48/48 execuções, de 16/11 10:27 a 17/11 08:17 UTC, node pool a 0 no fim. Nenhuma refeita.
+- `make calibrar` na VM e na cópia local, com saída idêntica: inviável. 2 dos 3 pilotos do braço baseline de s3
+  (`cal1_011`, `cal1_020`) sem ALERT antes de 415 s. O resto cumpre: 30/30 controles, 9/9 pilotos, B = 680 ≥
+  2 × 42,16, tau 30 s sem solução (1 ALERT espúrio), pisos de p95 0,3755 s e p99 0,8594 s, d_off = deadband 3,7,
+  d_on 3,9.
+- Decidi fechar pela Seção 7.2, item 2: nenhuma execução oficial, H1, H2 e H3 não testadas na campanha 3, regra
+  nova só numa campanha 4 com pré-registro próprio. O config não foi congelado com valores calibrados.
+- Dados da calibração versionados em `data/calibracao/` (execuções, trilhas e `campaign.log`). A saída de terminal
+  `calib_r1.out` ficou fora do repositório porque traz o ID do projeto (D2).

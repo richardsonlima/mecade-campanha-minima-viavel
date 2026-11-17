@@ -1,0 +1,100 @@
+{
+  "run_id": "cal1_045_c0_controle_mecade_r04",
+  "scenario": "c0_controle",
+  "scenario_version": 1,
+  "arm": "mecade",
+  "backend": "k8s",
+  "status": "complete",
+  "wall_start": 1794896888.123422,
+  "t_inject_abs": 1794897188.123422,
+  "M_base": {
+    "p95": 0.3002840909090906,
+    "p99": 0.7239841269841263,
+    "error_rate": 0.0
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "event": "CONTROL_START",
+      "baseline": {
+        "p95": 0.3002840909090906,
+        "p99": 0.7239841269841263,
+        "error_rate": 0.0
+      }
+    },
+    {
+      "t": 600.0,
+      "event": "FAULT_END"
+    }
+  ],
+  "audit": {
+    "enabled": false
+  },
+  "controller_cpu_s": 5.713964602999994,
+  "timing": {
+    "warmup": 120,
+    "baseline": 300,
+    "fault": 600,
+    "recovery": 600,
+    "step": 5
+  },
+  "axioms": {
+    "decision_signals": [
+      "p95",
+      "p99",
+      "error_rate"
+    ],
+    "k": 2,
+    "d_on": 3.1,
+    "d_off": 2.9,
+    "tau_dwell": 15,
+    "aggregation": "max",
+    "deadband": 2.9,
+    "budget_B": 47.0,
+    "limit_gate": "alert",
+    "envelope": "d_on_tau",
+    "envelope_delta": 1.0
+  },
+  "reactive": {
+    "rules": [
+      {
+        "signal": "p99",
+        "op": ">",
+        "factor_of_baseline": 2.0
+      },
+      {
+        "signal": "error_rate",
+        "op": ">",
+        "absolute": 0.05
+      }
+    ],
+    "for": 300,
+    "response_delay": 120
+  },
+  "recovery": {
+    "hold": 60
+  },
+  "block": {
+    "stop_injection": false
+  },
+  "rto_s": 180,
+  "mitigation": {
+    "acao": "none"
+  },
+  "git_commit": "71ad5fbbaf34d9ec15f66abba33689d7df6ee495",
+  "k8s_server": "v1.36.4-gke.2377000",
+  "machine_types": {
+    "e2-standard-2": 3
+  },
+  "campaign_id": "mvc-2026-11-c3",
+  "git_dirty": false,
+  "config_sha256": "91d685b2a57e9962315aa0685adb2e87664f5b2df3f554714c2ca0360ba111b8",
+  "plano": "calibracao",
+  "etapa": "calibracao",
+  "pair": "",
+  "rep": 4,
+  "order": 45,
+  "audit_planned": 0,
+  "tentativa": 1,
+  "fora_da_ordem": false
+}
