@@ -1,0 +1,1625 @@
+{
+  "formato": "mecade-evidencias/1",
+  "gerado_em_utc": "2026-11-17T14:36:00Z",
+  "git": {
+    "commit": "b670f6b0c3f89b69da91aefde0f527752938adb9",
+    "tags": [
+      "mvc-2026-11-c3-final"
+    ],
+    "descricao": "mvc-2026-11-c3-final",
+    "data_commit": "2026-11-17T11:32:14-03:00",
+    "arvore_limpa": true,
+    "modificados": [],
+    "dados_fora_do_git": 0
+  },
+  "campaign_id": "mvc-2026-11-c3",
+  "config_sha256": "91d685b2a57e9962315aa0685adb2e87664f5b2df3f554714c2ca0360ba111b8",
+  "plano_oficial": {
+    "caminho": "data/plan_mvc-2026-11-c3.csv",
+    "sha256": "359cd792ca39b685d2417cc940d01a72eafecc2b9cdc762fe715915b2bb88b41",
+    "replicas": 80
+  },
+  "versions_env": {
+    "sha256": "8d83d6e84bb9a24346a7f215f6a377d41fd4ea385154195c85b7cdc76d8bb1fc",
+    "valores": {
+      "KIND_VERSION": "v0.33.0",
+      "KIND_NODE_IMAGE": "kindest/node:v1.37.0@sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5",
+      "ONLINE_BOUTIQUE_VERSION": "v0.10.5",
+      "CHAOS_MESH_CHART_VERSION": "2.8.4",
+      "KUBE_PROMETHEUS_STACK_CHART_VERSION": "90.0.0",
+      "LOADGEN_PYTHON_IMAGE": "python:3.12-slim",
+      "NAMESPACE_TARGET": "boutique",
+      "NAMESPACE_MONITORING": "monitoring",
+      "NAMESPACE_CHAOS": "chaos-mesh"
+    }
+  },
+  "ambiente_analise": {
+    "python": "3.14.4",
+    "plataforma": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "pacotes": {
+      "numpy": "2.5.4",
+      "pandas": "3.0.6",
+      "scipy": "1.18.1",
+      "matplotlib": "3.11.2",
+      "nbformat": "5.11.1",
+      "nbclient": "0.11.0",
+      "PyYAML": "6.0.3"
+    },
+    "requirements_sha256": "99014ffd96516e0f4305c339090272f2af5c93973481f7f69a2b49140715f936"
+  },
+  "contagem": {
+    "data/runs": {
+      "existe": true,
+      "arquivos": 0,
+      "bytes": 0
+    },
+    "data/audit": {
+      "existe": false,
+      "arquivos": 0,
+      "bytes": 0
+    },
+    "data/calibracao": {
+      "existe": true,
+      "arquivos": 314,
+      "bytes": 21794601
+    },
+    "data/diagnostico": {
+      "existe": true,
+      "arquivos": 32,
+      "bytes": 18278921
+    },
+    "total_arquivos": 347
+  },
+  "verify_audit": {
+    "oficial": {
+      "trilhas": 0,
+      "integras": 0,
+      "todas_integras": true,
+      "detalhe": {}
+    },
+    "calibracao": {
+      "trilhas": 24,
+      "integras": 24,
+      "todas_integras": true,
+      "detalhe": {
+        "data/calibracao/audit/cal1_001_c0_controle_mecade_r15.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_003_s3_podkill_cart_mecade_r02.jsonl": {
+          "integra": true,
+          "registros": 7,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_004_c0_controle_mecade_r27.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_006_c0_controle_mecade_r09.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_008_c0_controle_mecade_r03.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_009_c0_controle_mecade_r19.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_012_s3_podkill_cart_mecade_r03.jsonl": {
+          "integra": true,
+          "registros": 7,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_014_s2_gray_currency_mecade_r02.jsonl": {
+          "integra": true,
+          "registros": 7,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_015_c0_controle_mecade_r07.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_017_c0_controle_mecade_r23.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_018_s2_gray_currency_mecade_r01.jsonl": {
+          "integra": true,
+          "registros": 7,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_021_s3_podkill_cart_mecade_r01.jsonl": {
+          "integra": true,
+          "registros": 11,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_023_c0_controle_mecade_r21.jsonl": {
+          "integra": true,
+          "registros": 6,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_024_c0_controle_mecade_r11.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_026_s1_latencia_productcatalog_mecade_r02.jsonl": {
+          "integra": true,
+          "registros": 8,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_030_c0_controle_mecade_r17.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_032_s1_latencia_productcatalog_mecade_r01.jsonl": {
+          "integra": true,
+          "registros": 8,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_034_c0_controle_mecade_r01.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_038_s1_latencia_productcatalog_mecade_r03.jsonl": {
+          "integra": true,
+          "registros": 8,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_039_c0_controle_mecade_r13.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_040_c0_controle_mecade_r25.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_042_c0_controle_mecade_r05.jsonl": {
+          "integra": true,
+          "registros": 4,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_044_c0_controle_mecade_r29.jsonl": {
+          "integra": true,
+          "registros": 2,
+          "mensagem": "cadeia íntegra"
+        },
+        "data/calibracao/audit/cal1_046_s2_gray_currency_mecade_r03.jsonl": {
+          "integra": true,
+          "registros": 7,
+          "mensagem": "cadeia íntegra"
+        }
+      }
+    }
+  },
+  "replicas_oficiais": {
+    "por_status": {},
+    "por_backend": {},
+    "git_commits": {},
+    "axiomas_sha256": {},
+    "primeira_wall_start_utc": null,
+    "ultima_wall_start_utc": null,
+    "alertas": []
+  },
+  "replicas_calibracao": {
+    "por_status": {
+      "complete": 48
+    },
+    "por_backend": {
+      "k8s": 48
+    },
+    "git_commits": {
+      "71ad5fbbaf34d9ec15f66abba33689d7df6ee495": 48
+    },
+    "axiomas_sha256": {
+      "8317ea5fa95ffd42d1c8f2120698821cfbe32c5b2741b9bcc047b618cb6875bf": 48
+    },
+    "primeira_wall_start_utc": "2026-11-16T10:37:37.296024Z",
+    "ultima_wall_start_utc": "2026-11-17T07:49:26.140922Z",
+    "alertas": []
+  },
+  "alertas": [],
+  "arquivos": {
+    "data/calibracao/audit/cal1_001_c0_controle_mecade_r15.jsonl": {
+      "sha256": "1f6489bcee4902c77ba6bceacd6b2956f807226ca208ccce4cea5ea64c558106",
+      "bytes": 671
+    },
+    "data/calibracao/audit/cal1_003_s3_podkill_cart_mecade_r02.jsonl": {
+      "sha256": "086550d7695d9aeea2fe2bce5b72ccee0606c5fe1f355a0c5624e0aa32df9744",
+      "bytes": 2234
+    },
+    "data/calibracao/audit/cal1_004_c0_controle_mecade_r27.jsonl": {
+      "sha256": "04624e25dbe60e0b63a8e0bc77e01e72de59a9ad4d68db6d0506e4f8b76261cc",
+      "bytes": 671
+    },
+    "data/calibracao/audit/cal1_006_c0_controle_mecade_r09.jsonl": {
+      "sha256": "52504996c5813e8edeb6b30272900df63e239dfd8efdb54ce3a2aac92c1c55b0",
+      "bytes": 671
+    },
+    "data/calibracao/audit/cal1_008_c0_controle_mecade_r03.jsonl": {
+      "sha256": "2e6484ea602ac023f0e26faf3226c6adeb0b4d8d9ddf219af6f5d5a921ea7cbb",
+      "bytes": 671
+    },
+    "data/calibracao/audit/cal1_009_c0_controle_mecade_r19.jsonl": {
+      "sha256": "756b136ca30c4789e59cf302e781800ed54909023750375c810a5dc7f536f987",
+      "bytes": 671
+    },
+    "data/calibracao/audit/cal1_012_s3_podkill_cart_mecade_r03.jsonl": {
+      "sha256": "cbd6682c645592e69d5d2c0b374f6219f54aa01cd3e13be9307485104c430357",
+      "bytes": 2230
+    },
+    "data/calibracao/audit/cal1_014_s2_gray_currency_mecade_r02.jsonl": {
+      "sha256": "6bafa6f00fd63b6807556850d5be31331aa3c147daae445651596bc83de1dfeb",
+      "bytes": 2234
+    },
+    "data/calibracao/audit/cal1_015_c0_controle_mecade_r07.jsonl": {
+      "sha256": "a5cb5a047b7dd7fe72fafd6eae4e3ed78dd112adf1b11cd73da06d8b5d527161",
+      "bytes": 671
+    },
+    "data/calibracao/audit/cal1_017_c0_controle_mecade_r23.jsonl": {
+      "sha256": "cf07649e0b4bbcee4e386cb16f6cb86d5ad1130648792cb47b57c4d55d7fe3bb",
+      "bytes": 669
+    },
+    "data/calibracao/audit/cal1_018_s2_gray_currency_mecade_r01.jsonl": {
+      "sha256": "a196ccdd41a71c0644d38655307e841d933a092f403d85be28d741306896e8b3",
+      "bytes": 2233
+    },
+    "data/calibracao/audit/cal1_021_s3_podkill_cart_mecade_r01.jsonl": {
+      "sha256": "f5c2529c0093fc9820e1f49b5092e0f55b7aaed655068745d3bb427faa618d31",
+      "bytes": 3461
+    },
+    "data/calibracao/audit/cal1_023_c0_controle_mecade_r21.jsonl": {
+      "sha256": "0fa6525d473458900c9d0980f79265d40b969806fe148a1622f710441f0f3662",
+      "bytes": 1879
+    },
+    "data/calibracao/audit/cal1_024_c0_controle_mecade_r11.jsonl": {
+      "sha256": "8b8b352535518c7177a7063833fe136bd3416f0665764680e70f5e0df69ca97c",
+      "bytes": 671
+    },
+    "data/calibracao/audit/cal1_026_s1_latencia_productcatalog_mecade_r02.jsonl": {
+      "sha256": "133ec94c3cfe674503e545ac769d980095523eba476182389f332f8d3fb3ee99",
+      "bytes": 2694
+    },
+    "data/calibracao/audit/cal1_030_c0_controle_mecade_r17.jsonl": {
+      "sha256": "321c6ef204059b90da216a88b7f2ca8b9d11f0f10cc411b3e989d766f5de9f66",
+      "bytes": 671
+    },
+    "data/calibracao/audit/cal1_032_s1_latencia_productcatalog_mecade_r01.jsonl": {
+      "sha256": "93a88e33944fdf531c298db2d952e8388bf2ce5ec54be9defe5fa6a43be73d39",
+      "bytes": 2695
+    },
+    "data/calibracao/audit/cal1_034_c0_controle_mecade_r01.jsonl": {
+      "sha256": "648aac661b1bf19088174f09f3c2d69e0808cebad2fd30a79dfe92fa348b92ce",
+      "bytes": 671
+    },
+    "data/calibracao/audit/cal1_038_s1_latencia_productcatalog_mecade_r03.jsonl": {
+      "sha256": "d3e701dc7c1daf662d7693b5b69f0429c6fd9eac6920dc6cb447ef00e5fea521",
+      "bytes": 2691
+    },
+    "data/calibracao/audit/cal1_039_c0_controle_mecade_r13.jsonl": {
+      "sha256": "87a901743d4140eb6197cc300995b60704816235801a1dad605d014413b6d7f6",
+      "bytes": 671
+    },
+    "data/calibracao/audit/cal1_040_c0_controle_mecade_r25.jsonl": {
+      "sha256": "b0e69521073904bf63c8b14b7e9b9de17718139d831fda599b6a814e25c4344c",
+      "bytes": 671
+    },
+    "data/calibracao/audit/cal1_042_c0_controle_mecade_r05.jsonl": {
+      "sha256": "51c1df19425b8c26651c531cc13ed1fe1e36640747a7065447db4fa4cb4b5047",
+      "bytes": 1275
+    },
+    "data/calibracao/audit/cal1_044_c0_controle_mecade_r29.jsonl": {
+      "sha256": "7514076dcb08baf41bbfe802e5ffd09002a6a6e1edb34f50772613c74b4f0477",
+      "bytes": 671
+    },
+    "data/calibracao/audit/cal1_046_s2_gray_currency_mecade_r03.jsonl": {
+      "sha256": "d58c1660cb11fb22fe01e96a2b777739b00c2519b57c0ba80b3d22c2255c0244",
+      "bytes": 2235
+    },
+    "data/calibracao/campaign.log": {
+      "sha256": "eb52e7b0cc477730ab408c8286c17a94dc71d21f64afc0db1d35806247d2b53f",
+      "bytes": 29530
+    },
+    "data/calibracao/plan_r1.csv": {
+      "sha256": "916663e947ed6d791c8e5a3f33b8d231be6be9a907b922ce87cf20c8b8a6a265",
+      "bytes": 3654
+    },
+    "data/calibracao/runs/cal1_001_c0_controle_mecade_r15/k8s_coleta.jsonl": {
+      "sha256": "8f7ca1f7d1f702fb311e2d990bfb8b68faf03f48e0771441dd37a59d6af47693",
+      "bytes": 260914
+    },
+    "data/calibracao/runs/cal1_001_c0_controle_mecade_r15/k8s_eventos.jsonl": {
+      "sha256": "93d55ea72bdc9ed998c260b4b53d1f1350f31be8b0e533a5ba9769409e97a1a2",
+      "bytes": 40372
+    },
+    "data/calibracao/runs/cal1_001_c0_controle_mecade_r15/meta.json": {
+      "sha256": "369f6446438b714fb72d1221af3bc9c0f2fe01848ff85a61fe1e258cb24f181d",
+      "bytes": 2027
+    },
+    "data/calibracao/runs/cal1_001_c0_controle_mecade_r15/prom_range.csv": {
+      "sha256": "cbafd693841c6bf4a6b293df9ce298b1b980ed2e5143fdb08d8ddb11bcd975bc",
+      "bytes": 56225
+    },
+    "data/calibracao/runs/cal1_001_c0_controle_mecade_r15/steps.csv": {
+      "sha256": "f72439d628b4ea7e53e1ef965082b8c682e7a86c5cad3c38b23bd55c22ac0061",
+      "bytes": 48057
+    },
+    "data/calibracao/runs/cal1_001_c0_controle_mecade_r15/tentativas.jsonl": {
+      "sha256": "6590b79843556e429f2a2dcbc786432f2f5f387d3d51070564c9f8e199389a17",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_002_s3_podkill_cart_baseline_r02/k8s_coleta.jsonl": {
+      "sha256": "110715c95ccfd8b0fdcff4c6b800c9d138f8a1986c6eed32b0a28a5b3b7b5324",
+      "bytes": 281584
+    },
+    "data/calibracao/runs/cal1_002_s3_podkill_cart_baseline_r02/k8s_eventos.jsonl": {
+      "sha256": "29b11b560c68faf078804ce953cbaf956ac765041a18c7a64ade0026ad188a77",
+      "bytes": 138733
+    },
+    "data/calibracao/runs/cal1_002_s3_podkill_cart_baseline_r02/meta.json": {
+      "sha256": "101a501d9d1bfeecb0e9d8ce15093a893530cbedd0d09be033f579519f1b5b6b",
+      "bytes": 2188
+    },
+    "data/calibracao/runs/cal1_002_s3_podkill_cart_baseline_r02/prom_range.csv": {
+      "sha256": "cf06355a503ef264dc80efae0ab59719ccfe33990e94f7769ec866973235ebb2",
+      "bytes": 57054
+    },
+    "data/calibracao/runs/cal1_002_s3_podkill_cart_baseline_r02/steps.csv": {
+      "sha256": "6b7cd9dc26a2237b9adcd9f1dbe133683ebd117d3ae5883a551ef3e18ed0f5c0",
+      "bytes": 51037
+    },
+    "data/calibracao/runs/cal1_002_s3_podkill_cart_baseline_r02/tentativas.jsonl": {
+      "sha256": "fe665902634c54a18eb6e560ec325f51d718805a4b94103456cb7d7dd47dd830",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_003_s3_podkill_cart_mecade_r02/k8s_coleta.jsonl": {
+      "sha256": "dfefee3dde8740dcd7c64327334ef7a5f4bfce3c923440a356d9dc4435114d3a",
+      "bytes": 291652
+    },
+    "data/calibracao/runs/cal1_003_s3_podkill_cart_mecade_r02/k8s_eventos.jsonl": {
+      "sha256": "d7572957ba0604f0cb9206bc43c6968e0d66b185ea312a48a5c315c09650049c",
+      "bytes": 201702
+    },
+    "data/calibracao/runs/cal1_003_s3_podkill_cart_mecade_r02/meta.json": {
+      "sha256": "00c7f300a4ea07f0744ec1b99144810313850862fffb93a2c575aa18e331bcb3",
+      "bytes": 2486
+    },
+    "data/calibracao/runs/cal1_003_s3_podkill_cart_mecade_r02/prom_range.csv": {
+      "sha256": "1f1372f740e4078d89bd47dd3c4fb636ac4a40b8ea441c3a28b6570292965a35",
+      "bytes": 56439
+    },
+    "data/calibracao/runs/cal1_003_s3_podkill_cart_mecade_r02/steps.csv": {
+      "sha256": "8d6a36c007642013ef0caaaa496868a87846f5fd7838d43c9888cee3be9cf4d6",
+      "bytes": 49760
+    },
+    "data/calibracao/runs/cal1_003_s3_podkill_cart_mecade_r02/tentativas.jsonl": {
+      "sha256": "3c30ffe7f746356436b618f3c49b9b31cfd21d3575ee7de0de46dc8e43d1847a",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_004_c0_controle_mecade_r27/k8s_coleta.jsonl": {
+      "sha256": "7c19eedd72b688a4a1f73e78fe4c6f5c829b8ecb58141a5cb60edce6c47ea780",
+      "bytes": 260959
+    },
+    "data/calibracao/runs/cal1_004_c0_controle_mecade_r27/k8s_eventos.jsonl": {
+      "sha256": "becc8040fb53d02adbd683bd7b55d4717d92778436746105fe7e409bf90e08ef",
+      "bytes": 200860
+    },
+    "data/calibracao/runs/cal1_004_c0_controle_mecade_r27/meta.json": {
+      "sha256": "2be233e63fed76c70eaf0897cb9cebefca5467e058690a768f1cd1aff0f35c33",
+      "bytes": 2028
+    },
+    "data/calibracao/runs/cal1_004_c0_controle_mecade_r27/prom_range.csv": {
+      "sha256": "3c0f7d1c1a7bb6d8806729035bf14c29bb19dd7c97b09d30ad5300c057ad899e",
+      "bytes": 55995
+    },
+    "data/calibracao/runs/cal1_004_c0_controle_mecade_r27/steps.csv": {
+      "sha256": "0332e10da73d9226d74e5e5ca00f888698cd825faa0e4830b135002330b880a6",
+      "bytes": 47917
+    },
+    "data/calibracao/runs/cal1_004_c0_controle_mecade_r27/tentativas.jsonl": {
+      "sha256": "002269b8a1e480dceb049e2ada0f655eb262c0b98fae09bfbff4fa3130ca10e1",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_005_c0_controle_mecade_r10/k8s_coleta.jsonl": {
+      "sha256": "b6ed697533e9d656d89b7b49246b4ee538c1ecdef0d9d28fb176cd657d91021a",
+      "bytes": 260950
+    },
+    "data/calibracao/runs/cal1_005_c0_controle_mecade_r10/k8s_eventos.jsonl": {
+      "sha256": "b2f5bcc4959a974c80325d8bd68dbe9950347bdde13c7e6803aa6a1e9d3fbb99",
+      "bytes": 105728
+    },
+    "data/calibracao/runs/cal1_005_c0_controle_mecade_r10/meta.json": {
+      "sha256": "8eb6c84d6e8a3b2459f0da611093e71319bd5d92bf13b0f455a411dfe062a92c",
+      "bytes": 1974
+    },
+    "data/calibracao/runs/cal1_005_c0_controle_mecade_r10/prom_range.csv": {
+      "sha256": "1470470e57e461d990fa89fb27a97e3c8819c8ba687f45487541571971a48512",
+      "bytes": 56157
+    },
+    "data/calibracao/runs/cal1_005_c0_controle_mecade_r10/steps.csv": {
+      "sha256": "879e2fca698b3617c332a98063da874ace12c0dd81a8a1633653133833f07554",
+      "bytes": 47969
+    },
+    "data/calibracao/runs/cal1_005_c0_controle_mecade_r10/tentativas.jsonl": {
+      "sha256": "1f0ec53a8487ef4a4da452e8472cdb7a68e5999bf404783dfbb65b78b1781265",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_006_c0_controle_mecade_r09/k8s_coleta.jsonl": {
+      "sha256": "2826314d274a2f62b84e475e82f6630c6408bce5d63bfd96a5e04c4dbfd69214",
+      "bytes": 260954
+    },
+    "data/calibracao/runs/cal1_006_c0_controle_mecade_r09/k8s_eventos.jsonl": {
+      "sha256": "4addaa291e59cda6ece7586f8d28dc8d8020958accf0ae0251d021319eae4a90",
+      "bytes": 7134
+    },
+    "data/calibracao/runs/cal1_006_c0_controle_mecade_r09/meta.json": {
+      "sha256": "c90b3c5a1b47ceaa73b5b357bbe069f2fad60036b1a45eab9108bf361c262022",
+      "bytes": 2033
+    },
+    "data/calibracao/runs/cal1_006_c0_controle_mecade_r09/prom_range.csv": {
+      "sha256": "aa23d31dbe781697a4ac884f3d8d51facc6882a01a737407d8ed51fc6997873e",
+      "bytes": 59104
+    },
+    "data/calibracao/runs/cal1_006_c0_controle_mecade_r09/steps.csv": {
+      "sha256": "0b583ac56dad816a6c6e50abad7758a5f763c6edaf0b3bd3f04a704d53f3f41b",
+      "bytes": 47818
+    },
+    "data/calibracao/runs/cal1_006_c0_controle_mecade_r09/tentativas.jsonl": {
+      "sha256": "dc5a0c231a0fe7aaa248309bc7bd6f4d7da99f11884249cfa091c2e53228b0ca",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_007_c0_controle_mecade_r28/k8s_coleta.jsonl": {
+      "sha256": "10bfa9fe12a84cee5aaf97f10c0584b26813f1ee66f563ebae711e469ccb2fbc",
+      "bytes": 260952
+    },
+    "data/calibracao/runs/cal1_007_c0_controle_mecade_r28/k8s_eventos.jsonl": {
+      "sha256": "b47b9af702bf05584acd8742018a450128d017d9ef8f6b6cca47de78e1acfab2",
+      "bytes": 5524
+    },
+    "data/calibracao/runs/cal1_007_c0_controle_mecade_r28/meta.json": {
+      "sha256": "2c732c0f8786b68338d89c118ab82351baf77931ddc23d76a34e85ac75a5860f",
+      "bytes": 2831
+    },
+    "data/calibracao/runs/cal1_007_c0_controle_mecade_r28/prom_range.csv": {
+      "sha256": "4e105645f568c1073a5e1b9e20f2d7f6a67a7375569ecb4392871a7b28a37178",
+      "bytes": 57624
+    },
+    "data/calibracao/runs/cal1_007_c0_controle_mecade_r28/steps.csv": {
+      "sha256": "5d68c1c2615de8c82f9251543419672fd2a519f3bd8f1bddb4327f624cb48bd6",
+      "bytes": 50486
+    },
+    "data/calibracao/runs/cal1_007_c0_controle_mecade_r28/tentativas.jsonl": {
+      "sha256": "a03827f9414a91fdbc24eb1a9f686037c3914822f906ece20d702c9837b7d75e",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_008_c0_controle_mecade_r03/k8s_coleta.jsonl": {
+      "sha256": "6ffd7257597573645cd9055304406c278732da758cdeb01d9622d05ef215d4ab",
+      "bytes": 260965
+    },
+    "data/calibracao/runs/cal1_008_c0_controle_mecade_r03/k8s_eventos.jsonl": {
+      "sha256": "60075e0e021f243d629e1df82d1ddd2d63e29a297b5c2d419a36ed912cec26ba",
+      "bytes": 6769
+    },
+    "data/calibracao/runs/cal1_008_c0_controle_mecade_r03/meta.json": {
+      "sha256": "cb7d1ebd0d78b5c93623caac961ae4c67c312ad5ffe39cd2a67e090febd956e1",
+      "bytes": 2024
+    },
+    "data/calibracao/runs/cal1_008_c0_controle_mecade_r03/prom_range.csv": {
+      "sha256": "9adcbad10ef8e5a1e90394a3b4322cc54fecdcd1e086e6eb62b226b1e2f23707",
+      "bytes": 56932
+    },
+    "data/calibracao/runs/cal1_008_c0_controle_mecade_r03/steps.csv": {
+      "sha256": "416ebf3d7f288ed2cdea8987eb77c69c5763f464ce53554ddbb660982ab64ae7",
+      "bytes": 48980
+    },
+    "data/calibracao/runs/cal1_008_c0_controle_mecade_r03/tentativas.jsonl": {
+      "sha256": "036a7c581f455bf0750eacee8985a2e090624f6590ab3ed7e8fd34af6dd63a73",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_009_c0_controle_mecade_r19/k8s_coleta.jsonl": {
+      "sha256": "7cdeba4ab4b6e9e7800aecb0a43dc3db1242889a320e9a8e30cb188a226e4775",
+      "bytes": 260960
+    },
+    "data/calibracao/runs/cal1_009_c0_controle_mecade_r19/k8s_eventos.jsonl": {
+      "sha256": "2945b35425a099146e1375eaac1a442b67249fb150b8b730eb547f727147a3c0",
+      "bytes": 5867
+    },
+    "data/calibracao/runs/cal1_009_c0_controle_mecade_r19/meta.json": {
+      "sha256": "c22faacd58c51c446bbb6bbd8aee2de0368f70d727059a8f7472e9a57e616f74",
+      "bytes": 2031
+    },
+    "data/calibracao/runs/cal1_009_c0_controle_mecade_r19/prom_range.csv": {
+      "sha256": "6fe23fb462bdbd2338ab7d4647a1156230c6cfe927ef9fa19203c6d1a0890d71",
+      "bytes": 56869
+    },
+    "data/calibracao/runs/cal1_009_c0_controle_mecade_r19/steps.csv": {
+      "sha256": "6fb0db23da08992f168caf3f3a915ce716a1c5a620e60d491d993c7790bb5e07",
+      "bytes": 48833
+    },
+    "data/calibracao/runs/cal1_009_c0_controle_mecade_r19/tentativas.jsonl": {
+      "sha256": "67ea146646295146f794c2e60f5c0c5ecca9ddb3f0c3610165c97d026256eae1",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_010_c0_controle_mecade_r26/k8s_coleta.jsonl": {
+      "sha256": "b41ef089bd8fb0065bf683e9a6361d315b11e565391fbeea8b76f3243e16a5b3",
+      "bytes": 260973
+    },
+    "data/calibracao/runs/cal1_010_c0_controle_mecade_r26/k8s_eventos.jsonl": {
+      "sha256": "1925e6e9e7f36f7a3050231f231830efbb8172a72ab06df6f1e71870d371f121",
+      "bytes": 5185
+    },
+    "data/calibracao/runs/cal1_010_c0_controle_mecade_r26/meta.json": {
+      "sha256": "7cb9e8274d9154d267c287c6a6eb7de5cd75addc12f72f643ed0548f1860c2b1",
+      "bytes": 2536
+    },
+    "data/calibracao/runs/cal1_010_c0_controle_mecade_r26/prom_range.csv": {
+      "sha256": "94c1fbd573b73edb5a0b7dc81a71c6db34f5285c959effab023336a067efeb2e",
+      "bytes": 57056
+    },
+    "data/calibracao/runs/cal1_010_c0_controle_mecade_r26/steps.csv": {
+      "sha256": "d79224c0a86a1eacec653c553ba88b837dd05905e756def30a3c2ef9d1192d5f",
+      "bytes": 49118
+    },
+    "data/calibracao/runs/cal1_010_c0_controle_mecade_r26/tentativas.jsonl": {
+      "sha256": "f26afa6628ed8a1b6327ad75a4075d9be3b53b82479fd4731f87af42e0b1ab33",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_011_s3_podkill_cart_baseline_r03/k8s_coleta.jsonl": {
+      "sha256": "a77ee55390e9215c243f4f3f9f5a2b0da9d8233a6499b954b8f51d8de6d1bed2",
+      "bytes": 281290
+    },
+    "data/calibracao/runs/cal1_011_s3_podkill_cart_baseline_r03/k8s_eventos.jsonl": {
+      "sha256": "6a902a88f98f9e7df64afafaa8f09b3f84951f13126b7fbf81be1cb9a61481af",
+      "bytes": 105194
+    },
+    "data/calibracao/runs/cal1_011_s3_podkill_cart_baseline_r03/meta.json": {
+      "sha256": "09f570045e21c813250b023afc574ce1b4b2508e6b77a29ec326fcb7eef8b9a7",
+      "bytes": 2189
+    },
+    "data/calibracao/runs/cal1_011_s3_podkill_cart_baseline_r03/prom_range.csv": {
+      "sha256": "a204d3fdd72b7c1b330e960eea47747347676b024469b96e4a0991b42e02256c",
+      "bytes": 57369
+    },
+    "data/calibracao/runs/cal1_011_s3_podkill_cart_baseline_r03/steps.csv": {
+      "sha256": "593e3ecb3a37cb99061e8f0eca0688d8b7239c2fc97ac78827cdaae1f75e2ca3",
+      "bytes": 51406
+    },
+    "data/calibracao/runs/cal1_011_s3_podkill_cart_baseline_r03/tentativas.jsonl": {
+      "sha256": "7ab5b38022572b9ae9083de588331f10cd144ea18e76fd4cc1db2f7c3ac0ee4d",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_012_s3_podkill_cart_mecade_r03/k8s_coleta.jsonl": {
+      "sha256": "24e7d71d87e2aa14d79b1a549e6aa647ef6bd16695658b0c4138b000c5d00e7c",
+      "bytes": 290515
+    },
+    "data/calibracao/runs/cal1_012_s3_podkill_cart_mecade_r03/k8s_eventos.jsonl": {
+      "sha256": "ea3fac7091b7ccc53e0a55dfaeeddbb6af99ab084b832c6d9cf7e093e524a54d",
+      "bytes": 202219
+    },
+    "data/calibracao/runs/cal1_012_s3_podkill_cart_mecade_r03/meta.json": {
+      "sha256": "67250bd80ad758e038d608200da748d95532b6d90038d8357d1a7fbb56015378",
+      "bytes": 2486
+    },
+    "data/calibracao/runs/cal1_012_s3_podkill_cart_mecade_r03/prom_range.csv": {
+      "sha256": "e5cfd9cd377fd308acce73a76378b654ee127229c509cf89a290d767eb08e508",
+      "bytes": 57203
+    },
+    "data/calibracao/runs/cal1_012_s3_podkill_cart_mecade_r03/steps.csv": {
+      "sha256": "5b9b03086e0d416a5ac171af13007c64f588df3210615b2e07251bb11a22447a",
+      "bytes": 50777
+    },
+    "data/calibracao/runs/cal1_012_s3_podkill_cart_mecade_r03/tentativas.jsonl": {
+      "sha256": "80d5cd7f3706c9907cc86846a2f49d7c711bcaf8121039306795369d642b71c9",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_013_s2_gray_currency_baseline_r02/k8s_coleta.jsonl": {
+      "sha256": "830c4f8d27b99cb325268289eb7c262f5e0383d270de79e2d4623348073e421b",
+      "bytes": 261266
+    },
+    "data/calibracao/runs/cal1_013_s2_gray_currency_baseline_r02/k8s_eventos.jsonl": {
+      "sha256": "3e240f9a3ace0e9aad368c8e153019496a54e213e1edbe0f24d3f2a142abf3ab",
+      "bytes": 277146
+    },
+    "data/calibracao/runs/cal1_013_s2_gray_currency_baseline_r02/meta.json": {
+      "sha256": "b32916c3457e76b5ac4dbad782a3a3260114262f72d4258b4a5c9ae2f1dadd15",
+      "bytes": 1999
+    },
+    "data/calibracao/runs/cal1_013_s2_gray_currency_baseline_r02/prom_range.csv": {
+      "sha256": "124a70c4f290a157f7622356bf188497aab62e852a19eb1bac25fe00cc65ee77",
+      "bytes": 58352
+    },
+    "data/calibracao/runs/cal1_013_s2_gray_currency_baseline_r02/steps.csv": {
+      "sha256": "1389f8d8cd116952970efb65285ac903d118e5f46f7f2bf80f1f2a28be393ecb",
+      "bytes": 52732
+    },
+    "data/calibracao/runs/cal1_013_s2_gray_currency_baseline_r02/tentativas.jsonl": {
+      "sha256": "14f0584f7708121fba4daa4c72a0e8dd47bc7fc986209cd162cfec3f79785751",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_014_s2_gray_currency_mecade_r02/k8s_coleta.jsonl": {
+      "sha256": "2874974ee8a2fdb488deb245241fd453635c1613cd84170b7f44f5cebed2a7c6",
+      "bytes": 261552
+    },
+    "data/calibracao/runs/cal1_014_s2_gray_currency_mecade_r02/k8s_eventos.jsonl": {
+      "sha256": "b5506d443f235bfe5c05deea6b3885fc0bc33522b09b1521ae577f926f2f7679",
+      "bytes": 226807
+    },
+    "data/calibracao/runs/cal1_014_s2_gray_currency_mecade_r02/meta.json": {
+      "sha256": "028f4f68dc0ae4398359c6fc1b065e397a2065e6f6121ffeee7855f827e89869",
+      "bytes": 2466
+    },
+    "data/calibracao/runs/cal1_014_s2_gray_currency_mecade_r02/prom_range.csv": {
+      "sha256": "d69609e8f21e4a6a718e0a2df54801c859f99279db4677e743122c000f09c40c",
+      "bytes": 57437
+    },
+    "data/calibracao/runs/cal1_014_s2_gray_currency_mecade_r02/steps.csv": {
+      "sha256": "73fba2cb78c800e532c5788b103ac7ba1ca2a6aa485e7f7b2732470c8a72cf56",
+      "bytes": 50890
+    },
+    "data/calibracao/runs/cal1_014_s2_gray_currency_mecade_r02/tentativas.jsonl": {
+      "sha256": "a84c3ab97ba009aa05a4c671aa7da0a182b1be109d8278a0ececceaf2d595061",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_015_c0_controle_mecade_r07/k8s_coleta.jsonl": {
+      "sha256": "ffad6103b836b7edfc5a64d0cda3b16aefe4628e7c2c6929994050caae220a2b",
+      "bytes": 261156
+    },
+    "data/calibracao/runs/cal1_015_c0_controle_mecade_r07/k8s_eventos.jsonl": {
+      "sha256": "a9d424bc38e641c50596b2df93dfab7c7c095d38df7ce3b0bde0f04e334b12d3",
+      "bytes": 133238
+    },
+    "data/calibracao/runs/cal1_015_c0_controle_mecade_r07/meta.json": {
+      "sha256": "e76881f3e7beac169530c32f5ab1ae676091a79d0588451eefa77d658eb1b619",
+      "bytes": 2033
+    },
+    "data/calibracao/runs/cal1_015_c0_controle_mecade_r07/prom_range.csv": {
+      "sha256": "8ff599eb55835c0e2df6c54423441cb92705d2d6dced98471bac6c25917249c2",
+      "bytes": 58206
+    },
+    "data/calibracao/runs/cal1_015_c0_controle_mecade_r07/steps.csv": {
+      "sha256": "4682b174d65c8bfb40afea4e5a4498c52c70c8138d58ea2b7a06b753442c6472",
+      "bytes": 50007
+    },
+    "data/calibracao/runs/cal1_015_c0_controle_mecade_r07/tentativas.jsonl": {
+      "sha256": "9489de038c8c43aa4af97d21f0c28efd1c1fbdbe90374836679ff1eb9956f56d",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_016_c0_controle_mecade_r06/k8s_coleta.jsonl": {
+      "sha256": "f30bd7dbb6b51eb130e443dd093b050567061ad12601357b33f5d569db9a5618",
+      "bytes": 261166
+    },
+    "data/calibracao/runs/cal1_016_c0_controle_mecade_r06/k8s_eventos.jsonl": {
+      "sha256": "f4ca645a55b7363a564352422edac520e24510d62a584e214a24027aca8e8daa",
+      "bytes": 63769
+    },
+    "data/calibracao/runs/cal1_016_c0_controle_mecade_r06/meta.json": {
+      "sha256": "ba348460d7a9bb829aee50ea240b93e65d334b003aa58a4f8b9668b36c62b4cd",
+      "bytes": 1972
+    },
+    "data/calibracao/runs/cal1_016_c0_controle_mecade_r06/prom_range.csv": {
+      "sha256": "8d3d791d7cec584dbd45f72b00c3785881be62493a2dd6c4cf2d5c927469cdbe",
+      "bytes": 58384
+    },
+    "data/calibracao/runs/cal1_016_c0_controle_mecade_r06/steps.csv": {
+      "sha256": "dca9567c5598587a98aaad3f889ca74f205056b30b71f3c062c3c0d363df4cd7",
+      "bytes": 50390
+    },
+    "data/calibracao/runs/cal1_016_c0_controle_mecade_r06/tentativas.jsonl": {
+      "sha256": "13a71ed86075198e381f3a177340f20ccfb2eab174d37f585a682dc29fb556e5",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_017_c0_controle_mecade_r23/k8s_coleta.jsonl": {
+      "sha256": "49ce05a2580516d30071e3db2a790745e7081b59c09753f747fc277e72565822",
+      "bytes": 261159
+    },
+    "data/calibracao/runs/cal1_017_c0_controle_mecade_r23/k8s_eventos.jsonl": {
+      "sha256": "effd6826130ad7d01c85ab691ab68801156ad958fd507aa2b298b09f04327ae7",
+      "bytes": 7895
+    },
+    "data/calibracao/runs/cal1_017_c0_controle_mecade_r23/meta.json": {
+      "sha256": "d10c6492e0549040581a5bf71e802cd94b9ffa3acd9fc74862b1b8a80a1fffc2",
+      "bytes": 2028
+    },
+    "data/calibracao/runs/cal1_017_c0_controle_mecade_r23/prom_range.csv": {
+      "sha256": "a58374c5d3de7dcd5ac1239d8a331d696a9a1f520ce6e3dfb44e65f52340b8cc",
+      "bytes": 58215
+    },
+    "data/calibracao/runs/cal1_017_c0_controle_mecade_r23/steps.csv": {
+      "sha256": "9f48005a3a1953b31504caa5f89020b778ab569fd7a4f17e9be0107550e9828b",
+      "bytes": 50115
+    },
+    "data/calibracao/runs/cal1_017_c0_controle_mecade_r23/tentativas.jsonl": {
+      "sha256": "9ae711bf2e7e0b5905cef7f31a1df6f22f4476c04223949c3780c6b1e4dae6af",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_018_s2_gray_currency_mecade_r01/k8s_coleta.jsonl": {
+      "sha256": "591b73a54c743b83cc63bd042fc3ebc95a2a657c4ddc4aea15370db558d4a830",
+      "bytes": 261582
+    },
+    "data/calibracao/runs/cal1_018_s2_gray_currency_mecade_r01/k8s_eventos.jsonl": {
+      "sha256": "6ab0ac89c098d354ddb56cb179c75a33fbf6ee37f4a4868dbc5c0b1b1f8c053f",
+      "bytes": 63559
+    },
+    "data/calibracao/runs/cal1_018_s2_gray_currency_mecade_r01/meta.json": {
+      "sha256": "308c43d63e5e232929bbf13c1d450e6ac154b7003697aeb3deb4e191ec12cc24",
+      "bytes": 2466
+    },
+    "data/calibracao/runs/cal1_018_s2_gray_currency_mecade_r01/prom_range.csv": {
+      "sha256": "ad7c9e206b6cf88e53066dfe200af141d3a28945d4acc60891c73d8c72b45a30",
+      "bytes": 58089
+    },
+    "data/calibracao/runs/cal1_018_s2_gray_currency_mecade_r01/steps.csv": {
+      "sha256": "0b904a476333afe85772837b6a4b3efd326b0d94f3d916b04205f1edba02b329",
+      "bytes": 51431
+    },
+    "data/calibracao/runs/cal1_018_s2_gray_currency_mecade_r01/tentativas.jsonl": {
+      "sha256": "e96f963a1ba5713f3319e95fa0be7767d84aed285b1b2d3aefb52d897d179fac",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_019_s2_gray_currency_baseline_r01/k8s_coleta.jsonl": {
+      "sha256": "3ef2987ab2b89b119a2c8269cf820d8cd5a109c57041a2eaa4723b41d240f04a",
+      "bytes": 261352
+    },
+    "data/calibracao/runs/cal1_019_s2_gray_currency_baseline_r01/k8s_eventos.jsonl": {
+      "sha256": "b2a232c965a565685cfc1a4f688a8970fdc4b1e045af4c6f36e13195b419f309",
+      "bytes": 136558
+    },
+    "data/calibracao/runs/cal1_019_s2_gray_currency_baseline_r01/meta.json": {
+      "sha256": "0c42018b2ebebe6e5403fcd1a8de29a501e21f0e1ab1eae3b76391ecf9078721",
+      "bytes": 2001
+    },
+    "data/calibracao/runs/cal1_019_s2_gray_currency_baseline_r01/prom_range.csv": {
+      "sha256": "5fde1e459bbb2881a7ae48d6b6f9cc8394ad1990d60a9d721f1e443c192b0cfa",
+      "bytes": 59329
+    },
+    "data/calibracao/runs/cal1_019_s2_gray_currency_baseline_r01/steps.csv": {
+      "sha256": "5c9d8c9881a36b350751561d924f47a514a9ddb7e672d031096deed8ab2df902",
+      "bytes": 53956
+    },
+    "data/calibracao/runs/cal1_019_s2_gray_currency_baseline_r01/tentativas.jsonl": {
+      "sha256": "86036cf9849741e038bab1cd74acecf49e51105207eb0a920469b7311fd8e840",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_020_s3_podkill_cart_baseline_r01/k8s_coleta.jsonl": {
+      "sha256": "ff447db6f05284a7667324ba21c2dee3dc48bc77cd36bf7b8494ebb823dc5aa5",
+      "bytes": 281657
+    },
+    "data/calibracao/runs/cal1_020_s3_podkill_cart_baseline_r01/k8s_eventos.jsonl": {
+      "sha256": "3b3c6016ad13629b0a819d3d1591475bb87c7e836f132072dfb47857c975941d",
+      "bytes": 226287
+    },
+    "data/calibracao/runs/cal1_020_s3_podkill_cart_baseline_r01/meta.json": {
+      "sha256": "a120d61f85b7ebd28b3a90e62648bb28bfd62e9632f0ba8169e19fc49e17745b",
+      "bytes": 2182
+    },
+    "data/calibracao/runs/cal1_020_s3_podkill_cart_baseline_r01/prom_range.csv": {
+      "sha256": "9a147d3141ad9bcfd3b8d5cbfd1810c0638fc892698b02ef295960f35294a8d4",
+      "bytes": 59125
+    },
+    "data/calibracao/runs/cal1_020_s3_podkill_cart_baseline_r01/steps.csv": {
+      "sha256": "134849d5c02630bdd4f3d4a8faee5fd2a3c832f97b1f5853692ffec9e68b099c",
+      "bytes": 52721
+    },
+    "data/calibracao/runs/cal1_020_s3_podkill_cart_baseline_r01/tentativas.jsonl": {
+      "sha256": "205bc5c63d4583a7dd4b54b0da4f9d17b5e905b235a907f29e3a42b9deca8f7b",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_021_s3_podkill_cart_mecade_r01/k8s_coleta.jsonl": {
+      "sha256": "14244200767fa30b8eb748719dc880a871de17088c1f7fe943a1084d710e357b",
+      "bytes": 290437
+    },
+    "data/calibracao/runs/cal1_021_s3_podkill_cart_mecade_r01/k8s_eventos.jsonl": {
+      "sha256": "8aeb0f0f285d6fe9d6afb65a61a3c3ef2e43743d97c09cbd423a26de3faa7aad",
+      "bytes": 274998
+    },
+    "data/calibracao/runs/cal1_021_s3_podkill_cart_mecade_r01/meta.json": {
+      "sha256": "38b461af9ff6f6e1eb6baa369dfd7ea42245dc2a3d66f7fb2a9819021a6c40ca",
+      "bytes": 2795
+    },
+    "data/calibracao/runs/cal1_021_s3_podkill_cart_mecade_r01/prom_range.csv": {
+      "sha256": "ecc7c09b7b2511c721f41351e31c1e90a05e2a70acd60d51b329d28b8abff5e0",
+      "bytes": 58572
+    },
+    "data/calibracao/runs/cal1_021_s3_podkill_cart_mecade_r01/steps.csv": {
+      "sha256": "f1d4604ec7b73fc727cfec94effac8f194d635c72d56d0b19f9486fd6e4a581f",
+      "bytes": 52047
+    },
+    "data/calibracao/runs/cal1_021_s3_podkill_cart_mecade_r01/tentativas.jsonl": {
+      "sha256": "99b7af69c22a9194657f51d273c902d0df360c5ff74af3a4f39bda45a4ad8664",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_022_c0_controle_mecade_r20/k8s_coleta.jsonl": {
+      "sha256": "6495030590bf015556e076341f423d6b4c66d644f005d9c5afc0c0dd0d1b179e",
+      "bytes": 261052
+    },
+    "data/calibracao/runs/cal1_022_c0_controle_mecade_r20/k8s_eventos.jsonl": {
+      "sha256": "bac784e201083ec3a633b98bc7e593b183238bf99155487699407803d1571eb8",
+      "bytes": 209309
+    },
+    "data/calibracao/runs/cal1_022_c0_controle_mecade_r20/meta.json": {
+      "sha256": "b786f023fc5ca16e2cf7fc77a0b233b479630eb19cb203feb5bfc1b132d0441f",
+      "bytes": 2380
+    },
+    "data/calibracao/runs/cal1_022_c0_controle_mecade_r20/prom_range.csv": {
+      "sha256": "46c802e2cd18ec8629ca3133b2236ff1db8ef2a5280b05b36732ec4f76baf232",
+      "bytes": 58393
+    },
+    "data/calibracao/runs/cal1_022_c0_controle_mecade_r20/steps.csv": {
+      "sha256": "2274f8186601d76d43f16bb87bde8f0ef4686e0daef67f6d77d842868c8df653",
+      "bytes": 50708
+    },
+    "data/calibracao/runs/cal1_022_c0_controle_mecade_r20/tentativas.jsonl": {
+      "sha256": "2b453686c4c0d59d2957c357af7566e9863bb91797321087e53460287cc1a6a7",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_023_c0_controle_mecade_r21/k8s_coleta.jsonl": {
+      "sha256": "1342c130e748e97ccacec641ada2ac152a582d59f526d34fa0bddb07727be13b",
+      "bytes": 261053
+    },
+    "data/calibracao/runs/cal1_023_c0_controle_mecade_r21/k8s_eventos.jsonl": {
+      "sha256": "7987dedc2e3800a45f1d2c10c6c3d8418976a1d2d766f87c61a957caf5211acf",
+      "bytes": 111275
+    },
+    "data/calibracao/runs/cal1_023_c0_controle_mecade_r21/meta.json": {
+      "sha256": "9ef4286051f23c0b64c77794afc97ba6c80cfb035d38d2c3b280d316a980cd6b",
+      "bytes": 2334
+    },
+    "data/calibracao/runs/cal1_023_c0_controle_mecade_r21/prom_range.csv": {
+      "sha256": "229732de8495779a67f65e93673a46bdc433af0a1d0790109a18d794dc50c572",
+      "bytes": 58709
+    },
+    "data/calibracao/runs/cal1_023_c0_controle_mecade_r21/steps.csv": {
+      "sha256": "747f6bc3ad0be0f2db0a4f84d67c7b52163387027cc10425f0b3f6f28a0d38c7",
+      "bytes": 51746
+    },
+    "data/calibracao/runs/cal1_023_c0_controle_mecade_r21/tentativas.jsonl": {
+      "sha256": "2c502092a986abaa8331364819eb8c4705eaccf980224f9afbb8f80f038dc4b8",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_024_c0_controle_mecade_r11/k8s_coleta.jsonl": {
+      "sha256": "93713cd57759b15ac17199f41d6b217c7e01841f7c847d5509606e4ce16674b9",
+      "bytes": 261053
+    },
+    "data/calibracao/runs/cal1_024_c0_controle_mecade_r11/k8s_eventos.jsonl": {
+      "sha256": "ff4e1f907fce1ed58ed4d14cd4f85c780474e9d9e434db2d36b3e6cc26179eb4",
+      "bytes": 7778
+    },
+    "data/calibracao/runs/cal1_024_c0_controle_mecade_r11/meta.json": {
+      "sha256": "a71c608fa4ae726913b8c7c6bc477f36e02597d972ea456de3d50afc8ae66e63",
+      "bytes": 2033
+    },
+    "data/calibracao/runs/cal1_024_c0_controle_mecade_r11/prom_range.csv": {
+      "sha256": "fded37e397a13d0bfb9f9cb679653ec82c956f67dfcde7d256cf16e5f2bcc819",
+      "bytes": 58200
+    },
+    "data/calibracao/runs/cal1_024_c0_controle_mecade_r11/steps.csv": {
+      "sha256": "da026ab28f7188e0b7dd8efc1079d089bbe4054c489a7165d11bd9f96b1136af",
+      "bytes": 50121
+    },
+    "data/calibracao/runs/cal1_024_c0_controle_mecade_r11/tentativas.jsonl": {
+      "sha256": "e8542fd11f14081a8bf137a710b3215c985e653ab0ec6e036c31ad94c04b67f7",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_025_c0_controle_mecade_r08/k8s_coleta.jsonl": {
+      "sha256": "be2c305a7953c6d105394743a696caa5e9defe64de60c6e68845fabbc69e4757",
+      "bytes": 261058
+    },
+    "data/calibracao/runs/cal1_025_c0_controle_mecade_r08/k8s_eventos.jsonl": {
+      "sha256": "194a2222fc48933e3c1c58b91dbd3426dd2839480a6c78e30539fb314dad7af2",
+      "bytes": 6176
+    },
+    "data/calibracao/runs/cal1_025_c0_controle_mecade_r08/meta.json": {
+      "sha256": "2d6540fecda8025e359594de6a800de10029db39378d4508079f04c9aea5b0de",
+      "bytes": 1974
+    },
+    "data/calibracao/runs/cal1_025_c0_controle_mecade_r08/prom_range.csv": {
+      "sha256": "697102197ad9efda96bc7e5bdeec4074fdff11cfa39c56c4f46e9a25b024e1ab",
+      "bytes": 58078
+    },
+    "data/calibracao/runs/cal1_025_c0_controle_mecade_r08/steps.csv": {
+      "sha256": "4bbd526613f89f41246a71245537d252576dfc30427643e3ce2720fd119c5a0e",
+      "bytes": 50082
+    },
+    "data/calibracao/runs/cal1_025_c0_controle_mecade_r08/tentativas.jsonl": {
+      "sha256": "a86ec1eb464f3c0d04b205db13a78b832b65c0dd3b104166f6eaa2f8360dabfa",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_026_s1_latencia_productcatalog_mecade_r02/k8s_coleta.jsonl": {
+      "sha256": "748af15bb07555fd91672bab4ed1e800c54846c6653ad8b8693beb051cd41f42",
+      "bytes": 262073
+    },
+    "data/calibracao/runs/cal1_026_s1_latencia_productcatalog_mecade_r02/k8s_eventos.jsonl": {
+      "sha256": "fe9befd53fafaf4dfe26986ce3e3afb545dc89bc6a2031b8bc0129e870943847",
+      "bytes": 34943
+    },
+    "data/calibracao/runs/cal1_026_s1_latencia_productcatalog_mecade_r02/meta.json": {
+      "sha256": "94b245521987d5d3c8c4fe8c384d89936912e2a50d402816abf2c6ea14442129",
+      "bytes": 2801
+    },
+    "data/calibracao/runs/cal1_026_s1_latencia_productcatalog_mecade_r02/prom_range.csv": {
+      "sha256": "7ebc284b3538998cf09350e1b2240f254a050855653fdea1fa88cd61293c3ff8",
+      "bytes": 57828
+    },
+    "data/calibracao/runs/cal1_026_s1_latencia_productcatalog_mecade_r02/steps.csv": {
+      "sha256": "a58c7150e92263a775f8c92d05284a7a61a62ea29ec2030133583c3e3b5820f1",
+      "bytes": 51437
+    },
+    "data/calibracao/runs/cal1_026_s1_latencia_productcatalog_mecade_r02/tentativas.jsonl": {
+      "sha256": "fb0a01b6cb24e6996aef76df9363277beed0115248986121898f970e1a7cdb2b",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_027_s1_latencia_productcatalog_baseline_r02/k8s_coleta.jsonl": {
+      "sha256": "b93e5f7ef825e9331f417ed4c52b065e3b60af9c1f78ca2f0b5d7fd7024b48ca",
+      "bytes": 262013
+    },
+    "data/calibracao/runs/cal1_027_s1_latencia_productcatalog_baseline_r02/k8s_eventos.jsonl": {
+      "sha256": "c05895c4a192236af625f197701e464331bbcba35ffe2151da20a1a9dda9561a",
+      "bytes": 74471
+    },
+    "data/calibracao/runs/cal1_027_s1_latencia_productcatalog_baseline_r02/meta.json": {
+      "sha256": "daa2a463b5e0b4125bfe0ae564a0106e791d32c3f216c6acf372e1e4f4f306f8",
+      "bytes": 2512
+    },
+    "data/calibracao/runs/cal1_027_s1_latencia_productcatalog_baseline_r02/prom_range.csv": {
+      "sha256": "6e43fa4e5244917dab3c548c53d5e8088ccb94f0b9c848d363e62e65dff630aa",
+      "bytes": 57661
+    },
+    "data/calibracao/runs/cal1_027_s1_latencia_productcatalog_baseline_r02/steps.csv": {
+      "sha256": "d5f250f51f68b2eb3efb5014802c47b9b08eaf5416b60f9506718633b8382d7d",
+      "bytes": 52928
+    },
+    "data/calibracao/runs/cal1_027_s1_latencia_productcatalog_baseline_r02/tentativas.jsonl": {
+      "sha256": "b6da6f32e226228b10b68264ffcd49d9b45f46fc2849460ecf91fc6194b05692",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_028_c0_controle_mecade_r18/k8s_coleta.jsonl": {
+      "sha256": "85e076f314c489e268f646d743dc1eb1f93219751c620452ed0eee5e52b3f8df",
+      "bytes": 261254
+    },
+    "data/calibracao/runs/cal1_028_c0_controle_mecade_r18/k8s_eventos.jsonl": {
+      "sha256": "d0a43d1f836866172b545658ef8cac135dcbd3b3c2aae9c3f0b6465a1bccf6e6",
+      "bytes": 57844
+    },
+    "data/calibracao/runs/cal1_028_c0_controle_mecade_r18/meta.json": {
+      "sha256": "4e89f704600b0be5386facc4cf3e2728defa1baa1efadb20449baf2a6e143481",
+      "bytes": 2126
+    },
+    "data/calibracao/runs/cal1_028_c0_controle_mecade_r18/prom_range.csv": {
+      "sha256": "325a7cb69fbc0ccfb58170408cfbab98b0849c77ac022c26e5943755f62a3d35",
+      "bytes": 57532
+    },
+    "data/calibracao/runs/cal1_028_c0_controle_mecade_r18/steps.csv": {
+      "sha256": "dfcd7f72ea942198fb1e3cf286c42e0a106af1b791db6b746d00aafae154d757",
+      "bytes": 49878
+    },
+    "data/calibracao/runs/cal1_028_c0_controle_mecade_r18/tentativas.jsonl": {
+      "sha256": "72cf5326ecae92e62211bebf65ad8bc8cc17193a12f6f5bd4d346d1558b20590",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_029_c0_controle_mecade_r22/k8s_coleta.jsonl": {
+      "sha256": "2ca5d27ab962506f3f9c23c1e47a7d722ec44c2bcb431a3bc5e6dee9e9ff73e3",
+      "bytes": 261264
+    },
+    "data/calibracao/runs/cal1_029_c0_controle_mecade_r22/k8s_eventos.jsonl": {
+      "sha256": "cd53f112d1f1de6245db6a801f3bcd402624a9ec3d1862b5a4f5efddbb7b41f6",
+      "bytes": 31239
+    },
+    "data/calibracao/runs/cal1_029_c0_controle_mecade_r22/meta.json": {
+      "sha256": "6f13b5d200553cb23a2bd56d295c74b58c0f2f7db6fcf85f3c8339c2e387efda",
+      "bytes": 1973
+    },
+    "data/calibracao/runs/cal1_029_c0_controle_mecade_r22/prom_range.csv": {
+      "sha256": "89c0f1adeb80ac9156f350c471d7ffcb637e08a8b46c16053dfa10db62a9b6c9",
+      "bytes": 57506
+    },
+    "data/calibracao/runs/cal1_029_c0_controle_mecade_r22/steps.csv": {
+      "sha256": "788c3ec480d605951367e0f440c6861f454c240933bd4a791547b4dae37a32b1",
+      "bytes": 49389
+    },
+    "data/calibracao/runs/cal1_029_c0_controle_mecade_r22/tentativas.jsonl": {
+      "sha256": "ded07b013bc9da5f4e40496639b95e50195d4e0e1bb8536e43440a40f1150d39",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_030_c0_controle_mecade_r17/k8s_coleta.jsonl": {
+      "sha256": "e9860b6a34f55cdcf23839cd438f88d1f1395e69b6d1c4d81b2db2edaa034869",
+      "bytes": 261261
+    },
+    "data/calibracao/runs/cal1_030_c0_controle_mecade_r17/k8s_eventos.jsonl": {
+      "sha256": "1552a80f5b4bc2981c4335e90e46ae512af1d2d8f107f97d45ae2f48b87d3f1a",
+      "bytes": 5586
+    },
+    "data/calibracao/runs/cal1_030_c0_controle_mecade_r17/meta.json": {
+      "sha256": "f41a274d7ef5727550621a5a5ebb1b011e28664425789dad8c0e9b3d3f7774b2",
+      "bytes": 2036
+    },
+    "data/calibracao/runs/cal1_030_c0_controle_mecade_r17/prom_range.csv": {
+      "sha256": "786ca65850ac004a7a11b2018987ef34c3b4a296ed65d4de4834709411676957",
+      "bytes": 56953
+    },
+    "data/calibracao/runs/cal1_030_c0_controle_mecade_r17/steps.csv": {
+      "sha256": "b1fa140b83e4aa8ee1a54848e816ca25d9e78bcec9df33e96b9c193196f404b9",
+      "bytes": 48790
+    },
+    "data/calibracao/runs/cal1_030_c0_controle_mecade_r17/tentativas.jsonl": {
+      "sha256": "bf68f753f4fe90b656af61cdebf1e3affdf3989f1c5f53c02138071222c9b43b",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_031_s1_latencia_productcatalog_baseline_r01/k8s_coleta.jsonl": {
+      "sha256": "37a544c3e524c2a52ec3bfc2da5a466ba8caa74be53228639d7a42cddedb1005",
+      "bytes": 261697
+    },
+    "data/calibracao/runs/cal1_031_s1_latencia_productcatalog_baseline_r01/k8s_eventos.jsonl": {
+      "sha256": "dfc4ebea83c90a3352c1a800a8010fdd587456a3c5c738c30809c5d0d1993db8",
+      "bytes": 50411
+    },
+    "data/calibracao/runs/cal1_031_s1_latencia_productcatalog_baseline_r01/meta.json": {
+      "sha256": "37e97f534e2c6b6bb0c02f23e205387cd55d0f16bd57629bc6a2098e1999bb15",
+      "bytes": 2512
+    },
+    "data/calibracao/runs/cal1_031_s1_latencia_productcatalog_baseline_r01/prom_range.csv": {
+      "sha256": "37eb55a52be149e91738d8f0f5b2cf50acb9de5f004a7c03405be7f6759031ac",
+      "bytes": 55555
+    },
+    "data/calibracao/runs/cal1_031_s1_latencia_productcatalog_baseline_r01/steps.csv": {
+      "sha256": "625402376180aac24202189b51c6efac344d8a44d7fb18043346701248a487d8",
+      "bytes": 49477
+    },
+    "data/calibracao/runs/cal1_031_s1_latencia_productcatalog_baseline_r01/tentativas.jsonl": {
+      "sha256": "d38b282f0a7787560c86273fc655d3088466677da0f13a555c09d8e25a1ac7c2",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_032_s1_latencia_productcatalog_mecade_r01/k8s_coleta.jsonl": {
+      "sha256": "632a561a9c9c4688e654468cb975849f1291ab2da7f7f82edaebf2dd6fa2a036",
+      "bytes": 262659
+    },
+    "data/calibracao/runs/cal1_032_s1_latencia_productcatalog_mecade_r01/k8s_eventos.jsonl": {
+      "sha256": "6224494273ab5348bb0c3bd6231529703c608e55cbb37db7520ab83a20e8a47a",
+      "bytes": 68850
+    },
+    "data/calibracao/runs/cal1_032_s1_latencia_productcatalog_mecade_r01/meta.json": {
+      "sha256": "7cb9bd98beeb8bfb90845e100b2886570a68feb0cf983b615d7dd290372eafee",
+      "bytes": 2803
+    },
+    "data/calibracao/runs/cal1_032_s1_latencia_productcatalog_mecade_r01/prom_range.csv": {
+      "sha256": "59e695f194c27cb4f866ff9c7ba9d4ca08e8555d7ef1e11b84638569229870fc",
+      "bytes": 57563
+    },
+    "data/calibracao/runs/cal1_032_s1_latencia_productcatalog_mecade_r01/steps.csv": {
+      "sha256": "99e32d6efa19f8e46ebc0d2530536c74925db708bd941eefebea62c159719c3e",
+      "bytes": 51150
+    },
+    "data/calibracao/runs/cal1_032_s1_latencia_productcatalog_mecade_r01/tentativas.jsonl": {
+      "sha256": "1f4174b013b8cc616447a73c33215dfc843b5e6e3d5487a481779710692dc10b",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_033_c0_controle_mecade_r24/k8s_coleta.jsonl": {
+      "sha256": "0418ab8f674378676076b008030f67b4cff27e706993530c1841ec46e58a634c",
+      "bytes": 261669
+    },
+    "data/calibracao/runs/cal1_033_c0_controle_mecade_r24/k8s_eventos.jsonl": {
+      "sha256": "655664e6977c1a7995750ca266544c489722d7ff00c6c3ce636ca44d23f0aa9c",
+      "bytes": 56203
+    },
+    "data/calibracao/runs/cal1_033_c0_controle_mecade_r24/meta.json": {
+      "sha256": "f0ada92249608194713f19ba90e03781f7ec6c8732f6a729b974258504c70dfe",
+      "bytes": 1974
+    },
+    "data/calibracao/runs/cal1_033_c0_controle_mecade_r24/prom_range.csv": {
+      "sha256": "7793e1aa3e4eacd268add18c5ce0fb23f4ab54ea41dc32acb82e4ec1ffb68d79",
+      "bytes": 57376
+    },
+    "data/calibracao/runs/cal1_033_c0_controle_mecade_r24/steps.csv": {
+      "sha256": "4457ac5809963e9a8cbf9592de534f261dc9ad71cfcda77d8a57f72d7a4ac412",
+      "bytes": 49239
+    },
+    "data/calibracao/runs/cal1_033_c0_controle_mecade_r24/tentativas.jsonl": {
+      "sha256": "5c514220fb24d178fa0d11bd7e7fae4b3c75c2df3a0f52b4676c8887f2cd8ed9",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_034_c0_controle_mecade_r01/k8s_coleta.jsonl": {
+      "sha256": "27f2a9417fad2a9247438fda0e21f2b043d4d23ec8c1e0ec39ba0115466e9600",
+      "bytes": 261658
+    },
+    "data/calibracao/runs/cal1_034_c0_controle_mecade_r01/k8s_eventos.jsonl": {
+      "sha256": "5b02cc14c6bfcbf2aca3125fd8ff1682630865600fabb20b814e1083bbe40f50",
+      "bytes": 31098
+    },
+    "data/calibracao/runs/cal1_034_c0_controle_mecade_r01/meta.json": {
+      "sha256": "a9d193d7f4f9905e9d79bb85cf01fb4e2a908cffe50b5d855756e1d409295e3e",
+      "bytes": 2031
+    },
+    "data/calibracao/runs/cal1_034_c0_controle_mecade_r01/prom_range.csv": {
+      "sha256": "69c86a73874f8d53e7f149b9f37a3a96a1649686f62f7f49b281bee53944c175",
+      "bytes": 57326
+    },
+    "data/calibracao/runs/cal1_034_c0_controle_mecade_r01/steps.csv": {
+      "sha256": "5f704f3d67db63f9c86de02cadadfd920ff473b98bb8a03dfb77867c360f270c",
+      "bytes": 49332
+    },
+    "data/calibracao/runs/cal1_034_c0_controle_mecade_r01/tentativas.jsonl": {
+      "sha256": "b68d43aaedc276c7b930616e5f3ab9cc6460e0b40a6d42a7f0ed2ecc4505f374",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_035_c0_controle_mecade_r02/k8s_coleta.jsonl": {
+      "sha256": "4773514fcbf1827d2129c81f1aef8d7b6f228cad47817d2628a6a61858e3b187",
+      "bytes": 261669
+    },
+    "data/calibracao/runs/cal1_035_c0_controle_mecade_r02/k8s_eventos.jsonl": {
+      "sha256": "1701003280a40efde71590d656c6ed4cc01e7f486703fc7372de8fd2dbb80fed",
+      "bytes": 5534
+    },
+    "data/calibracao/runs/cal1_035_c0_controle_mecade_r02/meta.json": {
+      "sha256": "9892dd90b1a504ed02ad852b5a1e5a43093dbdf9b8cc10a2c966d65f27a793ee",
+      "bytes": 1972
+    },
+    "data/calibracao/runs/cal1_035_c0_controle_mecade_r02/prom_range.csv": {
+      "sha256": "c46fc4f632ab5becc50894c13861c5b0159a6677dc85f014fde7d77f57c973ad",
+      "bytes": 57071
+    },
+    "data/calibracao/runs/cal1_035_c0_controle_mecade_r02/steps.csv": {
+      "sha256": "5e95a2f4482caaef44f9adfe9c86d0c32bed6e1fee5e84ca66fdc37a38def908",
+      "bytes": 48986
+    },
+    "data/calibracao/runs/cal1_035_c0_controle_mecade_r02/tentativas.jsonl": {
+      "sha256": "94873d71ed914c6aa77d017abfb0025eb2ececd0c70b34ee2e153eedb02cbcdf",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_036_c0_controle_mecade_r16/k8s_coleta.jsonl": {
+      "sha256": "41379b52167d6bb44e6ee2f6081a4f49c742054c07924e7f8932c4be7c316a3b",
+      "bytes": 261670
+    },
+    "data/calibracao/runs/cal1_036_c0_controle_mecade_r16/k8s_eventos.jsonl": {
+      "sha256": "97a2956f4c3938af162da521a0f490aab5fe1312136a3ee9cd0e00a6c92c3a48",
+      "bytes": 6674
+    },
+    "data/calibracao/runs/cal1_036_c0_controle_mecade_r16/meta.json": {
+      "sha256": "bf30182f1e60d64d70581059308ec27bf90ac73800145f64d580dfad7d743908",
+      "bytes": 1975
+    },
+    "data/calibracao/runs/cal1_036_c0_controle_mecade_r16/prom_range.csv": {
+      "sha256": "b4d845de0c562feaefd2ff8a0fff37bd2797c0c34d30e7e66dfd04d797ff263d",
+      "bytes": 57563
+    },
+    "data/calibracao/runs/cal1_036_c0_controle_mecade_r16/steps.csv": {
+      "sha256": "3dbd341c6ab81cfc884089d212173eeeecfc4fd04c099c08a2f1e75777e55a04",
+      "bytes": 49632
+    },
+    "data/calibracao/runs/cal1_036_c0_controle_mecade_r16/tentativas.jsonl": {
+      "sha256": "475a7298c59943c43d91adb31cdd3e56749f81fe2d6a478560466583865d3094",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_037_s1_latencia_productcatalog_baseline_r03/k8s_coleta.jsonl": {
+      "sha256": "9df5eb11ba7c58e987b63947ffc5aed428f01f681ce956cd7721b2b740b7c859",
+      "bytes": 262363
+    },
+    "data/calibracao/runs/cal1_037_s1_latencia_productcatalog_baseline_r03/k8s_eventos.jsonl": {
+      "sha256": "3a6f33a1c79697432ca6491a25a46c768c435fbe78f382ff7c045fcc73a6ca19",
+      "bytes": 45696
+    },
+    "data/calibracao/runs/cal1_037_s1_latencia_productcatalog_baseline_r03/meta.json": {
+      "sha256": "cc2b423d59cdc4e0e456fb23d96abce1a74f18b7d9b38f245fb43d35238ccbbc",
+      "bytes": 2512
+    },
+    "data/calibracao/runs/cal1_037_s1_latencia_productcatalog_baseline_r03/prom_range.csv": {
+      "sha256": "9aea1349ff3f635d22c8da7aab1d47343f33970984a027cb6b8bb67d06984976",
+      "bytes": 58614
+    },
+    "data/calibracao/runs/cal1_037_s1_latencia_productcatalog_baseline_r03/steps.csv": {
+      "sha256": "3f921b72f67c68d3636da5b9e2e74122009c474ce9f89a9f98c900acaa7a5a6b",
+      "bytes": 54102
+    },
+    "data/calibracao/runs/cal1_037_s1_latencia_productcatalog_baseline_r03/tentativas.jsonl": {
+      "sha256": "191837033faaade03b439f97bfbd1eb8080c6df27b916b84742b0415e3ee0377",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_038_s1_latencia_productcatalog_mecade_r03/k8s_coleta.jsonl": {
+      "sha256": "4e90f9d1f7a99b89aa3ddeba3c87aa29bd63d3f25f917ec0137dc2d234f02296",
+      "bytes": 262464
+    },
+    "data/calibracao/runs/cal1_038_s1_latencia_productcatalog_mecade_r03/k8s_eventos.jsonl": {
+      "sha256": "505e1e0872eacb374dd9dc53f7fc7367cb0d1b3a122755065b7561fdba5ca3f3",
+      "bytes": 59031
+    },
+    "data/calibracao/runs/cal1_038_s1_latencia_productcatalog_mecade_r03/meta.json": {
+      "sha256": "47d8a21291eb47dbb576f0d2a9bdeb1666ca4cb3407cf66f19b711ea54a94dac",
+      "bytes": 2799
+    },
+    "data/calibracao/runs/cal1_038_s1_latencia_productcatalog_mecade_r03/prom_range.csv": {
+      "sha256": "e58dee152c3f1c69be17975c71dcd89ac906166f8f29aaff5ea6bd71ba96d614",
+      "bytes": 57764
+    },
+    "data/calibracao/runs/cal1_038_s1_latencia_productcatalog_mecade_r03/steps.csv": {
+      "sha256": "bfca3210a2b8f3ad2d489d3c09b4c0da6abad65bd5bdb5dc013f5cb8e45b75f8",
+      "bytes": 51374
+    },
+    "data/calibracao/runs/cal1_038_s1_latencia_productcatalog_mecade_r03/tentativas.jsonl": {
+      "sha256": "a15517d506e7935dca13ae57bbe5b6b6bbf25a8ba4cf925323154118ee8c82a8",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_039_c0_controle_mecade_r13/k8s_coleta.jsonl": {
+      "sha256": "51c2e5d01d7835f0afbf940ea2801872a4a90790bddd53b970b3ea81db3167fa",
+      "bytes": 261665
+    },
+    "data/calibracao/runs/cal1_039_c0_controle_mecade_r13/k8s_eventos.jsonl": {
+      "sha256": "22a02c7606457cbb88a4fc44ed06eb5f80eed8edd257977678852efa880d032b",
+      "bytes": 55069
+    },
+    "data/calibracao/runs/cal1_039_c0_controle_mecade_r13/meta.json": {
+      "sha256": "e3d0f1c4bf565f471ef4b807806d57bf4a79243b444fae065b78e11b20a167c2",
+      "bytes": 2031
+    },
+    "data/calibracao/runs/cal1_039_c0_controle_mecade_r13/prom_range.csv": {
+      "sha256": "ec57387899a3ab49af33be1c0524649e48c0736d88256f5e68aa53eaacacdc30",
+      "bytes": 57116
+    },
+    "data/calibracao/runs/cal1_039_c0_controle_mecade_r13/steps.csv": {
+      "sha256": "59693b8a565acc4a25db6e74be6438bba6c6a4d63bfd014244d239a81192754a",
+      "bytes": 48854
+    },
+    "data/calibracao/runs/cal1_039_c0_controle_mecade_r13/tentativas.jsonl": {
+      "sha256": "a3df06522822f0375861a2cb97472328ff8e8c3031c2b616a63c3f6cbcdcae8f",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_040_c0_controle_mecade_r25/k8s_coleta.jsonl": {
+      "sha256": "409a5897134285e078e350f60df8fa93184b3e087bf2283ed23caf62d15ad2a7",
+      "bytes": 261660
+    },
+    "data/calibracao/runs/cal1_040_c0_controle_mecade_r25/k8s_eventos.jsonl": {
+      "sha256": "ed139444901fcb88eda40fe9b22aadfaf100ccb6926a73cad73dd60980937c3d",
+      "bytes": 30683
+    },
+    "data/calibracao/runs/cal1_040_c0_controle_mecade_r25/meta.json": {
+      "sha256": "ef2208b6bbf916f54ae4464c88a2367931a22caebf6e501cdd699c2842e3cb8c",
+      "bytes": 2035
+    },
+    "data/calibracao/runs/cal1_040_c0_controle_mecade_r25/prom_range.csv": {
+      "sha256": "2d4fdfb96cbdff483e36b96dc716e93dddfbb571d249819e9e02025af08851bf",
+      "bytes": 57356
+    },
+    "data/calibracao/runs/cal1_040_c0_controle_mecade_r25/steps.csv": {
+      "sha256": "a1505fe7f10d3f61a4ee227723205ad15e2046e84c8847d977c04529e1d1f2b8",
+      "bytes": 49340
+    },
+    "data/calibracao/runs/cal1_040_c0_controle_mecade_r25/tentativas.jsonl": {
+      "sha256": "83e8ae3212be787a76625266ea5644c6157fda9c5ea3c66105123ea083425a4e",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_041_c0_controle_mecade_r30/k8s_coleta.jsonl": {
+      "sha256": "27d48766ec998bf12e16579d5d2be32abe128f3824e352c4dc469dee7a7850b4",
+      "bytes": 261667
+    },
+    "data/calibracao/runs/cal1_041_c0_controle_mecade_r30/k8s_eventos.jsonl": {
+      "sha256": "c06ebf75c9b1223c9c156d3e56e06311e3f452d4ba33889d7196611151adff8c",
+      "bytes": 4751
+    },
+    "data/calibracao/runs/cal1_041_c0_controle_mecade_r30/meta.json": {
+      "sha256": "bdea7be001e53fef64998e6949ecbb20cdbddd4d6bd4747f6352716ada6bf40d",
+      "bytes": 1973
+    },
+    "data/calibracao/runs/cal1_041_c0_controle_mecade_r30/prom_range.csv": {
+      "sha256": "a63ea869b6df2c1fa6197ad47c161173e5f5d209fe2a5f190fc77f50105bdb31",
+      "bytes": 57227
+    },
+    "data/calibracao/runs/cal1_041_c0_controle_mecade_r30/steps.csv": {
+      "sha256": "e71673fa67b55e02eae409865d111223ce1daf1f55a39fccaa16804f029db7e6",
+      "bytes": 49104
+    },
+    "data/calibracao/runs/cal1_041_c0_controle_mecade_r30/tentativas.jsonl": {
+      "sha256": "b26880276d8136c7af483eadad1c7c91c9572e6a2b393895ee6fb21b68bcb8a2",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_042_c0_controle_mecade_r05/k8s_coleta.jsonl": {
+      "sha256": "0315ef6833994406e6977d96235ee4a6ded0eab36954c56961a17c19b8e3037d",
+      "bytes": 261664
+    },
+    "data/calibracao/runs/cal1_042_c0_controle_mecade_r05/k8s_eventos.jsonl": {
+      "sha256": "123965c6100739c832a3fbc941d0b984741607b7a3537c07af819be539665894",
+      "bytes": 5882
+    },
+    "data/calibracao/runs/cal1_042_c0_controle_mecade_r05/meta.json": {
+      "sha256": "d71af7e518cd1057a3fc38e8aa077926dca84987ca069c78378f4c641173d197",
+      "bytes": 2183
+    },
+    "data/calibracao/runs/cal1_042_c0_controle_mecade_r05/prom_range.csv": {
+      "sha256": "746f2d690b4386ef00efc5a33dd714f545a14334c483462d6b11e4b6ad93ee10",
+      "bytes": 57181
+    },
+    "data/calibracao/runs/cal1_042_c0_controle_mecade_r05/steps.csv": {
+      "sha256": "62b6c6ebacd7fa10c9e5a2c1b74497e133d0027c7d58232a2513a4cb045bafca",
+      "bytes": 49329
+    },
+    "data/calibracao/runs/cal1_042_c0_controle_mecade_r05/tentativas.jsonl": {
+      "sha256": "bff15fb22d7433a698e3d6b15db32ef932ae005f054e4ae99f8b628df893a710",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_043_c0_controle_mecade_r14/k8s_coleta.jsonl": {
+      "sha256": "debddbcffbc780dd81400d2da72c1b0b6bb4277e77bf384edcf7ccf0764bc985",
+      "bytes": 261669
+    },
+    "data/calibracao/runs/cal1_043_c0_controle_mecade_r14/k8s_eventos.jsonl": {
+      "sha256": "2a517427cb65422d6df2a94b8c2705efdd93433f88d0543a114440f47762b419",
+      "bytes": 5752
+    },
+    "data/calibracao/runs/cal1_043_c0_controle_mecade_r14/meta.json": {
+      "sha256": "94d0a295fa2d8a986179084a85c343e52fe815e51a2ff0214dcddfaabb4f84bd",
+      "bytes": 1971
+    },
+    "data/calibracao/runs/cal1_043_c0_controle_mecade_r14/prom_range.csv": {
+      "sha256": "e4ae8fca9c2abe47f8b6f955c5208e5a94a9b53b46006089508b6d0892632905",
+      "bytes": 57344
+    },
+    "data/calibracao/runs/cal1_043_c0_controle_mecade_r14/steps.csv": {
+      "sha256": "870063cac41a0082a34b904bcb4fcfe720eef83a72d042ac13ae486f0a9fe8ad",
+      "bytes": 49196
+    },
+    "data/calibracao/runs/cal1_043_c0_controle_mecade_r14/tentativas.jsonl": {
+      "sha256": "927bfc98c76c27b659edb59c3f28fa89d05d2bd9e5e3f4a0bd14ea3fb7278640",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_044_c0_controle_mecade_r29/k8s_coleta.jsonl": {
+      "sha256": "3ae0c8a6342cca7d37b3484576b17924277a8ae03422701c79a1dfce3e5863e1",
+      "bytes": 261658
+    },
+    "data/calibracao/runs/cal1_044_c0_controle_mecade_r29/k8s_eventos.jsonl": {
+      "sha256": "65d46858f8f8822ee662c44b15dd1d75e2c871c438d8a11cfbfef6fe4219d166",
+      "bytes": 6148
+    },
+    "data/calibracao/runs/cal1_044_c0_controle_mecade_r29/meta.json": {
+      "sha256": "9ca4e9f13b7a66228574e3e44c7d39f669f06ca0ceb781227c1bc67089bd6ef8",
+      "bytes": 2032
+    },
+    "data/calibracao/runs/cal1_044_c0_controle_mecade_r29/prom_range.csv": {
+      "sha256": "2ebc96ed83e8d591fc9e3b5cfab40d6034e696a7c4f7df989685c3752b70ba02",
+      "bytes": 57127
+    },
+    "data/calibracao/runs/cal1_044_c0_controle_mecade_r29/steps.csv": {
+      "sha256": "238ffdb4b9498ae891ad26a78841720dfd9ab59bd5142834008c11163393b495",
+      "bytes": 49019
+    },
+    "data/calibracao/runs/cal1_044_c0_controle_mecade_r29/tentativas.jsonl": {
+      "sha256": "4968de039506b2f2abb038e596c89f878565cbfacfbbb1b7add0385a909b7b79",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_045_c0_controle_mecade_r04/k8s_coleta.jsonl": {
+      "sha256": "a7c0f7930904d54d8e1eb3addc95d4b39202e3829ed033cd5927c3dbac2b9fda",
+      "bytes": 261664
+    },
+    "data/calibracao/runs/cal1_045_c0_controle_mecade_r04/k8s_eventos.jsonl": {
+      "sha256": "c93e126df4f657d9d25c6fbae2335e54511842489a6c263871e96dabef6d68f3",
+      "bytes": 5956
+    },
+    "data/calibracao/runs/cal1_045_c0_controle_mecade_r04/meta.json": {
+      "sha256": "dcedb929eb7dd516d223697b9fb65f7ba1911023b9d27ba6be7ee4861e25076f",
+      "bytes": 1970
+    },
+    "data/calibracao/runs/cal1_045_c0_controle_mecade_r04/prom_range.csv": {
+      "sha256": "e304345584d80be5c65258b6d222d60ecf245f1093a84666a40602b29502a863",
+      "bytes": 57209
+    },
+    "data/calibracao/runs/cal1_045_c0_controle_mecade_r04/steps.csv": {
+      "sha256": "8d99b9d38a994534a79c03a803204ede477c226756e549f5d0758719bc0d9b9a",
+      "bytes": 49111
+    },
+    "data/calibracao/runs/cal1_045_c0_controle_mecade_r04/tentativas.jsonl": {
+      "sha256": "0b0d194e69a27ac37ecc462b15e1b64d2b99b89754ba8a7bd627e4bb2216031b",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_046_s2_gray_currency_mecade_r03/k8s_coleta.jsonl": {
+      "sha256": "f1b6f4e398c30d55b530b614c2d833e091d9e60d15b79166d918f8ebaf79bb3a",
+      "bytes": 262191
+    },
+    "data/calibracao/runs/cal1_046_s2_gray_currency_mecade_r03/k8s_eventos.jsonl": {
+      "sha256": "0834e0a95e33918c96b70b457f493e460e240e42228267ec57a5013a47c1801b",
+      "bytes": 62842
+    },
+    "data/calibracao/runs/cal1_046_s2_gray_currency_mecade_r03/meta.json": {
+      "sha256": "a98a89a646d63d04fc18e746b1fdb69f7b42857d6612837069ef9f202c952418",
+      "bytes": 2466
+    },
+    "data/calibracao/runs/cal1_046_s2_gray_currency_mecade_r03/prom_range.csv": {
+      "sha256": "5ea8c2b1bccb6050435b6871f54606950a13d1a6b019122205bbbb90c2db3d9a",
+      "bytes": 57661
+    },
+    "data/calibracao/runs/cal1_046_s2_gray_currency_mecade_r03/steps.csv": {
+      "sha256": "1ce8754afe2983fff0e041ec27db62acdf42392b916f90e71ecbf96ab4b78903",
+      "bytes": 51107
+    },
+    "data/calibracao/runs/cal1_046_s2_gray_currency_mecade_r03/tentativas.jsonl": {
+      "sha256": "094103769c12f3e39f5dc360eb32b5eec95c890892cadd6dd5653327accb4e8e",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_047_s2_gray_currency_baseline_r03/k8s_coleta.jsonl": {
+      "sha256": "c263b263bf6f939d551f6df023501b62405646b8811c3345fab2f3861e6dd39e",
+      "bytes": 261961
+    },
+    "data/calibracao/runs/cal1_047_s2_gray_currency_baseline_r03/k8s_eventos.jsonl": {
+      "sha256": "02f9e70674ef979c6c52910fc33d619400e805111402bdda1c158d50c3c43d2d",
+      "bytes": 137749
+    },
+    "data/calibracao/runs/cal1_047_s2_gray_currency_baseline_r03/meta.json": {
+      "sha256": "3108768b1052e358248bfc6ebe2925c597634616335a2ddaebea17a9c2dba2a5",
+      "bytes": 2000
+    },
+    "data/calibracao/runs/cal1_047_s2_gray_currency_baseline_r03/prom_range.csv": {
+      "sha256": "361aa985bd913e87e56577ee2321d73496b0f3172e0eff791804c6a5979418a3",
+      "bytes": 58037
+    },
+    "data/calibracao/runs/cal1_047_s2_gray_currency_baseline_r03/steps.csv": {
+      "sha256": "f400308aeaaf54be2b878c0b1119dcf062c80a344c6a202d71e0ee535662d374",
+      "bytes": 52351
+    },
+    "data/calibracao/runs/cal1_047_s2_gray_currency_baseline_r03/tentativas.jsonl": {
+      "sha256": "d0b8014dde0e76b224948987eca8fd9ca684d23cecfe454d6e751bc542de1bed",
+      "bytes": 143
+    },
+    "data/calibracao/runs/cal1_048_c0_controle_mecade_r12/k8s_coleta.jsonl": {
+      "sha256": "1060c43f7b08d73f5feec24f5568ad93cb0b4fb0476f3d7fbf0818f3bb6342c4",
+      "bytes": 261765
+    },
+    "data/calibracao/runs/cal1_048_c0_controle_mecade_r12/k8s_eventos.jsonl": {
+      "sha256": "7bd63c589e0aa69d7fe78f81cde6501005f658c371766bad47d644ead82fcf7b",
+      "bytes": 127794
+    },
+    "data/calibracao/runs/cal1_048_c0_controle_mecade_r12/meta.json": {
+      "sha256": "cfd2950b6d9b19b94a0d44f6aef489303ccc09e2fabcd3cdfc9b9203a58dc802",
+      "bytes": 1975
+    },
+    "data/calibracao/runs/cal1_048_c0_controle_mecade_r12/prom_range.csv": {
+      "sha256": "15de97598a94ffd2dbc7f9f2c70067bc2467b85efe4245c365aad19cfd78288b",
+      "bytes": 57132
+    },
+    "data/calibracao/runs/cal1_048_c0_controle_mecade_r12/steps.csv": {
+      "sha256": "fee3d4386c894771e4f956c2e037ed6bdb82f8b6e52fb3751394cc333f60d07b",
+      "bytes": 48989
+    },
+    "data/calibracao/runs/cal1_048_c0_controle_mecade_r12/tentativas.jsonl": {
+      "sha256": "7424a5b0f41f4c0220c611463c346cca6758af6ed9c418fd9089aecda5566391",
+      "bytes": 143
+    },
+    "data/diagnostico/analise_fase0.json": {
+      "sha256": "0b7d68bdf2d7d0a60852ce0017d0fee111b18cd1c3d5b6774898a59ced7f4996",
+      "bytes": 2195
+    },
+    "data/diagnostico/diag_A/k8s_coleta.jsonl": {
+      "sha256": "be972374a68c73ecee1a071f5b1f728d7cbb54621806ce00ca38ac8b27ef371e",
+      "bytes": 4296894
+    },
+    "data/diagnostico/diag_A/k8s_eventos.jsonl": {
+      "sha256": "7b5998109678581d57bcbb127b434266ffebee4425d5b6d491af21d8dffd6d5a",
+      "bytes": 53842
+    },
+    "data/diagnostico/diag_A/k8s_pods_watch.log": {
+      "sha256": "ff6e68a839256fb85278471208823502840ecb4d1eb698ebb1f3374565c58c9c",
+      "bytes": 6838
+    },
+    "data/diagnostico/diag_A/meta.json": {
+      "sha256": "464b3f6308200d8c6604d9afa39dd191d42e733242f81e55cc2000089c4991b6",
+      "bytes": 1753
+    },
+    "data/diagnostico/diag_A/steps.csv": {
+      "sha256": "a8bc5248d509902bd2819d3521d26a1ebabdcec52445184a37e43a57a7600d38",
+      "bytes": 16659
+    },
+    "data/diagnostico/diag_A/tentativas.jsonl": {
+      "sha256": "31cf31149a99ef23b7fd46ccc0f8913493640e3e99d0573f351f6e2991cdced7",
+      "bytes": 143
+    },
+    "data/diagnostico/diag_B/k8s_coleta.jsonl": {
+      "sha256": "04690e6c6f0675f00e5b9015f7c6306b044e53209a68c72544508aa5accbc6f8",
+      "bytes": 3142230
+    },
+    "data/diagnostico/diag_B/k8s_eventos.jsonl": {
+      "sha256": "29946a7ce400c1ac4c9ee8640243f12f28591d4a674ada15cd457808865cc6e1",
+      "bytes": 75627
+    },
+    "data/diagnostico/diag_B/k8s_pods_watch.log": {
+      "sha256": "71cc4b084b0636a0aef858217568e7da33b57481e13eb747352923b31bb845c9",
+      "bytes": 5258
+    },
+    "data/diagnostico/diag_B/meta.json": {
+      "sha256": "8bdda2d0c3acc78a977c88ed7fb9f72a5aab488dc595e84e228f5931540df821",
+      "bytes": 1725
+    },
+    "data/diagnostico/diag_B/steps.csv": {
+      "sha256": "3687e10e7858a006a966d205d4c27168bdfe4fd7dfc573b5a42be14972499c1a",
+      "bytes": 17690
+    },
+    "data/diagnostico/diag_B/tentativas.jsonl": {
+      "sha256": "3272e9822a65d0835bbe9d0d7f60494c16b33189cfb55e65d41976150711d5dc",
+      "bytes": 143
+    },
+    "data/diagnostico/diag_C1/k8s_coleta.jsonl": {
+      "sha256": "a644624c707b62f142030ed5081fe52433820b7dd476d4c4ed3fcdcb1b3ccbdd",
+      "bytes": 3654586
+    },
+    "data/diagnostico/diag_C1/k8s_eventos.jsonl": {
+      "sha256": "9976a701c0ded77a8932932a5c488e5c27680624d28a5f130c529a1deec125a9",
+      "bytes": 71168
+    },
+    "data/diagnostico/diag_C1/k8s_pods_watch.log": {
+      "sha256": "317f59f157ec3aad167d58c7428a7df8da55dcb49981e61c9598e3fca13a8099",
+      "bytes": 14149
+    },
+    "data/diagnostico/diag_C1/meta.json": {
+      "sha256": "c61ec056872c7f29ed9220c1b72579f8f0a79d59b801eb378c0c588eed177d1c",
+      "bytes": 2015
+    },
+    "data/diagnostico/diag_C1/steps.csv": {
+      "sha256": "e60f330229ac3897e0a8be94ca0cb32a245f1bc4e34c790f64d06b12781fb4c0",
+      "bytes": 17412
+    },
+    "data/diagnostico/diag_C1/tentativas.jsonl": {
+      "sha256": "2dd1e596c291e68e373647acf4dbc88f71ab3c893644f02f26573a58c4f71852",
+      "bytes": 143
+    },
+    "data/diagnostico/diag_C2/k8s_coleta.jsonl": {
+      "sha256": "20a1b99eb659883f7d77c02cb7dec121c09c4bf7f0cdb72a7445702046d4879d",
+      "bytes": 3438114
+    },
+    "data/diagnostico/diag_C2/k8s_eventos.jsonl": {
+      "sha256": "9a8d9391d2fbe1ff3805f87d8ef2c0c5d025cae337eb9aa700c5211e31acb540",
+      "bytes": 75669
+    },
+    "data/diagnostico/diag_C2/k8s_pods_watch.log": {
+      "sha256": "6ab870e6d372d0e5698ee37e346b9d8f1056bc5c4c6acf7ca1495762218b0d26",
+      "bytes": 13538
+    },
+    "data/diagnostico/diag_C2/meta.json": {
+      "sha256": "ea06ff85cc4109fa206f312572f9dbee3b83c8164b7534dfcb7024e4f6b25229",
+      "bytes": 2013
+    },
+    "data/diagnostico/diag_C2/steps.csv": {
+      "sha256": "17f7af662cb21a4323a1828eb4ff6fc90bfabcc0ff0e409d7028d890c80d0911",
+      "bytes": 17508
+    },
+    "data/diagnostico/diag_C2/tentativas.jsonl": {
+      "sha256": "b04dc0ccd4e1a9a346e05e7672fb9341185ccfe12bcf9ff502e04d6372ff0431",
+      "bytes": 143
+    },
+    "data/diagnostico/diag_D/k8s_coleta.jsonl": {
+      "sha256": "5c76147c9484f69f9f0bc812990d91fa794c141e0248fa310572b206830d669d",
+      "bytes": 3211528
+    },
+    "data/diagnostico/diag_D/k8s_eventos.jsonl": {
+      "sha256": "7778a7d86bc02c1d21f676f88c3296d0952028f95b32d4f1c5e83f254d75ae78",
+      "bytes": 100820
+    },
+    "data/diagnostico/diag_D/k8s_pods_watch.log": {
+      "sha256": "1baf2791967ba11df14a8d914aaa00f8ff43af9d99a8ca7494d66e4cf0a2f914",
+      "bytes": 14773
+    },
+    "data/diagnostico/diag_D/meta.json": {
+      "sha256": "bba21c747a57d273b2a36c4accd1ffd886e36b7dcaaeca4f6fb36c5899e71d80",
+      "bytes": 1988
+    },
+    "data/diagnostico/diag_D/steps.csv": {
+      "sha256": "0e910b14c21055ced103ca9b3cacde26fb56be878e06dbab593f24755ed57767",
+      "bytes": 18996
+    },
+    "data/diagnostico/diag_D/tentativas.jsonl": {
+      "sha256": "7ddbaf09d9eedd71b49e71bbc720cb43ab80953ed8d3c61c5671ae4161b1c09d",
+      "bytes": 143
+    },
+    "data/diagnostico/fase0.log": {
+      "sha256": "dac0ad4f681a0af5ed27d7da73cfa8cb6be0af70afa57058a89bea0874fef519",
+      "bytes": 3218
+    },
+    "data/plan_mvc-2026-11-c3.csv": {
+      "sha256": "359cd792ca39b685d2417cc940d01a72eafecc2b9cdc762fe715915b2bb88b41",
+      "bytes": 6850
+    }
+  }
+}
